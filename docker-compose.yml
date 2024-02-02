@@ -1,0 +1,46 @@
+version: '3.10'
+services:
+  user-management-db:
+    image: postgres:latest
+    container_name: user-management-db
+    restart: always
+    environment:
+      - POSTGRES_DB=user_management_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=2165
+      - POSTGRES_SCHEMA=users
+    ports:
+      - "5432:5432"
+    command: ["postgres", "-c", "search_path=users"]
+    networks:
+      - spring-network
+
+  eureka-server:
+    image: eureka_server:latest
+    build:
+      context: ./eureka-server
+      dockerfile: Dockerfile
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - spring-network
+
+  user-management-server:
+    image: user_management_service:latest
+    build:
+      context: ./user_management_service
+      dockerfile: Dockerfile
+    container_name: user-management-service
+    ports:
+      - "8081:8081"
+    networks:
+      - spring-network
+    depends_on:
+      - eureka-server
+      - user-management-db
+
+networks:
+  spring-network:
+    driver: bridge
+
