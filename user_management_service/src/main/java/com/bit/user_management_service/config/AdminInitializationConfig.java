@@ -1,9 +1,9 @@
 package com.bit.user_management_service.config;
 
-import com.bit.user_management_service.entity.Role;
-import com.bit.user_management_service.entity.User;
-import com.bit.user_management_service.repository.RoleRepository;
-import com.bit.user_management_service.repository.UserRepository;
+import com.bit.shared.entity.Role;
+import com.bit.shared.entity.User;
+import com.bit.shared.repository.RoleRepository;
+import com.bit.shared.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
@@ -12,6 +12,7 @@ import org.springframework.core.annotation.Order;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Configuration
@@ -29,15 +30,18 @@ public class AdminInitializationConfig implements CommandLineRunner {
     }
 
     private void initializeAdmin() {
-        if (roleRepository.findByName("ADMIN").isPresent()){
-            Role adminRole = roleRepository.findByName("ADMIN").get();
+        Role adminRole = roleRepository.findByName("ADMIN").orElse(null);
+
+        if (adminRole != null){
             Set<Role> roles = new HashSet<>();
             roles.add(adminRole);
 
-            if (userRepository.findByRoles(roles).isEmpty()){
+            List<User> usersWithAdminRole = userRepository.findByRoles(roles);
+
+            if (usersWithAdminRole.isEmpty()){
                 User user = User.builder()
-                    .first_name("admin")
-                    .last_name("admin")
+                    .firstName("admin")
+                    .lastName("admin")
                     .email("admin@gmail.com")
                     .password(passwordEncoder.encode("admin"))
                     .roles(roles)

@@ -8,17 +8,23 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <module name="user_management_service" />
+        <module name="library" />
         <module name="eureka-server" />
+        <module name="jwt_auth_service" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
       <module name="eureka_server" target="17" />
+      <module name="jwt-auth-service" target="17" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="eureka-server" options="-parameters" />
       <module name="eureka_server" options="-parameters" />
+      <module name="jwt-auth-service" options="-parameters" />
+      <module name="jwt_auth_service" options="-parameters" />
+      <module name="library" options="-parameters" />
       <module name="user_management_service" options="-parameters" />
     </option>
   </component>

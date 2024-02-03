@@ -15,6 +15,20 @@ services:
     networks:
       - spring-network
 
+  jwt-auth-service:
+    image: jwt_auth_service:latest
+    container_name: jwt-auth-service
+    build:
+      context: ./jwt-auth-service
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    networks:
+      - spring-network
+    depends_on:
+      - eureka-server
+      - user-management-db
+
   eureka-server:
     image: eureka_server:latest
     build:

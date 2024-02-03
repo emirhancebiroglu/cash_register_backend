@@ -1,7 +1,7 @@
 package com.bit.user_management_service.config;
 
-import com.bit.user_management_service.entity.Role;
-import com.bit.user_management_service.repository.RoleRepository;
+import com.bit.shared.entity.Role;
+import com.bit.shared.repository.RoleRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.boot.CommandLineRunner;

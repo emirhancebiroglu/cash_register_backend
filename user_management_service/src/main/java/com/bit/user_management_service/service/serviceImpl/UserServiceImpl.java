@@ -1,13 +1,13 @@
 package com.bit.user_management_service.service.serviceImpl;
 
+import com.bit.shared.config.PasswordEncoderConfig;
+import com.bit.shared.entity.Role;
+import com.bit.shared.entity.User;
+import com.bit.shared.repository.RoleRepository;
+import com.bit.shared.repository.UserRepository;
 import com.bit.user_management_service.dto.UserDTO;
-import com.bit.user_management_service.entity.Role;
-import com.bit.user_management_service.entity.User;
-import com.bit.user_management_service.repository.RoleRepository;
-import com.bit.user_management_service.repository.UserRepository;
 import com.bit.user_management_service.service.UserService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Set;
@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final PasswordEncoderConfig passwordEncoder;
 
     @Override
     public void addUser(UserDTO userDTO) {
@@ -31,17 +31,16 @@ public class UserServiceImpl implements UserService {
                 .collect(Collectors.toSet());
 
         User newUser = User.builder()
-                .first_name(userDTO.getFirst_name())
-                .last_name(userDTO.getLast_name())
+                .firstName(userDTO.getFirstName())
+                .lastName(userDTO.getLastName())
                 .email(userDTO.getEmail())
-                .password(passwordEncoder.encode(userDTO.getPassword()))
+                .password(passwordEncoder.passwordEncoder().encode(userDTO.getPassword()))
                 .roles(roles)
                 .build();
 
         if(isAdminRoleExist && roles.contains(roleRepository.findByName("ADMIN").get()) && isInitialAdminExist){
             userRepository.delete(userRepository.findByEmail("admin@gmail.com").get());
         }
-
         userRepository.save(newUser);
     }
 
@@ -54,10 +53,10 @@ public class UserServiceImpl implements UserService {
                     .map(role_name -> roleRepository.findByName(role_name).orElseThrow(() -> new RuntimeException("Role not found: " + role_name)))
                     .collect(Collectors.toSet());
 
-            existingUser.setFirst_name(userDTO.getFirst_name());
-            existingUser.setLast_name(userDTO.getLast_name());
+            existingUser.setFirstName(userDTO.getFirstName());
+            existingUser.setLastName(userDTO.getLastName());
             existingUser.setEmail(userDTO.getEmail());
-            existingUser.setPassword(passwordEncoder.encode(userDTO.getPassword()));
+            existingUser.setPassword(passwordEncoder.passwordEncoder().encode(userDTO.getPassword()));
             existingUser.setRoles(roles);
 
             userRepository.save(existingUser);
