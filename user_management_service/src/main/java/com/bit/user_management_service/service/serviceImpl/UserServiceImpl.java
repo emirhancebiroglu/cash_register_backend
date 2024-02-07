@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final PasswordEncoderConfig passwordEncoder;
+    private final PasswordEncoderConfig passwordEncoderConfig;
 
     @Override
     public void addUser(UserDTO userDTO) {
@@ -34,7 +34,7 @@ public class UserServiceImpl implements UserService {
                 .firstName(userDTO.getFirstName())
                 .lastName(userDTO.getLastName())
                 .email(userDTO.getEmail())
-                .password(passwordEncoder.passwordEncoder().encode(userDTO.getPassword()))
+                .password(passwordEncoderConfig.passwordEncoder().encode(userDTO.getPassword()))
                 .roles(roles)
                 .build();
 
@@ -56,7 +56,7 @@ public class UserServiceImpl implements UserService {
             existingUser.setFirstName(userDTO.getFirstName());
             existingUser.setLastName(userDTO.getLastName());
             existingUser.setEmail(userDTO.getEmail());
-            existingUser.setPassword(passwordEncoder.passwordEncoder().encode(userDTO.getPassword()));
+            existingUser.setPassword(passwordEncoderConfig.passwordEncoder().encode(userDTO.getPassword()));
             existingUser.setRoles(roles);
 
             userRepository.save(existingUser);

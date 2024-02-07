@@ -1,14 +1,14 @@
 package com.bit.user_management_service.filter;
 
+import com.bit.shared.dto.TokenValidationReq;
+import com.bit.user_management_service.client.JwtAuthServiceClient;
 import com.bit.user_management_service.service.CustomUserDetailsService;
-import com.bit.user_management_service.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
@@ -22,10 +22,9 @@ import java.io.IOException;
 
 @Component
 @RequiredArgsConstructor
-@Slf4j
 public class JwtAuthFilter extends OncePerRequestFilter {
-    private final JwtService jwtService;
     private final CustomUserDetailsService customUserDetailsService;
+    private final JwtAuthServiceClient jwtAuthServiceClient;
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
@@ -39,12 +38,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         jwt = authHeader.substring(7);
-        email = jwtService.extractUserName(jwt);
+
+        TokenValidationReq tokenValidationReqToExtractUsername = new TokenValidationReq(jwt);
+
+        email = jwtAuthServiceClient.extractUsername(tokenValidationReqToExtractUsername);
 
         if(StringUtils.isNotEmpty(email) && SecurityContextHolder.getContext().getAuthentication() == null){
             UserDetails userDetails = customUserDetailsService.userDetailsService().loadUserByUsername(email);
 
-            if(jwtService.isTokenValid(jwt, userDetails)){
+            TokenValidationReq tokenValidationReqToValidateToken = new TokenValidationReq(jwt, userDetails.getUsername());
+
+            if(jwtAuthServiceClient.validateToken(tokenValidationReqToValidateToken)){
                 SecurityContext context = SecurityContextHolder.createEmptyContext();
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                         userDetails, null, userDetails.getAuthorities());

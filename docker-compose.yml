@@ -1,5 +1,24 @@
 version: '3.10'
 services:
+  api-gateway:
+    image: nginx:latest
+    container_name: api_gateway
+    restart: always
+    ports:
+      - protocol: tcp
+        target: 80
+        published: 8881
+    environment:
+      NGINX_PORT: 80
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    networks:
+      - spring-network
+    depends_on:
+      - user-management-service
+      - jwt-auth-service
+      - eureka-server
+
   user-management-db:
     image: postgres:latest
     container_name: user-management-db
@@ -11,7 +30,7 @@ services:
       - POSTGRES_SCHEMA=users
     ports:
       - "5432:5432"
-    command: ["postgres", "-c", "search_path=users"]
+    command: [ "postgres", "-c", "search_path=users" ]
     networks:
       - spring-network
 
@@ -19,7 +38,7 @@ services:
     image: jwt_auth_service:latest
     container_name: jwt-auth-service
     build:
-      context: ./jwt-auth-service
+      context: ./jwt_auth_service
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
@@ -40,7 +59,7 @@ services:
     networks:
       - spring-network
 
-  user-management-server:
+  user-management-service:
     image: user_management_service:latest
     build:
       context: ./user_management_service
@@ -57,4 +76,3 @@ services:
 networks:
   spring-network:
     driver: bridge
-

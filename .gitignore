@@ -10,6 +10,11 @@
 .springBeans
 .sts4-cache
 
+#Ignore Intellij IDEA, Visual Studio and Visual Studio Code directories
+.idea/
+.vs/
+.vscode/
+
 
 # Created by https://www.gitignore.io/api/git,java,maven,eclipse,windows
 

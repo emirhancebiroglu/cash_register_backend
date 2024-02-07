@@ -20,10 +20,10 @@ import java.util.stream.Collectors;
 
 @Service
 public class JwtServiceImpl implements JwtService {
-  @Value("${jwt.secret.key}")
+  @Value("${jwt.secret-key}")
   String jwtSecretKey;
 
-  @Value("${token.expiration}")
+  @Value("${jwt.expiration}")
   Long jwtExpirationMs;
 
   @Override
@@ -32,9 +32,9 @@ public class JwtServiceImpl implements JwtService {
   }
 
   @Override
-  public boolean isTokenValid(String token, UserDetails userDetails) {
+  public boolean isTokenValid(String token, String username) {
     final String userName = extractUserName(token);
-    return (userName.equals(userDetails.getUsername())) && !isTokenExpired(token);
+    return (userName.equals(username)) && !isTokenExpired(token);
   }
 
   @Override

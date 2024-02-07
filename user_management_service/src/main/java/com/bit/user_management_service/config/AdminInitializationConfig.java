@@ -1,5 +1,6 @@
 package com.bit.user_management_service.config;
 
+import com.bit.shared.config.PasswordEncoderConfig;
 import com.bit.shared.entity.Role;
 import com.bit.shared.entity.User;
 import com.bit.shared.repository.RoleRepository;
@@ -9,7 +10,6 @@ import lombok.AllArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
-import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.HashSet;
 import java.util.List;
@@ -22,7 +22,7 @@ import java.util.Set;
 public class AdminInitializationConfig implements CommandLineRunner {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
-    private final PasswordEncoder passwordEncoder;
+    private final PasswordEncoderConfig passwordEncoderConfig;
 
     @Override
     public void run(String... args){
@@ -43,7 +43,7 @@ public class AdminInitializationConfig implements CommandLineRunner {
                     .firstName("admin")
                     .lastName("admin")
                     .email("admin@gmail.com")
-                    .password(passwordEncoder.encode("admin"))
+                    .password(passwordEncoderConfig.passwordEncoder().encode("admin"))
                     .roles(roles)
                     .build();
 
