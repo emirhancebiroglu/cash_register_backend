@@ -7,11 +7,13 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication(
-		scanBasePackages = {"com.bit.shared", "com.bit.user_management_service"}
+		scanBasePackages = {"com.bit.sharedClasses", "com.bit.user_management_service", "com.bit.sharedFilter"}
 )
-@EnableJpaRepositories("com.bit.shared.repository")
-@EntityScan("com.bit.shared.entity")
-@EnableFeignClients
+@EnableJpaRepositories("com.bit.sharedClasses.repository")
+@EntityScan("com.bit.sharedClasses.entity")
+@EnableFeignClients(basePackages = {
+		"com.bit.sharedFilter"
+})
 public class UserManagementServiceApplication {
 
 	public static void main(String[] args) {

@@ -1,7 +1,7 @@
 package com.bit.user_management_service.config;
 
-import com.bit.shared.entity.Role;
-import com.bit.shared.repository.RoleRepository;
+import com.bit.sharedClasses.entity.Role;
+import com.bit.sharedClasses.repository.RoleRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
@@ -23,7 +23,7 @@ public class RoleInitializationConfig implements CommandLineRunner {
         initializeRoles();
     }
 
-    private void initializeRoles() {
+    protected void initializeRoles() {
         List<String> roleNames = Arrays.asList("ADMIN", "CASHIER", "STORE-MANAGER");
 
         for(String role_name : roleNames){

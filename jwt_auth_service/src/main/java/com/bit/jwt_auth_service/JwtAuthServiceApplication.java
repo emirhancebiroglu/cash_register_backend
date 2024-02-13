@@ -6,10 +6,10 @@ import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication(
-		scanBasePackages = {"com.bit.shared", "com.bit.jwt_auth_service"}
+		scanBasePackages = {"com.bit.sharedClasses", "com.bit.jwt_auth_service"}
 )
-@EnableJpaRepositories("com.bit.shared.repository")
-@EntityScan("com.bit.shared.entity")
+@EnableJpaRepositories("com.bit.sharedClasses.repository")
+@EntityScan("com.bit.sharedClasses.entity")
 public class JwtAuthServiceApplication {
 
 	public static void main(String[] args) {

@@ -1,10 +1,10 @@
 package com.bit.user_management_service.config;
 
-import com.bit.shared.config.PasswordEncoderConfig;
-import com.bit.shared.entity.Role;
-import com.bit.shared.entity.User;
-import com.bit.shared.repository.RoleRepository;
-import com.bit.shared.repository.UserRepository;
+import com.bit.sharedClasses.config.PasswordEncoderConfig;
+import com.bit.sharedClasses.entity.Role;
+import com.bit.sharedClasses.entity.User;
+import com.bit.sharedClasses.repository.RoleRepository;
+import com.bit.sharedClasses.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import org.springframework.boot.CommandLineRunner;
@@ -29,7 +29,7 @@ public class AdminInitializationConfig implements CommandLineRunner {
         initializeAdmin();
     }
 
-    private void initializeAdmin() {
+    protected void initializeAdmin() {
         Role adminRole = roleRepository.findByName("ADMIN").orElse(null);
 
         if (adminRole != null){

@@ -3,14 +3,13 @@
   import com.bit.jwt_auth_service.dto.JwtAuthResponse;
   import com.bit.jwt_auth_service.dto.LoginRequest;
   import com.bit.jwt_auth_service.service.JwtService;
-  import com.bit.jwt_auth_service.service.service_impl.CustomUserDetailsService;
-  import com.bit.shared.dto.TokenValidationReq;
-  import com.bit.shared.entity.User;
-  import com.bit.shared.repository.UserRepository;
+  import com.bit.sharedClasses.dto.TokenValidationReq;
+  import com.bit.sharedClasses.entity.User;
+  import com.bit.sharedClasses.repository.UserRepository;
+  import com.bit.sharedClasses.service.CustomUserDetailsService;
   import lombok.*;
   import org.springframework.security.authentication.AuthenticationManager;
   import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-  import org.springframework.security.core.userdetails.UserDetails;
   import org.springframework.web.bind.annotation.*;
 
   @RestController

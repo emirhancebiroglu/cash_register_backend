@@ -1,8 +1,8 @@
 package com.bit.user_management_service.config;
 
-import com.bit.shared.config.PasswordEncoderConfig;
-import com.bit.user_management_service.filter.JwtAuthFilter;
-import com.bit.user_management_service.service.CustomUserDetailsService;
+import com.bit.sharedFilter.filter.JwtAuthFilter;
+import com.bit.sharedClasses.config.PasswordEncoderConfig;
+import com.bit.sharedClasses.service.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -1,10 +1,10 @@
 package com.bit.user_management_service.service.serviceImpl;
 
-import com.bit.shared.config.PasswordEncoderConfig;
-import com.bit.shared.entity.Role;
-import com.bit.shared.entity.User;
-import com.bit.shared.repository.RoleRepository;
-import com.bit.shared.repository.UserRepository;
+import com.bit.sharedClasses.config.PasswordEncoderConfig;
+import com.bit.sharedClasses.entity.Role;
+import com.bit.sharedClasses.entity.User;
+import com.bit.sharedClasses.repository.RoleRepository;
+import com.bit.sharedClasses.repository.UserRepository;
 import com.bit.user_management_service.dto.UserDTO;
 import com.bit.user_management_service.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +38,7 @@ public class UserServiceImpl implements UserService {
                 .roles(roles)
                 .build();
 
-        if(isAdminRoleExist && roles.contains(roleRepository.findByName("ADMIN").get()) && isInitialAdminExist){
+        if(isAdminRoleExist  & roles.contains(roleRepository.findByName("ADMIN").get()) & isInitialAdminExist){
             userRepository.delete(userRepository.findByEmail("admin@gmail.com").get());
         }
         userRepository.save(newUser);
