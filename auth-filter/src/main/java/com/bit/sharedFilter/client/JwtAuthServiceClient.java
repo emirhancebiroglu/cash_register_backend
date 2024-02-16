@@ -16,4 +16,3 @@ public interface JwtAuthServiceClient {
     @PostMapping("/extract-username")
     String extractUsername(@RequestBody TokenValidationReq tokenValidationReq);
 }
-

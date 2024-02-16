@@ -30,7 +30,7 @@ public class AdminInitializationConfig implements CommandLineRunner {
     }
 
     protected void initializeAdmin() {
-        Role adminRole = roleRepository.findByName("ADMIN").orElse(null);
+        Role adminRole = roleRepository.findByName("ROLE_ADMIN").orElse(null);
 
         if (adminRole != null){
             Set<Role> roles = new HashSet<>();

@@ -24,7 +24,7 @@ public class RoleInitializationConfig implements CommandLineRunner {
     }
 
     protected void initializeRoles() {
-        List<String> roleNames = Arrays.asList("ADMIN", "CASHIER", "STORE-MANAGER");
+        List<String> roleNames = Arrays.asList("ROLE_ADMIN", "ROLE_CASHIER", "ROLE_STORE-MANAGER");
 
         for(String role_name : roleNames){
             if(roleRepository.findByName(role_name).isEmpty()){

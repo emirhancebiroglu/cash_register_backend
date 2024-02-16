@@ -22,7 +22,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void addUser(UserDTO userDTO) {
-        boolean isAdminRoleExist = roleRepository.findByName("ADMIN").isPresent();
+        boolean isAdminRoleExist = roleRepository.findByName("ROLE_ADMIN").isPresent();
         boolean isInitialAdminExist = userRepository.findByEmail("admin@gmail.com").isPresent();
 
         Set<Role> roles = userDTO.getRoles().stream()
@@ -38,7 +38,7 @@ public class UserServiceImpl implements UserService {
                 .roles(roles)
                 .build();
 
-        if(isAdminRoleExist  & roles.contains(roleRepository.findByName("ADMIN").get()) & isInitialAdminExist){
+        if(isAdminRoleExist  & roles.contains(roleRepository.findByName("ROLE_ADMIN").get()) & isInitialAdminExist){
             userRepository.delete(userRepository.findByEmail("admin@gmail.com").get());
         }
         userRepository.save(newUser);

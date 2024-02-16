@@ -1,55 +1,101 @@
 package com.bit.user_management_service.controller;
 
-import com.bit.user_management_service.dto.UserDTO;
-import com.bit.user_management_service.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
-import java.util.Collections;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
+@SpringBootTest
 public class AdminControllerTest {
-    @Mock
-    private UserService userService;
+    @Autowired
+    private WebApplicationContext context;
 
-    @InjectMocks
-    private AdminController adminController;
+    private MockMvc mockMvc;
 
     @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
+    public void setup(){
+        mockMvc = MockMvcBuilders
+                .webAppContextSetup(context)
+                .apply(springSecurity())
+                .build();
     }
 
     @Test
-    void testAddUser() {
-        UserDTO userDTO = new UserDTO("Emirhan", "Cebiroglu", "emirhancebiroglu21@hotmail.com", "Emirhan2165", Collections.singleton("ADMIN"));
-
-        adminController.addUser(userDTO);
-
-        verify(userService, times(1)).addUser(userDTO);
+    @WithMockUser(roles = "ADMIN")
+    void canCreateUserAsAdmin() throws Exception {
+        mockMvc.perform(post("/api/users/admin/add-user")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"firstName\": \"Emirhan\"," +
+                                " \"lastName\": \"Cebiroglu\"," +
+                                " \"email\": \"emirhanebiroglu21@hotmail.com\"," +
+                                " \"password\": \"Emirhan2165\"," +
+                                " \"roles\": [\"ROLE_ADMIN\"]}"))
+                .andExpect(status().isCreated());
+    }
+    @Test
+    @WithMockUser
+    void cannotCreateUserIfNotAnAdmin() throws Exception{
+        mockMvc.perform(post("/api/users/admin/add-user")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"firstName\": \"Emirhan\"," +
+                        " \"lastName\": \"Cebiroglu\"," +
+                        " \"email\": \"emirhanebiroglu21@hotmail.com\"," +
+                        " \"password\": \"Emirhan2165\"," +
+                        " \"roles\": [\"CASHIER\"]}"))
+                .andExpect(status().isForbidden());
     }
 
     @Test
-    void testUpdateUser() {
-        Long userId = 1L;
-        UserDTO userDTO = new UserDTO("Emirhan", "Cebiroglu", "emirhancebiroglu21@hotmail.com", "Emirhan2165", Collections.singleton("ADMIN"));
-
-        adminController.updateUser(userId, userDTO);
-
-        verify(userService, times(1)).updateUser(userId, userDTO);
+    @WithMockUser(roles = "ADMIN")
+    void canUpdateUserAsAdmin() throws Exception{
+        mockMvc.perform(put("/api/users/admin/update-user/{user_id}", 1L)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"firstName\": \"Emirhan\"," +
+                        " \"lastName\": \"Cebiroglu\"," +
+                        " \"email\": \"emirhanebiroglu21@hotmail.com\"," +
+                        " \"password\": \"Emirhan2165\"," +
+                        " \"roles\": [\"CASHIER\"]}"))
+                .andExpect(status().isOk());
     }
 
     @Test
-    void testDeleteUser() throws Exception {
-        Long userId = 1L;
-
-        adminController.deleteUser(userId);
-
-        verify(userService, times(1)).deleteUser(userId);
+    @WithMockUser()
+    void cannotUpdateUserIfNotAnAdmin() throws Exception{
+        mockMvc.perform(put("/api/users/admin/update-user/{user_id}", 1L)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"firstName\": \"Emirhan\"," +
+                                " \"lastName\": \"Cebiroglu\"," +
+                                " \"email\": \"emirhanebiroglu21@hotmail.com\"," +
+                                " \"password\": \"Emirhan2165\"," +
+                                " \"roles\": [\"CASHIER\"]}"))
+                .andExpect(status().isForbidden());
     }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void canDeleteUserAsAdmin() throws Exception {
+        mockMvc.perform(delete("/api/users/admin/delete-user/{user_id}", 1L)
+                .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    @WithMockUser()
+    void cannotDeleteUserIfNotAnAdmin() throws Exception {
+        mockMvc.perform(delete("/api/users/admin/delete-user/{user_id}", 1L)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
+    }
+
+
 }
