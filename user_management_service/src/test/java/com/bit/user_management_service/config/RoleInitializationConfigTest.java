@@ -26,41 +26,41 @@ public class RoleInitializationConfigTest {
 
     @Test
     public void testWhenAdminNotExist(){
-        when(roleRepository.findByName("ADMIN")).thenReturn(Optional.empty());
-        when(roleRepository.findByName("CASHIER")).thenReturn(Optional.of(new Role("CASHIER")));
-        when(roleRepository.findByName("STORE-MANAGER")).thenReturn(Optional.of(new Role("STORE-MANAGER")));
+        when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.empty());
+        when(roleRepository.findByName("ROLE_CASHIER")).thenReturn(Optional.of(new Role("ROLE_CASHIER")));
+        when(roleRepository.findByName("ROLE_STORE-MANAGER")).thenReturn(Optional.of(new Role("ROLE_STORE-MANAGER")));
 
         roleInitializationConfig.initializeRoles();
 
-        verify(roleRepository, times(1)).save(new Role("ADMIN"));
-        verify(roleRepository, times(0)).save(new Role("CASHIER"));
-        verify(roleRepository, times(0)).save(new Role("STORE-MANAGER"));
+        verify(roleRepository, times(1)).save(new Role("ROLE_ADMIN"));
+        verify(roleRepository, times(0)).save(new Role("ROLE_CASHIER"));
+        verify(roleRepository, times(0)).save(new Role("ROLE_STORE-MANAGER"));
     }
 
     @Test
     public void testWhenAdminAndStoreManagerNotExist(){
-        when(roleRepository.findByName("ADMIN")).thenReturn(Optional.empty());
-        when(roleRepository.findByName("CASHIER")).thenReturn(Optional.of(new Role("CASHIER")));
-        when(roleRepository.findByName("STORE-MANAGER")).thenReturn(Optional.empty());
+        when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.empty());
+        when(roleRepository.findByName("ROLE_CASHIER")).thenReturn(Optional.of(new Role("ROLE_CASHIER")));
+        when(roleRepository.findByName("ROLE_STORE-MANAGER")).thenReturn(Optional.empty());
 
 
         roleInitializationConfig.initializeRoles();
 
-        verify(roleRepository, times(1)).save(new Role("ADMIN"));
-        verify(roleRepository, times(0)).save(new Role("CASHIER"));
-        verify(roleRepository, times(1)).save(new Role("STORE-MANAGER"));
+        verify(roleRepository, times(1)).save(new Role("ROLE_ADMIN"));
+        verify(roleRepository, times(0)).save(new Role("ROLE_CASHIER"));
+        verify(roleRepository, times(1)).save(new Role("ROLE_STORE-MANAGER"));
     }
 
     @Test
     public void testWhenNoRoleExists(){
-        when(roleRepository.findByName("ADMIN")).thenReturn(Optional.empty());
-        when(roleRepository.findByName("CASHIER")).thenReturn(Optional.empty());
-        when(roleRepository.findByName("STORE-MANAGER")).thenReturn(Optional.empty());
+        when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.empty());
+        when(roleRepository.findByName("ROLE_CASHIER")).thenReturn(Optional.empty());
+        when(roleRepository.findByName("ROLE_STORE-MANAGER")).thenReturn(Optional.empty());
 
         roleInitializationConfig.initializeRoles();
 
-        verify(roleRepository, times(1)).save(new Role("ADMIN"));
-        verify(roleRepository, times(1)).save(new Role("CASHIER"));
-        verify(roleRepository, times(1)).save(new Role("STORE-MANAGER"));
+        verify(roleRepository, times(1)).save(new Role("ROLE_ADMIN"));
+        verify(roleRepository, times(1)).save(new Role("ROLE_CASHIER"));
+        verify(roleRepository, times(1)).save(new Role("ROLE_STORE-MANAGER"));
     }
 }

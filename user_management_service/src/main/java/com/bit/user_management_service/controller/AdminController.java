@@ -21,7 +21,7 @@ public class AdminController {
 
     @PutMapping("/update-user/{user_id}")
     public ResponseEntity<String> updateUser(@PathVariable Long user_id,
-                           @RequestBody UserDTO userDTO){
+                           @RequestBody UserDTO userDTO) throws Exception {
         userService.updateUser(user_id, userDTO);
         return ResponseEntity.status(HttpStatus.OK).body("User updated successfully");
     }

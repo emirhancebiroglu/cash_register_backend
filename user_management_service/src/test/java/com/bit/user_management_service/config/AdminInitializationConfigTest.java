@@ -20,7 +20,6 @@ import java.util.Set;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-
 class AdminInitializationConfigTest {
     @Mock
     private UserRepository userRepository;
@@ -46,9 +45,9 @@ class AdminInitializationConfigTest {
     public void testInitializeAdminIfThereIsNotAny(){
         Role adminRole = new Role();
         adminRole.setId(1L);
-        adminRole.setName("ADMIN");
+        adminRole.setName("ROLE_ADMIN");
 
-        when(roleRepository.findByName("ADMIN")).thenReturn(Optional.of(adminRole));
+        when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.of(adminRole));
         when(userRepository.findByRoles(any())).thenReturn(Collections.emptyList());
         when(passwordEncoderConfig.passwordEncoder()).thenReturn(passwordEncoder);
         when(passwordEncoder.encode(any(CharSequence.class))).thenReturn("encodedPassword");
@@ -62,7 +61,7 @@ class AdminInitializationConfigTest {
     public void testInitializeAdminIfThereIsAny(){
         Role adminRole = new Role();
         adminRole.setId(1L);
-        adminRole.setName("ADMIN");
+        adminRole.setName("ROLE_ADMIN");
 
         User existingAdminUser = User.builder()
                         .id(1L)
@@ -73,7 +72,7 @@ class AdminInitializationConfigTest {
                         .roles(Collections.singleton(adminRole))
                         .build();
 
-        when(roleRepository.findByName("ADMIN")).thenReturn(Optional.of(adminRole));
+        when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.of(adminRole));
 
         Set<Role> adminRoles = new HashSet<>();
         adminRoles.add(adminRole);

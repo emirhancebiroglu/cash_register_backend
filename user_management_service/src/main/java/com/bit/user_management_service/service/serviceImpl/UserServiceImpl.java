@@ -45,8 +45,8 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updateUser(Long user_id, UserDTO userDTO) {
-        User existingUser = userRepository.findById(user_id).orElse(null);
+    public void updateUser(Long user_id, UserDTO userDTO) throws Exception{
+        User existingUser = userRepository.findById(user_id).orElseThrow(() -> new Exception("User not found"));
 
         if (existingUser != null){
             Set<Role> roles = userDTO.getRoles().stream()

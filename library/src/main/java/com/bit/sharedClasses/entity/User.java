@@ -39,6 +39,7 @@ public class User implements UserDetails {
   private String password;
 
   @ManyToMany(cascade = CascadeType.MERGE, fetch = FetchType.EAGER)
+  @Builder.Default
   @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"),
           inverseJoinColumns = @JoinColumn(name = "role_id"))
   private Set<Role> roles = new HashSet<>();
