@@ -15,7 +15,8 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -39,78 +40,52 @@ public class UserServiceTest {
     }
 
     @Test
-    void testAddUserWithAdminRole() {
-        Role adminRole = new Role("ROLE_ADMIN");
-        adminRole.setId(1L);
-
-        UserDTO userDTO = new UserDTO("Emirhan",
-                "Cebiroglu",
-                "emirhancebiroglu21@gmail.com",
-                "Emirhan2165",
+    void testAddUserWithInitialAdminUser() {
+        UserDTO userDTO = new UserDTO("emirhan",
+                "cebiroglu",
+                "emirhan@hotmail.com",
+                "emirhan",
                 Collections.singleton("ROLE_ADMIN"));
 
-        when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.of(adminRole));
+        when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.of(new Role()));
         when(userRepository.findByEmail("admin@gmail.com")).thenReturn(Optional.of(new User()));
         when(passwordEncoderConfig.passwordEncoder()).thenReturn(mock(PasswordEncoder.class));
         when(passwordEncoderConfig.passwordEncoder().encode("password")).thenReturn("encodedPassword");
 
         userService.addUser(userDTO);
+        verify(userRepository, times(1)).save(any(User.class));
+        verify(userRepository, times(1)).delete(any(User.class));
     }
 
     @Test
-    void testAddUserWithoutAdminRole() {
-        Set<String> roleNames = new HashSet<>(Arrays.asList("ROLE_CASHIER", "ROLE_STORE-MANAGER"));
-
-        Role adminRole = new Role("ROLE_ADMIN");
-        adminRole.setId(1L);
-        Role cashierRole = new Role("ROLE_CASHIER");
-        cashierRole.setId(2L);
-        Role storeManagerRole = new Role("ROLE_STORE-MANAGER");
-        storeManagerRole.setId(2L);
-
-        UserDTO userDTO = new UserDTO("Emirhan",
-                "Cebiroglu",
-                "emirhancebiroglu21@hotmail.com",
-                "Emirhan2165",
-                roleNames);
-
-        when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.of(adminRole));
-        when(roleRepository.findByName("ROLE_CASHIER")).thenReturn(Optional.of(cashierRole));
-        when(roleRepository.findByName("ROLE_STORE-MANAGER")).thenReturn(Optional.of(storeManagerRole));
-        when(userRepository.findByEmail("admin@gmail.com")).thenReturn(Optional.of(new User()));
-        when(passwordEncoderConfig.passwordEncoder()).thenReturn(mock(PasswordEncoder.class));
-        when(passwordEncoderConfig.passwordEncoder().encode("password")).thenReturn("encodedPassword");
-
-        userService.addUser(userDTO);
-    }
-
-    @Test
-    void testAddUserWithAdminRoleWithoutInitialAdminUser() {
-        Role adminRole = new Role("ROLE_ADMIN");
-        adminRole.setId(1L);
-
-        UserDTO userDTO = new UserDTO("Emirhan",
-                "Cebiroglu",
-                "emirhancebiroglu21@gmail.com",
-                "Emirhan2165",
+    void testAddUserWithoutInitialAdminUser() {
+        UserDTO userDTO = new UserDTO("emirhan",
+                "cebiroglu",
+                "emirhan@hotmail.com",
+                "emirhan",
                 Collections.singleton("ROLE_ADMIN"));
 
-        when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.of(adminRole));
+        when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.of(new Role()));
         when(userRepository.findByEmail("admin@gmail.com")).thenReturn(Optional.empty());
         when(passwordEncoderConfig.passwordEncoder()).thenReturn(mock(PasswordEncoder.class));
         when(passwordEncoderConfig.passwordEncoder().encode("password")).thenReturn("encodedPassword");
 
         userService.addUser(userDTO);
+
+        verify(userRepository, times(1)).save(any(User.class));
+        verify(userRepository, times(0)).delete(any(User.class));
     }
 
     @Test
     void testUpdateUser() throws Exception {
+        Role role = new Role("ROLE_ADMIN");
+
         Long userId = 1L;
-        UserDTO updatedUserDTO = new UserDTO("Emirhan",
-                "Cebiroglu",
-                "emirhancebiroglu21@hotmail.com",
-                "Emirhan2165",
-                Collections.singleton("ROLE_ADMIN"));
+        UserDTO updatedUserDTO = new UserDTO("emirhan",
+                "cebiroglu",
+                "emirhan@hotmail.com",
+                "emirhan",
+                Collections.singleton(role.getName()));
 
         User existingUser = User.builder()
                 .id(userId)
@@ -118,17 +93,12 @@ public class UserServiceTest {
                 .lastName("OldLastName")
                 .email("old.email@example.com")
                 .password("oldPassword")
-                .roles(Collections.singleton(new Role("ROLE_CASHIER"))).build();
+                .roles(Collections.singleton(new Role("ROLE_CASHIER")))
+                .build();
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
-
-        Role adminRole = new Role("ROLE_ADMIN");
-        adminRole.setId(1L);
-        Role cashierRole = new Role("ROLE_CASHIER");
-        cashierRole.setId(2L);
-
-        when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.of(adminRole));
-        when(roleRepository.findByName("ROLE_CASHIER")).thenReturn(Optional.of(cashierRole));
+        when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.of(role));
+        when(roleRepository.findByName("ROLE_CASHIER")).thenReturn(Optional.of(new Role()));
         when(passwordEncoderConfig.passwordEncoder()).thenReturn(mock(PasswordEncoder.class));
         when(passwordEncoderConfig.passwordEncoder().encode(any(CharSequence.class))).thenReturn("encodedPassword");
 
@@ -143,7 +113,7 @@ public class UserServiceTest {
         assertEquals(updatedUserDTO.getEmail(), capturedUser.getEmail());
         assertEquals("encodedPassword", capturedUser.getPassword());
         assertEquals(1, capturedUser.getRoles().size());
-        assertTrue(capturedUser.getRoles().contains(adminRole));
+        assertTrue(capturedUser.getRoles().contains(role));
     }
 
     @Test
@@ -170,10 +140,20 @@ public class UserServiceTest {
     void testDeleteNonExistingUser() {
         Long userId = 1L;
 
+        User existingUser = User.builder()
+                .id(userId)
+                .firstName("OldFirstName")
+                .lastName("OldLastName")
+                .email("old.email@example.com")
+                .password("oldPassword")
+                .roles(Collections.singleton(new Role("ROLE_CASHIER"))).build();
+
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
         assertThrows(Exception.class, () -> userService.deleteUser(userId));
 
-        verify(userRepository, times(1)).findById(userId);
+        verify(userRepository, times(0)).save(existingUser);
+        assertFalse(existingUser.isDeleted());
+
     }
 }

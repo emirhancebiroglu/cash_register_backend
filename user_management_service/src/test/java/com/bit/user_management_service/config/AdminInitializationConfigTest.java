@@ -43,9 +43,8 @@ class AdminInitializationConfigTest {
 
     @Test
     public void testInitializeAdminIfThereIsNotAny(){
-        Role adminRole = new Role();
+        Role adminRole = new Role("ROLE_ADMIN");
         adminRole.setId(1L);
-        adminRole.setName("ROLE_ADMIN");
 
         when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.of(adminRole));
         when(userRepository.findByRoles(any())).thenReturn(Collections.emptyList());

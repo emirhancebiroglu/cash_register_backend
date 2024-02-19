@@ -37,10 +37,10 @@ public class AdminControllerTest {
     void canCreateUserAsAdmin() throws Exception {
         mockMvc.perform(post("/api/users/admin/add-user")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"firstName\": \"Emirhan\"," +
-                                " \"lastName\": \"Cebiroglu\"," +
-                                " \"email\": \"emirhanebiroglu21@hotmail.com\"," +
-                                " \"password\": \"Emirhan2165\"," +
+                        .content("{\"firstName\": \"emirhan\"," +
+                                " \"lastName\": \"cebiroglu\"," +
+                                " \"email\": \"emirhan@hotmail.com\"," +
+                                " \"password\": \"emirhan\"," +
                                 " \"roles\": [\"ROLE_ADMIN\"]}"))
                 .andExpect(status().isCreated());
     }
