@@ -6,6 +6,7 @@ import com.bit.sharedClasses.entity.User;
 import com.bit.sharedClasses.repository.RoleRepository;
 import com.bit.sharedClasses.repository.UserRepository;
 import com.bit.user_management_service.dto.UserDTO;
+import com.bit.user_management_service.exceptions.RoleNotFoundException;
 import com.bit.user_management_service.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,8 +27,8 @@ public class UserServiceImpl implements UserService {
         boolean isInitialAdminExist = userRepository.findByEmail("admin@gmail.com").isPresent();
 
         Set<Role> roles = userDTO.getRoles().stream()
-                .map(role_name -> roleRepository.findByName(role_name)
-                        .orElseThrow(() -> new RuntimeException("Role not found: " + role_name)))
+                .map(roleName -> roleRepository.findByName(roleName)
+                        .orElseThrow(() -> new RoleNotFoundException("Role not found: " + roleName)))
                 .collect(Collectors.toSet());
 
         User newUser = User.builder()
@@ -50,7 +51,7 @@ public class UserServiceImpl implements UserService {
 
         if (existingUser != null){
             Set<Role> roles = userDTO.getRoles().stream()
-                    .map(role_name -> roleRepository.findByName(role_name).orElseThrow(() -> new RuntimeException("Role not found: " + role_name)))
+                    .map(roleName -> roleRepository.findByName(roleName).orElseThrow(() -> new RoleNotFoundException("Role not found: " + roleName)))
                     .collect(Collectors.toSet());
 
             existingUser.setFirstName(userDTO.getFirstName());

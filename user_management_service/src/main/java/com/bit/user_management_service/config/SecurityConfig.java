@@ -1,12 +1,13 @@
 package com.bit.user_management_service.config;
 
-import com.bit.sharedFilter.filter.JwtAuthFilter;
 import com.bit.sharedClasses.config.PasswordEncoderConfig;
 import com.bit.sharedClasses.service.CustomUserDetailsService;
+import com.bit.sharedFilter.filter.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -27,6 +28,7 @@ public class SecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
     private final CustomUserDetailsService customUserDetailsService;
     private final PasswordEncoderConfig passwordEncoderConfig;
+    private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
 
     @Bean
     AuthenticationProvider authenticationProvider() {
@@ -44,16 +46,14 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(AbstractHttpConfigurer::disable
-                )
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-                .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers(HttpMethod.GET, "/api/users/admin/test").permitAll()
-                        .anyRequest().hasAuthority("ROLE_ADMIN")
-                )
-                .authenticationProvider(authenticationProvider()).addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+            .csrf(AbstractHttpConfigurer::disable)
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            )
+            .authorizeHttpRequests(authorize -> authorize
+                .anyRequest().hasAuthority("ROLE_ADMIN")
+            )
+            .authenticationProvider(authenticationProvider()).addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
