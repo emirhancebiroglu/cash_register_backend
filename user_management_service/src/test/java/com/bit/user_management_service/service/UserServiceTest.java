@@ -45,13 +45,13 @@ public class UserServiceTest {
         UserDto UserDto = new UserDto("emirhan",
                 "cebiroglu",
                 "emirhan@hotmail.com",
-                "emirhan",
+                "Emirhan2165",
                 Collections.singleton("ROLE_ADMIN"));
 
         when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.of(new Role()));
         when(userRepository.findByUserCode("admin@gmail.com")).thenReturn(Optional.of(new User()));
         when(passwordEncoderConfig.passwordEncoder()).thenReturn(mock(PasswordEncoder.class));
-        when(passwordEncoderConfig.passwordEncoder().encode("password")).thenReturn("encodedPassword");
+        when(passwordEncoderConfig.passwordEncoder().encode("Emirhan2165")).thenReturn("encodedPassword");
 
         userService.addUser(UserDto);
         verify(userRepository, times(1)).save(any(User.class));
@@ -63,13 +63,13 @@ public class UserServiceTest {
         UserDto UserDto = new UserDto("emirhan",
                 "cebiroglu",
                 "emirhan@hotmail.com",
-                "emirhan",
+                "Emirhan2165",
                 Collections.singleton("ROLE_ADMIN"));
 
         when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.of(new Role()));
         when(userRepository.findByUserCode("admin@gmail.com")).thenReturn(Optional.empty());
         when(passwordEncoderConfig.passwordEncoder()).thenReturn(mock(PasswordEncoder.class));
-        when(passwordEncoderConfig.passwordEncoder().encode("password")).thenReturn("encodedPassword");
+        when(passwordEncoderConfig.passwordEncoder().encode("Emirhan2165")).thenReturn("encodedPassword");
 
         userService.addUser(UserDto);
 
@@ -82,13 +82,13 @@ public class UserServiceTest {
         UserDto UserDto = new UserDto("emirhan",
                 "cebiroglu",
                 "emirhan@hotmail.com",
-                "emirhan",
+                "Emirhan2165",
                 Collections.singleton("ROLE_ADMIN"));
 
         when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.of(new Role()));
         when(userRepository.findByUserCode(UserDto.getUserCode())).thenReturn(Optional.of(new User()));
         when(passwordEncoderConfig.passwordEncoder()).thenReturn(mock(PasswordEncoder.class));
-        when(passwordEncoderConfig.passwordEncoder().encode("password")).thenReturn("encodedPassword");
+        when(passwordEncoderConfig.passwordEncoder().encode("Emirhan2165")).thenReturn("encodedPassword");
 
         assertThrows(UserAlreadyExistsException.class, () -> userService.addUser(UserDto));
     }
@@ -101,7 +101,7 @@ public class UserServiceTest {
         UserDto updatedUserDto = new UserDto("emirhan",
                 "cebiroglu",
                 "emirhan@hotmail.com",
-                "emirhan",
+                "Emirhan2165",
                 Collections.singleton(role.getName()));
 
         User existingUser = User.builder()
@@ -109,7 +109,7 @@ public class UserServiceTest {
                 .firstName("OldFirstName")
                 .lastName("OldLastName")
                 .userCode("old.userCode@example.com")
-                .password("oldPassword")
+                .password("oldEmirhan2165")
                 .roles(Collections.singleton(new Role("ROLE_CASHIER")))
                 .build();
 
@@ -142,7 +142,7 @@ public class UserServiceTest {
                 .firstName("OldFirstName")
                 .lastName("OldLastName")
                 .userCode("old.userCode@example.com")
-                .password("oldPassword")
+                .password("oldEmirhan2165")
                 .roles(Collections.singleton(new Role("ROLE_CASHIER"))).build();
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
@@ -162,7 +162,7 @@ public class UserServiceTest {
                 .firstName("OldFirstName")
                 .lastName("OldLastName")
                 .userCode("old.userCode@example.com")
-                .password("oldPassword")
+                .password("oldEmirhan2165")
                 .roles(Collections.singleton(new Role("ROLE_CASHIER"))).build();
 
         when(userRepository.findById(userId)).thenReturn(Optional.empty());

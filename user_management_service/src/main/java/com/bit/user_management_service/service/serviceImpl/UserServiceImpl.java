@@ -24,41 +24,26 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoderConfig passwordEncoderConfig;
 
     @Override
-    public void addUser(UserDto UserDto) {
-        Optional<User> existingUser = userRepository.findByUserCode(UserDto.getUserCode());
-
-        if (existingUser.isPresent() && !existingUser.get().isDeleted()){
-            throw new UserAlreadyExistsException("User already exists: " + existingUser.get().getUserCode());
-        }
-        else {
-            if (existingUser.isPresent()){
-                existingUser.get().setDeleted(false);
-                userRepository.save(existingUser.get());
-                return;
-            }
+    public void addUser(UserDto userDto) {
+        if (!handleExistingUserForAddUser(userDto)){
+            return;
         }
 
-        Optional<User> initialAdmin = userRepository.findByUserCode("admin@gmail.com");
-        Optional<Role> adminRole = roleRepository.findByName("ROLE_ADMIN");
-
-        Set<Role> roles = UserDto.getRoles().stream()
+        Set<Role> roles = userDto.getRoles().stream()
                 .map(roleName -> roleRepository.findByName(roleName)
                         .orElseThrow(() -> new RoleNotFoundException("Role not found: " + roleName)))
                 .collect(Collectors.toSet());
 
         User newUser = User.builder()
-                .firstName(UserDto.getFirstName())
-                .lastName(UserDto.getLastName())
-                .userCode(UserDto.getUserCode())
-                .password(passwordEncoderConfig.passwordEncoder().encode(UserDto.getPassword()))
+                .firstName(userDto.getFirstName())
+                .lastName(userDto.getLastName())
+                .userCode(userDto.getUserCode())
+                .password(passwordEncoderConfig.passwordEncoder().encode(userDto.getPassword()))
                 .roles(roles)
                 .build();
 
-        if (adminRole.isPresent()){
-            if (roles.contains(adminRole.get()) & initialAdmin.isPresent()){
-                userRepository.delete(initialAdmin.get());
-            }
-        }
+        handleInitialAdminForAddUser(roles);
+
         userRepository.save(newUser);
     }
 
@@ -86,5 +71,32 @@ public class UserServiceImpl implements UserService {
         User existingUser = userRepository.findById(user_id).orElseThrow(() -> new Exception("User not found"));
         existingUser.setDeleted(true);
         userRepository.save(existingUser);
+    }
+
+    private boolean handleExistingUserForAddUser(UserDto userDto){
+        Optional<User> existingUser = userRepository.findByUserCode(userDto.getUserCode());
+
+        if (existingUser.isPresent() && !existingUser.get().isDeleted()){
+            throw new UserAlreadyExistsException("User already exists: " + existingUser.get().getUserCode());
+        }
+        else {
+            if (existingUser.isPresent()){
+                existingUser.get().setDeleted(false);
+                userRepository.save(existingUser.get());
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void handleInitialAdminForAddUser(Set<Role> roles){
+        Optional<User> initialAdmin = userRepository.findByUserCode("admin@gmail.com");
+        Optional<Role> adminRole = roleRepository.findByName("ROLE_ADMIN");
+
+        if (adminRole.isPresent()){
+            if (roles.contains(adminRole.get()) & initialAdmin.isPresent()){
+                userRepository.delete(initialAdmin.get());
+            }
+        }
     }
 }

@@ -37,9 +37,9 @@ public class AdminControllerTest {
     void canCreateUserAsAdmin() throws Exception {
         mockMvc.perform(post("/api/users/admin/add-user")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"firstName\": \"emirhan\"," +
-                                " \"lastName\": \"cebiroglu\"," +
-                                " \"userCode\": \"emirhan@hotmail21a.com\"," +
+                        .content("{\"firstName\": \"ismet\"," +
+                                " \"lastName\": \"genc\"," +
+                                " \"userCode\": \"emirhan21@hotmail.com\"," +
                                 " \"password\": \"Emirhan2165\"," +
                                 " \"roles\": [\"ROLE_ADMIN\"]}"))
                 .andExpect(status().isCreated());
@@ -86,7 +86,7 @@ public class AdminControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void canDeleteUserAsAdmin() throws Exception {
-        mockMvc.perform(delete("/api/users/admin/delete-user/{user_id}", 2L)
+        mockMvc.perform(delete("/api/users/admin/delete-user/{user_id}", 8L)
                 .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
     }
