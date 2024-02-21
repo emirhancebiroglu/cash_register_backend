@@ -5,6 +5,7 @@ import com.bit.sharedClasses.entity.Role;
 import com.bit.sharedClasses.entity.User;
 import com.bit.sharedClasses.repository.RoleRepository;
 import com.bit.sharedClasses.repository.UserRepository;
+import com.bit.user_management_service.exceptions.RoleNotFound.RoleNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -17,6 +18,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -42,7 +44,7 @@ class AdminInitializationConfigTest {
     }
 
     @Test
-    public void testInitializeAdminIfThereIsNotAny(){
+    public void test_Initialize_Admin_If_There_Is_Not_Any(){
         Role adminRole = new Role("ROLE_ADMIN");
         adminRole.setId(1L);
 
@@ -57,7 +59,7 @@ class AdminInitializationConfigTest {
     }
 
     @Test
-    public void testInitializeAdminIfThereIsAny(){
+    public void test_Initialize_Admin_If_There_Is_Any(){
         Role adminRole = new Role();
         adminRole.setId(1L);
         adminRole.setName("ROLE_ADMIN");
@@ -66,7 +68,7 @@ class AdminInitializationConfigTest {
                         .id(1L)
                         .firstName("emirhan")
                         .lastName("cebiroglu")
-                        .email("emirhancebiroglu21@hotmail.com")
+                        .userCode("emirhancebiroglu21@hotmail.com")
                         .password("Emirhan2165")
                         .roles(Collections.singleton(adminRole))
                         .build();
@@ -80,6 +82,14 @@ class AdminInitializationConfigTest {
 
         adminInitializationConfig.initializeAdmin();
 
+        verify(userRepository, times(0)).save(any(User.class));
+    }
+
+    @Test()
+    public void test_Initialize_Admin_If_There_Is_No_Admin_Role(){
+        when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.empty());
+
+        assertThrows(RoleNotFoundException.class, () -> adminInitializationConfig.initializeAdmin());
         verify(userRepository, times(0)).save(any(User.class));
     }
 }

@@ -1,0 +1,25 @@
+package com.bit.user_management_service.exceptions.UserAlreadyExists;
+
+import com.bit.user_management_service.exceptions.ErrorDetails;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+
+import java.time.LocalDateTime;
+
+@ControllerAdvice
+public class UserAlreadyExistsExceptionHandler {
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    public ResponseEntity<?> roleNotFoundException(UserAlreadyExistsException rnf){
+        ErrorDetails errorDetails = ErrorDetails
+            .builder()
+            .errorMessage(rnf.getMessage())
+            .status(HttpStatus.CONFLICT.name())
+            .statusCode(HttpStatus.CONFLICT.value())
+            .timeStamp(LocalDateTime.now())
+            .build();
+
+        return new ResponseEntity<>(errorDetails, HttpStatus.CONFLICT);
+    }
+}

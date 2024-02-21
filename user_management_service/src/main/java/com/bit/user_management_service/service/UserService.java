@@ -1,10 +1,10 @@
 package com.bit.user_management_service.service;
 
 
-import com.bit.user_management_service.dto.UserDTO;
+import com.bit.user_management_service.dto.UserDto;
 
 public interface UserService {
-    void addUser(UserDTO userDTO);
-    void updateUser(Long user_id, UserDTO userDTO) throws Exception;
+    void addUser(UserDto UserDto);
+    void updateUser(Long user_id, UserDto UserDto) throws Exception;
     void deleteUser(Long user_id) throws Exception;
 }

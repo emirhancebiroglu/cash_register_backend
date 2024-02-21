@@ -4,8 +4,6 @@ import com.bit.sharedClasses.config.PasswordEncoderConfig;
 import com.bit.sharedClasses.service.CustomUserDetailsService;
 import com.bit.sharedFilter.filter.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -28,7 +26,6 @@ public class SecurityConfig {
     private final JwtAuthFilter jwtAuthFilter;
     private final CustomUserDetailsService customUserDetailsService;
     private final PasswordEncoderConfig passwordEncoderConfig;
-    private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
 
     @Bean
     AuthenticationProvider authenticationProvider() {

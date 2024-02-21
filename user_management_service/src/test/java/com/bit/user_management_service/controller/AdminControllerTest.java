@@ -39,8 +39,8 @@ public class AdminControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"firstName\": \"emirhan\"," +
                                 " \"lastName\": \"cebiroglu\"," +
-                                " \"email\": \"emirhan@hotmail.com\"," +
-                                " \"password\": \"emirhan\"," +
+                                " \"userCode\": \"emirhan@hotmail21a.com\"," +
+                                " \"password\": \"Emirhan2165\"," +
                                 " \"roles\": [\"ROLE_ADMIN\"]}"))
                 .andExpect(status().isCreated());
     }
@@ -51,8 +51,8 @@ public class AdminControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"firstName\": \"Emirhan\"," +
                         " \"lastName\": \"Cebiroglu\"," +
-                        " \"email\": \"emirhanebiroglu21@hotmail.com\"," +
-                        " \"password\": \"Emirhan2165\"," +
+                        " \"userCode\": \"emirhanebiroglu211@hotmail.com\"," +
+                        " \"password\": \"emirhan\"," +
                         " \"roles\": [\"ROLE_CASHIER\"]}"))
                 .andExpect(status().isForbidden());
     }
@@ -64,7 +64,7 @@ public class AdminControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"firstName\": \"newEmirhan\"," +
                         " \"lastName\": \"newCebiroglu\"," +
-                        " \"email\": \"newemirhanebiroglu21@hotmail.com\"," +
+                        " \"userCode\": \"newemirhanebiroglu21@hotmail.com\"," +
                         " \"password\": \"newEmirhan2165\"," +
                         " \"roles\": [\"ROLE_CASHIER\"]}"))
                 .andExpect(status().isOk());
@@ -77,7 +77,7 @@ public class AdminControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"firstName\": \"Emirhan\"," +
                                 " \"lastName\": \"Cebiroglu\"," +
-                                " \"email\": \"emirhanebiroglu21@hotmail.com\"," +
+                                " \"userCode\": \"emirhanebiroglu21@hotmail.com\"," +
                                 " \"password\": \"Emirhan2165\"," +
                                 " \"roles\": [\"CASHIER\"]}"))
                 .andExpect(status().isForbidden());

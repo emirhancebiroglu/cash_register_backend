@@ -70,7 +70,7 @@ public class AuthControllerTest {
 
     @Test
     public void testValidateToken_With_Correct_Token() throws Exception{
-        Optional<User> user = userRepository.findByEmail("emirhan@hotmail.com");
+        Optional<User> user = userRepository.findByUserCode("emirhan@hotmail.com");
 
         user.ifPresent(value -> token = jwtService.generateToken(value));
 
@@ -94,7 +94,7 @@ public class AuthControllerTest {
 
     @Test
     public void testExtractUsername_With_Correct_Token() throws Exception{
-        Optional<User> user = userRepository.findByEmail("emirhan@hotmail.com");
+        Optional<User> user = userRepository.findByUserCode("emirhan@hotmail.com");
 
         user.ifPresent(value -> token = jwtService.generateToken(value));
 

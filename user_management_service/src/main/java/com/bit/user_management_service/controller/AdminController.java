@@ -1,7 +1,8 @@
 package com.bit.user_management_service.controller;
 
-import com.bit.user_management_service.dto.UserDTO;
+import com.bit.user_management_service.dto.UserDto;
 import com.bit.user_management_service.service.UserService;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,33 +15,21 @@ public class AdminController {
     private UserService userService;
 
     @PostMapping("/add-user")
-    public ResponseEntity<String> addUser(@RequestBody UserDTO userDTO){
-        try {
-            userService.addUser(userDTO);
-            return ResponseEntity.status(HttpStatus.CREATED).body("User created successfully");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to create user: " + e.getMessage());
-        }
+    public ResponseEntity<String> addUser(@RequestBody @Valid UserDto UserDto){
+        userService.addUser(UserDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body("User created successfully");
     }
 
     @PutMapping("/update-user/{user_id}")
     public ResponseEntity<String> updateUser(@PathVariable Long user_id,
-        @RequestBody UserDTO userDTO){
-        try {
-            userService.updateUser(user_id, userDTO);
-            return ResponseEntity.status(HttpStatus.OK).body("User updated successfully");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to update user: " + e.getMessage());
-        }
+        @RequestBody UserDto UserDto) throws Exception {
+        userService.updateUser(user_id, UserDto);
+        return ResponseEntity.status(HttpStatus.OK).body("User updated successfully");
     }
 
     @DeleteMapping("/delete-user/{user_id}")
-    public ResponseEntity<String> deleteUser(@PathVariable Long user_id){
-        try {
-            userService.deleteUser(user_id);
-            return ResponseEntity.status(HttpStatus.OK).body("User deleted successfully");
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to delete user: " + e.getMessage());
-        }
+    public ResponseEntity<String> deleteUser(@PathVariable Long user_id) throws Exception{
+        userService.deleteUser(user_id);
+        return ResponseEntity.status(HttpStatus.OK).body("User deleted successfully");
     }
 }

@@ -5,7 +5,7 @@ import com.bit.sharedClasses.entity.Role;
 import com.bit.sharedClasses.entity.User;
 import com.bit.sharedClasses.repository.RoleRepository;
 import com.bit.sharedClasses.repository.UserRepository;
-import com.bit.user_management_service.exceptions.RoleNotFoundException;
+import com.bit.user_management_service.exceptions.RoleNotFound.RoleNotFoundException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,33 +36,28 @@ public class AdminInitializationConfig implements CommandLineRunner {
     }
 
     protected void initializeAdmin() {
-        try {
-            Role adminRole = roleRepository.findByName("ROLE_ADMIN")
-                    .orElseThrow(() -> new RoleNotFoundException("ROLE_ADMIN not found"));
+        Role adminRole = roleRepository.findByName("ROLE_ADMIN")
+                .orElseThrow(() -> new RoleNotFoundException("ROLE_ADMIN not found"));
 
-            Set<Role> roles = new HashSet<>();
-            roles.add(adminRole);
+        Set<Role> roles = new HashSet<>();
+        roles.add(adminRole);
 
-            List<User> usersWithAdminRole = userRepository.findByRoles(roles);
+        List<User> usersWithAdminRole = userRepository.findByRoles(roles);
 
-            if (usersWithAdminRole.isEmpty()){
-                User adminUser = User.builder()
-                        .firstName("admin")
-                        .lastName("admin")
-                        .email("admin@gmail.com")
-                        .password(passwordEncoderConfig.passwordEncoder().encode("admin"))
-                        .roles(roles)
-                        .build();
+        if (usersWithAdminRole.isEmpty()){
+            User adminUser = User.builder()
+                    .firstName("admin")
+                    .lastName("admin")
+                    .userCode("admin@gmail.com")
+                    .password(passwordEncoderConfig.passwordEncoder().encode("admin"))
+                    .roles(roles)
+                    .build();
 
-                userRepository.save(adminUser);
-                logger.info("Admin user initialized successfully.");
-            }
-            else{
-                logger.info("Admin user already exists. Skipping initialization.");
-            }
+            userRepository.save(adminUser);
+            logger.info("Admin user initialized successfully.");
         }
-        catch (Exception e){
-            logger.error("An error occurred while initializing admin user: {}", e.getMessage());
+        else{
+            logger.info("Admin user already exists. Skipping initialization.");
         }
     }
 }

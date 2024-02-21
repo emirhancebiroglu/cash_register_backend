@@ -29,21 +29,16 @@ public class RoleInitializationConfig implements CommandLineRunner {
     }
 
     protected void initializeRoles() {
-        List<String> roleNames = Arrays.asList("ROLE_ADMIN", "ROLE_CASHIER", "ROLE_STORE-MANAGER");
+        List<String> roleNames = Arrays.asList("ROLE_ADMIN", "ROLE_CASHIER", "ROLE_STORE_MANAGER");
 
         for(String roleName : roleNames){
-            try {
-                if(roleRepository.findByName(roleName).isEmpty()){
-                    Role role = new Role(roleName);
-                    roleRepository.save(role);
-                    logger.info("Role '{}' initialized successfully.", roleName);
-                }
-                else{
-                    logger.info("Role '{}' already exists. Skipping initialization.", roleName);
-                }
+            if(roleRepository.findByName(roleName).isEmpty()){
+                Role role = new Role(roleName);
+                roleRepository.save(role);
+                logger.info("Role '{}' initialized successfully.", roleName);
             }
-            catch (Exception e){
-                logger.error("An error occurred while initializing role '{}': {}", roleName, e.getMessage());
+            else{
+                logger.info("Role '{}' already exists. Skipping initialization.", roleName);
             }
         }
     }

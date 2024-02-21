@@ -30,9 +30,9 @@ public class AuthServiceImpl implements AuthService {
     public JwtAuthResponse authenticateAndGetToken(LoginRequest loginRequest) {
         try {
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginRequest.getEmail(),
+                    new UsernamePasswordAuthenticationToken(loginRequest.getUserCode(),
                             loginRequest.getPassword()));
-            User user = userRepository.findByEmail(loginRequest.getEmail())
+            User user = userRepository.findByUserCode(loginRequest.getUserCode())
                     .orElseThrow(() -> new IllegalArgumentException("User not found"));
             var jwt = jwtService.generateToken(user);
 

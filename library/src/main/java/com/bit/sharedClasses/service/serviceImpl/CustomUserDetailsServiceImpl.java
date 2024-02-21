@@ -14,7 +14,7 @@ public class CustomUserDetailsServiceImpl implements CustomUserDetailsService {
 
     @Override
     public UserDetailsService userDetailsService() {
-        return username -> userRepository.findByEmail(username)
+        return username -> userRepository.findByUserCode(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 }

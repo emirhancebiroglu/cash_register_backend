@@ -28,39 +28,39 @@ public class RoleInitializationConfigTest {
     public void testWhenAdminNotExist(){
         when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.empty());
         when(roleRepository.findByName("ROLE_CASHIER")).thenReturn(Optional.of(new Role("ROLE_CASHIER")));
-        when(roleRepository.findByName("ROLE_STORE-MANAGER")).thenReturn(Optional.of(new Role("ROLE_STORE-MANAGER")));
+        when(roleRepository.findByName("ROLE_STORE_MANAGER")).thenReturn(Optional.of(new Role("ROLE_STORE_MANAGER")));
 
         roleInitializationConfig.initializeRoles();
 
         verify(roleRepository, times(1)).save(new Role("ROLE_ADMIN"));
         verify(roleRepository, times(0)).save(new Role("ROLE_CASHIER"));
-        verify(roleRepository, times(0)).save(new Role("ROLE_STORE-MANAGER"));
+        verify(roleRepository, times(0)).save(new Role("ROLE_STORE_MANAGER"));
     }
 
     @Test
     public void testWhenAdminAndStoreManagerNotExist(){
         when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.empty());
         when(roleRepository.findByName("ROLE_CASHIER")).thenReturn(Optional.of(new Role("ROLE_CASHIER")));
-        when(roleRepository.findByName("ROLE_STORE-MANAGER")).thenReturn(Optional.empty());
+        when(roleRepository.findByName("ROLE_STORE_MANAGER")).thenReturn(Optional.empty());
 
 
         roleInitializationConfig.initializeRoles();
 
         verify(roleRepository, times(1)).save(new Role("ROLE_ADMIN"));
         verify(roleRepository, times(0)).save(new Role("ROLE_CASHIER"));
-        verify(roleRepository, times(1)).save(new Role("ROLE_STORE-MANAGER"));
+        verify(roleRepository, times(1)).save(new Role("ROLE_STORE_MANAGER"));
     }
 
     @Test
     public void testWhenNoRoleExists(){
         when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.empty());
         when(roleRepository.findByName("ROLE_CASHIER")).thenReturn(Optional.empty());
-        when(roleRepository.findByName("ROLE_STORE-MANAGER")).thenReturn(Optional.empty());
+        when(roleRepository.findByName("ROLE_STORE_MANAGER")).thenReturn(Optional.empty());
 
         roleInitializationConfig.initializeRoles();
 
         verify(roleRepository, times(1)).save(new Role("ROLE_ADMIN"));
         verify(roleRepository, times(1)).save(new Role("ROLE_CASHIER"));
-        verify(roleRepository, times(1)).save(new Role("ROLE_STORE-MANAGER"));
+        verify(roleRepository, times(1)).save(new Role("ROLE_STORE_MANAGER"));
     }
 }

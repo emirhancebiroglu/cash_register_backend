@@ -1,10 +1,7 @@
 package com.bit.sharedClasses.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,18 +23,23 @@ public class User implements UserDetails {
   @Column(name = "id")
   Long id;
 
-  @Column(name = "first_name")
+  @Column(name = "first_name", nullable = false)
+  @NonNull
   private String firstName;
 
-  @Column(name = "last_name")
+  @Column(name = "last_name", nullable = false)
+  @NonNull
   private String lastName;
 
-  @Column(name = "email")
-  private String email;
+  @Column(name = "user_code", unique = true, nullable = false)
+  @NonNull
+  private String userCode;
 
-  @Column(name = "password")
+  @Column(name = "password", nullable = false)
+  @NonNull
   private String password;
 
+  @NonNull
   @ManyToMany(cascade = CascadeType.MERGE, fetch = FetchType.EAGER)
   @Builder.Default
   @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"),
@@ -56,7 +58,7 @@ public class User implements UserDetails {
 
   @Override
   public String getUsername() {
-    return email;
+    return userCode;
   }
 
   @Override
