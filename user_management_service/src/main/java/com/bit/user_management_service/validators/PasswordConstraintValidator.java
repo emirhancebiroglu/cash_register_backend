@@ -5,9 +5,11 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import lombok.SneakyThrows;
 import org.passay.*;
+import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 
+@Component
 public class PasswordConstraintValidator implements ConstraintValidator<ValidPassword, String> {
     @Override
     public void initialize(ValidPassword constraintAnnotation) {

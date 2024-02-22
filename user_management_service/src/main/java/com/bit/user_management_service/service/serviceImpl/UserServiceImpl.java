@@ -8,6 +8,7 @@ import com.bit.sharedClasses.repository.UserRepository;
 import com.bit.user_management_service.dto.UserDto;
 import com.bit.user_management_service.exceptions.RoleNotFound.RoleNotFoundException;
 import com.bit.user_management_service.exceptions.UserAlreadyExists.UserAlreadyExistsException;
+import com.bit.user_management_service.exceptions.UserNotFound.UserNotFoundException;
 import com.bit.user_management_service.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -48,27 +49,43 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void updateUser(Long user_id, UserDto UserDto) throws Exception{
-        User existingUser = userRepository.findById(user_id).orElseThrow(() -> new Exception("User not found"));
+    public void updateUser(Long user_id, UserDto userDto){
+        User existingUser = userRepository.findById(user_id).orElseThrow(() -> new UserNotFoundException("User not found"));
 
-        if (existingUser != null){
-            Set<Role> roles = UserDto.getRoles().stream()
-                    .map(roleName -> roleRepository.findByName(roleName).orElseThrow(() -> new RoleNotFoundException("Role not found: " + roleName)))
-                    .collect(Collectors.toSet());
-
-            existingUser.setFirstName(UserDto.getFirstName());
-            existingUser.setLastName(UserDto.getLastName());
-            existingUser.setUserCode(UserDto.getUserCode());
-            existingUser.setPassword(passwordEncoderConfig.passwordEncoder().encode(UserDto.getPassword()));
-            existingUser.setRoles(roles);
-
-            userRepository.save(existingUser);
+        if(existingUser.isDeleted()){
+            throw new UserNotFoundException("User not found");
         }
+
+        Set<Role> roles = userDto.getRoles().stream()
+                .map(roleName -> roleRepository.findByName(roleName).orElseThrow(() -> new RoleNotFoundException("Role not found: " + roleName)))
+                .collect(Collectors.toSet());
+
+        if (!userDto.getFirstName().isEmpty()){
+            existingUser.setFirstName(userDto.getFirstName());
+        }
+
+        if (!userDto.getLastName().isEmpty()){
+            existingUser.setLastName(userDto.getLastName());
+        }
+
+        if (!userDto.getUserCode().isEmpty()){
+            existingUser.setUserCode(userDto.getUserCode());
+        }
+
+        if (!userDto.getPassword().isEmpty()){
+            existingUser.setPassword(passwordEncoderConfig.passwordEncoder().encode(userDto.getPassword()));
+        }
+
+        if (!userDto.getRoles().isEmpty()){
+            existingUser.setRoles(roles);
+        }
+
+        userRepository.save(existingUser);
     }
 
     @Override
-    public void deleteUser(Long user_id) throws Exception{
-        User existingUser = userRepository.findById(user_id).orElseThrow(() -> new Exception("User not found"));
+    public void deleteUser(Long user_id){
+        User existingUser = userRepository.findById(user_id).orElseThrow(() -> new UserNotFoundException("User not found"));
         existingUser.setDeleted(true);
         userRepository.save(existingUser);
     }

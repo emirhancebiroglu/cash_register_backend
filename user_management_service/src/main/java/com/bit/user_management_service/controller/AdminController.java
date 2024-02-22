@@ -22,13 +22,13 @@ public class AdminController {
 
     @PutMapping("/update-user/{user_id}")
     public ResponseEntity<String> updateUser(@PathVariable Long user_id,
-        @RequestBody UserDto UserDto) throws Exception {
-        userService.updateUser(user_id, UserDto);
+        @RequestBody UserDto userDto){
+        userService.updateUser(user_id, userDto);
         return ResponseEntity.status(HttpStatus.OK).body("User updated successfully");
     }
 
     @DeleteMapping("/delete-user/{user_id}")
-    public ResponseEntity<String> deleteUser(@PathVariable Long user_id) throws Exception{
+    public ResponseEntity<String> deleteUser(@PathVariable Long user_id){
         userService.deleteUser(user_id);
         return ResponseEntity.status(HttpStatus.OK).body("User deleted successfully");
     }

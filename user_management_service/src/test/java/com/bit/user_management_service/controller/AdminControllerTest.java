@@ -37,9 +37,9 @@ public class AdminControllerTest {
     void canCreateUserAsAdmin() throws Exception {
         mockMvc.perform(post("/api/users/admin/add-user")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"firstName\": \"ismet\"," +
-                                " \"lastName\": \"genc\"," +
-                                " \"userCode\": \"emirhan21@hotmail.com\"," +
+                        .content("{\"firstName\": \"emirhan\"," +
+                                " \"lastName\": \"cebiroglu\"," +
+                                " \"userCode\": \"emirhan1@hotmail.com\"," +
                                 " \"password\": \"Emirhan2165\"," +
                                 " \"roles\": [\"ROLE_ADMIN\"]}"))
                 .andExpect(status().isCreated());
@@ -49,10 +49,10 @@ public class AdminControllerTest {
     void cannotCreateUserIfNotAnAdmin() throws Exception{
         mockMvc.perform(post("/api/users/admin/add-user")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"firstName\": \"Emirhan\"," +
-                        " \"lastName\": \"Cebiroglu\"," +
-                        " \"userCode\": \"emirhanebiroglu211@hotmail.com\"," +
-                        " \"password\": \"emirhan\"," +
+                .content("{\"firstName\": \"emirhan\"," +
+                        " \"lastName\": \"cebiroglu\"," +
+                        " \"userCode\": \"emirhan@hotmail.com\"," +
+                        " \"password\": \"Emirhan2165\"," +
                         " \"roles\": [\"ROLE_CASHIER\"]}"))
                 .andExpect(status().isForbidden());
     }
@@ -62,10 +62,10 @@ public class AdminControllerTest {
     void canUpdateUserAsAdmin() throws Exception{
         mockMvc.perform(put("/api/users/admin/update-user/{user_id}", 2L)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"firstName\": \"newEmirhan\"," +
-                        " \"lastName\": \"newCebiroglu\"," +
-                        " \"userCode\": \"newemirhanebiroglu21@hotmail.com\"," +
-                        " \"password\": \"newEmirhan2165\"," +
+                .content("{\"firstName\": \"emirhan\"," +
+                        " \"lastName\": \"cebiroglu\"," +
+                        " \"userCode\": \"emirhan@hotmail.com\"," +
+                        " \"password\": \"Emirhan2165\"," +
                         " \"roles\": [\"ROLE_CASHIER\"]}"))
                 .andExpect(status().isOk());
     }
@@ -75,11 +75,11 @@ public class AdminControllerTest {
     void cannotUpdateUserIfNotAnAdmin() throws Exception{
         mockMvc.perform(put("/api/users/admin/update-user/{user_id}", 2L)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"firstName\": \"Emirhan\"," +
-                                " \"lastName\": \"Cebiroglu\"," +
-                                " \"userCode\": \"emirhanebiroglu21@hotmail.com\"," +
-                                " \"password\": \"Emirhan2165\"," +
-                                " \"roles\": [\"CASHIER\"]}"))
+                        .content("{\"firstName\": \"newEmirhan\"," +
+                                " \"lastName\": \"newCebiroglu\"," +
+                                " \"userCode\": \"newemirhan@hotmail.com\"," +
+                                " \"password\": \"newEmirhan2165\"," +
+                                " \"roles\": [\"ROLE_CASHIER\"]}"))
                 .andExpect(status().isForbidden());
     }
 

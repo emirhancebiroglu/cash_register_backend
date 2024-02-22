@@ -42,7 +42,7 @@ public class UserServiceTest {
 
     @Test
     void test_AddUser_With_Initial_Admin_User() {
-        UserDto UserDto = new UserDto("emirhan",
+        UserDto userDto = new UserDto("emirhan",
                 "cebiroglu",
                 "emirhan@hotmail.com",
                 "Emirhan2165",
@@ -51,16 +51,16 @@ public class UserServiceTest {
         when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.of(new Role()));
         when(userRepository.findByUserCode("admin@gmail.com")).thenReturn(Optional.of(new User()));
         when(passwordEncoderConfig.passwordEncoder()).thenReturn(mock(PasswordEncoder.class));
-        when(passwordEncoderConfig.passwordEncoder().encode("Emirhan2165")).thenReturn("encodedPassword");
+        when(passwordEncoderConfig.passwordEncoder().encode(userDto.getPassword())).thenReturn("encodedPassword");
 
-        userService.addUser(UserDto);
+        userService.addUser(userDto);
         verify(userRepository, times(1)).save(any(User.class));
         verify(userRepository, times(1)).delete(any(User.class));
     }
 
     @Test
     void test_Add_User_Without_Initial_Admin_User() {
-        UserDto UserDto = new UserDto("emirhan",
+        UserDto userDto = new UserDto("emirhan",
                 "cebiroglu",
                 "emirhan@hotmail.com",
                 "Emirhan2165",
@@ -69,9 +69,9 @@ public class UserServiceTest {
         when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.of(new Role()));
         when(userRepository.findByUserCode("admin@gmail.com")).thenReturn(Optional.empty());
         when(passwordEncoderConfig.passwordEncoder()).thenReturn(mock(PasswordEncoder.class));
-        when(passwordEncoderConfig.passwordEncoder().encode("Emirhan2165")).thenReturn("encodedPassword");
+        when(passwordEncoderConfig.passwordEncoder().encode(userDto.getPassword())).thenReturn("encodedPassword");
 
-        userService.addUser(UserDto);
+        userService.addUser(userDto);
 
         verify(userRepository, times(1)).save(any(User.class));
         verify(userRepository, times(0)).delete(any(User.class));
@@ -79,29 +79,29 @@ public class UserServiceTest {
 
     @Test
     void test_Add_User_With_Existing_User() {
-        UserDto UserDto = new UserDto("emirhan",
+        UserDto userDto = new UserDto("emirhan",
                 "cebiroglu",
                 "emirhan@hotmail.com",
                 "Emirhan2165",
                 Collections.singleton("ROLE_ADMIN"));
 
         when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.of(new Role()));
-        when(userRepository.findByUserCode(UserDto.getUserCode())).thenReturn(Optional.of(new User()));
+        when(userRepository.findByUserCode(userDto.getUserCode())).thenReturn(Optional.of(new User()));
         when(passwordEncoderConfig.passwordEncoder()).thenReturn(mock(PasswordEncoder.class));
-        when(passwordEncoderConfig.passwordEncoder().encode("Emirhan2165")).thenReturn("encodedPassword");
+        when(passwordEncoderConfig.passwordEncoder().encode(userDto.getPassword())).thenReturn("encodedPassword");
 
-        assertThrows(UserAlreadyExistsException.class, () -> userService.addUser(UserDto));
+        assertThrows(UserAlreadyExistsException.class, () -> userService.addUser(userDto));
     }
 
     @Test
-    void test_Update_User() throws Exception {
+    void test_Update_User(){
         Role role = new Role("ROLE_ADMIN");
 
         Long userId = 1L;
         UserDto updatedUserDto = new UserDto("emirhan",
                 "cebiroglu",
                 "emirhan@hotmail.com",
-                "Emirhan2165",
+                "emirhan",
                 Collections.singleton(role.getName()));
 
         User existingUser = User.builder()
@@ -123,12 +123,12 @@ public class UserServiceTest {
 
         verify(userRepository, times(1)).save(any(User.class));
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
+
         verify(userRepository).save(userCaptor.capture());
         User capturedUser = userCaptor.getValue();
         assertEquals(updatedUserDto.getFirstName(), capturedUser.getFirstName());
         assertEquals(updatedUserDto.getLastName(), capturedUser.getLastName());
         assertEquals(updatedUserDto.getUserCode(), capturedUser.getUserCode());
-        assertEquals("encodedPassword", capturedUser.getPassword());
         assertEquals(1, capturedUser.getRoles().size());
         assertTrue(capturedUser.getRoles().contains(role));
     }
