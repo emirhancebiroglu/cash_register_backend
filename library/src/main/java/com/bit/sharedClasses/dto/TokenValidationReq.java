@@ -7,7 +7,7 @@ import lombok.Data;
 @AllArgsConstructor
 public class TokenValidationReq {
     String token;
-    String username;
+    String userCode;
 
     public TokenValidationReq(String token){
         this.token = token;

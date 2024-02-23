@@ -1,6 +1,7 @@
 package com.bit.user_management_service.controller;
 
-import com.bit.user_management_service.dto.UserDto;
+import com.bit.user_management_service.dto.AddUser.AddUserReq;
+import com.bit.user_management_service.dto.UpdateUser.UpdateUserReq;
 import com.bit.user_management_service.service.UserService;
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -15,15 +16,15 @@ public class AdminController {
     private UserService userService;
 
     @PostMapping("/add-user")
-    public ResponseEntity<String> addUser(@RequestBody @Valid UserDto UserDto){
-        userService.addUser(UserDto);
+    public ResponseEntity<String> addUser(@RequestBody @Valid AddUserReq addUserReq){
+        userService.addUser(addUserReq);
         return ResponseEntity.status(HttpStatus.CREATED).body("User created successfully");
     }
 
     @PutMapping("/update-user/{user_id}")
     public ResponseEntity<String> updateUser(@PathVariable Long user_id,
-        @RequestBody UserDto userDto){
-        userService.updateUser(user_id, userDto);
+        @RequestBody UpdateUserReq updateUserReq){
+        userService.updateUser(user_id, updateUserReq);
         return ResponseEntity.status(HttpStatus.OK).body("User updated successfully");
     }
 

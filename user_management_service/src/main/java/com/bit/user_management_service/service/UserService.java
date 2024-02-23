@@ -1,10 +1,11 @@
 package com.bit.user_management_service.service;
 
 
-import com.bit.user_management_service.dto.UserDto;
+import com.bit.user_management_service.dto.AddUser.AddUserReq;
+import com.bit.user_management_service.dto.UpdateUser.UpdateUserReq;
 
 public interface UserService {
-    void addUser(UserDto UserDto);
-    void updateUser(Long user_id, UserDto userDto);
+    void addUser(AddUserReq addUserReq);
+    void updateUser(Long userId, UpdateUserReq updateUserReq);
     void deleteUser(Long user_id);
 }

@@ -1,6 +1,5 @@
-package com.bit.user_management_service.dto;
+package com.bit.user_management_service.dto.AddUser;
 
-import com.bit.user_management_service.annotations.ValidPassword;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -13,15 +12,13 @@ import java.util.Set;
 @NoArgsConstructor
 @Data
 @Builder
-public class UserDto {
+public class AddUserReq {
     @NotEmpty
     private String firstName;
     @NotEmpty
     private String lastName;
     @NotEmpty
-    private String userCode;
-    @ValidPassword
-    private String password;
+    private String email;
     @NotEmpty
     private Set<String> roles;
 }

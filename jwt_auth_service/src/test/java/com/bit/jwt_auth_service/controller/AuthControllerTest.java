@@ -1,6 +1,6 @@
 package com.bit.jwt_auth_service.controller;
 
-import com.bit.jwt_auth_service.dto.LoginRequest;
+import com.bit.jwt_auth_service.dto.LoginReq;
 import com.bit.jwt_auth_service.service.JwtService;
 import com.bit.sharedClasses.dto.TokenValidationReq;
 import com.bit.sharedClasses.entity.User;
@@ -50,27 +50,27 @@ public class AuthControllerTest {
 
     @Test
     public void testAuthenticateAndGetToken_With_Correct_Credentials() throws Exception {
-        LoginRequest loginRequest = new LoginRequest("emirhan@hotmail.com", "emirhan");
+        LoginReq loginReq = new LoginReq("emirhan@hotmail.com", "emirhan");
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(loginRequest)))
+                        .content(objectMapper.writeValueAsString(loginReq)))
                 .andExpect(status().isOk());
     }
 
     @Test
     public void testAuthenticateAndGetToken_With_Bad_Credentials() throws Exception {
-        LoginRequest loginRequest = new LoginRequest("test@hotmail.com", "test");
+        LoginReq loginReq = new LoginReq("test@hotmail.com", "test");
 
         mockMvc.perform(MockMvcRequestBuilders.post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(loginRequest)))
+                        .content(objectMapper.writeValueAsString(loginReq)))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     public void testValidateToken_With_Correct_Token() throws Exception{
-        Optional<User> user = userRepository.findByUserCode("emirhan@hotmail.com");
+        Optional<User> user = userRepository.findByEmail("emirhan@hotmail.com");
 
         user.ifPresent(value -> token = jwtService.generateToken(value));
 
@@ -94,7 +94,7 @@ public class AuthControllerTest {
 
     @Test
     public void testExtractUsername_With_Correct_Token() throws Exception{
-        Optional<User> user = userRepository.findByUserCode("emirhan@hotmail.com");
+        Optional<User> user = userRepository.findByEmail("emirhan@hotmail.com");
 
         user.ifPresent(value -> token = jwtService.generateToken(value));
 

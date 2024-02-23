@@ -1,7 +1,7 @@
 package com.bit.jwt_auth_service.service.service_impl;
 
 import com.bit.jwt_auth_service.dto.JwtAuthResponse;
-import com.bit.jwt_auth_service.dto.LoginRequest;
+import com.bit.jwt_auth_service.dto.LoginReq;
 import com.bit.jwt_auth_service.service.AuthService;
 import com.bit.jwt_auth_service.service.JwtService;
 import com.bit.sharedClasses.dto.TokenValidationReq;
@@ -27,12 +27,12 @@ public class AuthServiceImpl implements AuthService {
     Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
 
     @Override
-    public JwtAuthResponse authenticateAndGetToken(LoginRequest loginRequest) {
+    public JwtAuthResponse authenticateAndGetToken(LoginReq loginReq) {
         try {
             authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginRequest.getUserCode(),
-                            loginRequest.getPassword()));
-            User user = userRepository.findByUserCode(loginRequest.getUserCode())
+                    new UsernamePasswordAuthenticationToken(loginReq.getUserCode(),
+                            loginReq.getPassword()));
+            User user = userRepository.findByUserCode(loginReq.getUserCode())
                     .orElseThrow(() -> new IllegalArgumentException("User not found"));
             var jwt = jwtService.generateToken(user);
 
@@ -47,8 +47,8 @@ public class AuthServiceImpl implements AuthService {
     public boolean validateToken(TokenValidationReq tokenValidationReq) {
         try {
             String token = tokenValidationReq.getToken();
-            String username = tokenValidationReq.getUsername();
-            return jwtService.isTokenValid(token, username);
+            String userCode = tokenValidationReq.getUserCode();
+            return jwtService.isTokenValid(token, userCode);
         }
         catch (Exception ex){
             logger.info(ex.toString());

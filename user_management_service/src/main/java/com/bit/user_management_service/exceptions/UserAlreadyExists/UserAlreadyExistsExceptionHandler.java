@@ -11,10 +11,10 @@ import java.time.LocalDateTime;
 @ControllerAdvice
 public class UserAlreadyExistsExceptionHandler {
     @ExceptionHandler(UserAlreadyExistsException.class)
-    public ResponseEntity<?> userAlreadyExistsException(UserAlreadyExistsException uae){
+    public ResponseEntity<ErrorDetails> userAlreadyExistsException(UserAlreadyExistsException ex){
         ErrorDetails errorDetails = ErrorDetails
             .builder()
-            .errorMessage(uae.getMessage())
+            .errorMessage(ex.getMessage())
             .status(HttpStatus.CONFLICT.name())
             .statusCode(HttpStatus.CONFLICT.value())
             .timeStamp(LocalDateTime.now())

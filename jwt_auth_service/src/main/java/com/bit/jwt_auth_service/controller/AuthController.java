@@ -1,7 +1,7 @@
   package com.bit.jwt_auth_service.controller;
 
   import com.bit.jwt_auth_service.dto.JwtAuthResponse;
-  import com.bit.jwt_auth_service.dto.LoginRequest;
+  import com.bit.jwt_auth_service.dto.LoginReq;
   import com.bit.jwt_auth_service.service.AuthService;
   import com.bit.sharedClasses.dto.TokenValidationReq;
   import lombok.Data;
@@ -17,8 +17,8 @@
     private final AuthService authService;
 
     @PostMapping("/login")
-    public JwtAuthResponse authenticateAndGetToken(@RequestBody LoginRequest loginRequest){
-      return authService.authenticateAndGetToken(loginRequest);
+    public JwtAuthResponse authenticateAndGetToken(@RequestBody LoginReq loginReq){
+      return authService.authenticateAndGetToken(loginReq);
     }
 
     @PostMapping("/validate-token")

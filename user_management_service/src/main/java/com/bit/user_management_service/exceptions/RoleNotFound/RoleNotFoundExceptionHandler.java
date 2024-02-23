@@ -11,10 +11,10 @@ import java.time.LocalDateTime;
 @ControllerAdvice
 public class RoleNotFoundExceptionHandler {
     @ExceptionHandler(RoleNotFoundException.class)
-    public ResponseEntity<?> roleNotFoundException(RoleNotFoundException rnf){
+    public ResponseEntity<ErrorDetails> roleNotFoundException(RoleNotFoundException ex){
         ErrorDetails errorDetails = ErrorDetails
             .builder()
-            .errorMessage(rnf.getMessage())
+            .errorMessage(ex.getMessage())
             .status(HttpStatus.NOT_FOUND.name())
             .statusCode(HttpStatus.NOT_FOUND.value())
             .timeStamp(LocalDateTime.now())

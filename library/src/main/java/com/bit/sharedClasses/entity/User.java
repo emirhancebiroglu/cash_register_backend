@@ -31,6 +31,10 @@ public class User implements UserDetails {
   @NonNull
   private String lastName;
 
+  @Column(name = "email", nullable = false, unique = true)
+  @NonNull
+  private String email;
+
   @Column(name = "user_code", unique = true, nullable = false)
   @NonNull
   private String userCode;

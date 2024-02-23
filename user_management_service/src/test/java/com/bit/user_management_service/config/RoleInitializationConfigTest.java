@@ -20,45 +20,53 @@ public class RoleInitializationConfigTest {
     private RoleInitializationConfig roleInitializationConfig;
 
     @BeforeEach
-    public void setup(){
+    public void setup() {
         MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    public void testWhenAdminNotExist(){
+    public void testInitializeRoles_WhenAdminNotExist() {
+        // Given
         when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.empty());
         when(roleRepository.findByName("ROLE_CASHIER")).thenReturn(Optional.of(new Role("ROLE_CASHIER")));
         when(roleRepository.findByName("ROLE_STORE_MANAGER")).thenReturn(Optional.of(new Role("ROLE_STORE_MANAGER")));
 
+        // When
         roleInitializationConfig.initializeRoles();
 
+        // Then
         verify(roleRepository, times(1)).save(new Role("ROLE_ADMIN"));
-        verify(roleRepository, times(0)).save(new Role("ROLE_CASHIER"));
-        verify(roleRepository, times(0)).save(new Role("ROLE_STORE_MANAGER"));
+        verify(roleRepository, never()).save(new Role("ROLE_CASHIER"));
+        verify(roleRepository, never()).save(new Role("ROLE_STORE_MANAGER"));
     }
 
     @Test
-    public void testWhenAdminAndStoreManagerNotExist(){
+    public void testInitializeRoles_WhenAdminAndStoreManagerNotExist() {
+        // Given
         when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.empty());
         when(roleRepository.findByName("ROLE_CASHIER")).thenReturn(Optional.of(new Role("ROLE_CASHIER")));
         when(roleRepository.findByName("ROLE_STORE_MANAGER")).thenReturn(Optional.empty());
 
-
+        // When
         roleInitializationConfig.initializeRoles();
 
+        // Then
         verify(roleRepository, times(1)).save(new Role("ROLE_ADMIN"));
-        verify(roleRepository, times(0)).save(new Role("ROLE_CASHIER"));
+        verify(roleRepository, never()).save(new Role("ROLE_CASHIER"));
         verify(roleRepository, times(1)).save(new Role("ROLE_STORE_MANAGER"));
     }
 
     @Test
-    public void testWhenNoRoleExists(){
+    public void testInitializeRoles_WhenNoRoleExists() {
+        // Given
         when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.empty());
         when(roleRepository.findByName("ROLE_CASHIER")).thenReturn(Optional.empty());
         when(roleRepository.findByName("ROLE_STORE_MANAGER")).thenReturn(Optional.empty());
 
+        // When
         roleInitializationConfig.initializeRoles();
 
+        // Then
         verify(roleRepository, times(1)).save(new Role("ROLE_ADMIN"));
         verify(roleRepository, times(1)).save(new Role("ROLE_CASHIER"));
         verify(roleRepository, times(1)).save(new Role("ROLE_STORE_MANAGER"));

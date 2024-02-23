@@ -11,10 +11,10 @@ import java.time.LocalDateTime;
 @ControllerAdvice
 public class UserNotFoundExceptionHandler {
     @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<?> userNotFoundException(UserNotFoundException unf){
+    public ResponseEntity<ErrorDetails> userNotFoundException(UserNotFoundException ex){
         ErrorDetails errorDetails = ErrorDetails
                 .builder()
-                .errorMessage(unf.getMessage())
+                .errorMessage(ex.getMessage())
                 .status(HttpStatus.NOT_FOUND.name())
                 .statusCode(HttpStatus.NOT_FOUND.value())
                 .timeStamp(LocalDateTime.now())

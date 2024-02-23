@@ -6,15 +6,13 @@ import com.bit.sharedClasses.entity.User;
 import com.bit.sharedClasses.repository.RoleRepository;
 import com.bit.sharedClasses.repository.UserRepository;
 import com.bit.user_management_service.exceptions.RoleNotFound.RoleNotFoundException;
-
+import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.transaction.annotation.Transactional;
-
-import lombok.AllArgsConstructor;
 
 import java.util.HashSet;
 import java.util.List;
@@ -48,7 +46,8 @@ public class AdminInitializationConfig implements CommandLineRunner {
             User adminUser = User.builder()
                     .firstName("admin")
                     .lastName("admin")
-                    .userCode("admin@gmail.com")
+                    .email("admin@gmail.com")
+                    .userCode("admin")
                     .password(passwordEncoderConfig.passwordEncoder().encode("admin"))
                     .roles(roles)
                     .build();
