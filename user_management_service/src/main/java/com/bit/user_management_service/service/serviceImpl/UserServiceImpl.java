@@ -68,7 +68,7 @@ public class UserServiceImpl implements UserService {
         User existingUser = getUserById(userId);
 
         if(existingUser.isDeleted()){
-            throw new UserNotFoundException("User is deleted" + existingUser.getEmail());
+            throw new UserNotFoundException("User is deleted: " + existingUser.getEmail());
         }
 
         validateEmail(updateUserReq.getEmail());
