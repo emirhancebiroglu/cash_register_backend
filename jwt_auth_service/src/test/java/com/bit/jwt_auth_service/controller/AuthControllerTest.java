@@ -1,6 +1,6 @@
 package com.bit.jwt_auth_service.controller;
 
-import com.bit.jwt_auth_service.dto.LoginReq;
+import com.bit.jwt_auth_service.dto.Login.LoginReq;
 import com.bit.jwt_auth_service.service.JwtService;
 import com.bit.sharedClasses.dto.TokenValidationReq;
 import com.bit.sharedClasses.entity.User;

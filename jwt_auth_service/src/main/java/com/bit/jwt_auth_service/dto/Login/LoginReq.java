@@ -1,4 +1,4 @@
-package com.bit.jwt_auth_service.dto;
+package com.bit.jwt_auth_service.dto.Login;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

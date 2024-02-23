@@ -1,7 +1,7 @@
 package com.bit.jwt_auth_service.service.service_impl;
 
-import com.bit.jwt_auth_service.dto.JwtAuthResponse;
-import com.bit.jwt_auth_service.dto.LoginReq;
+import com.bit.jwt_auth_service.dto.Login.LoginRes;
+import com.bit.jwt_auth_service.dto.Login.LoginReq;
 import com.bit.jwt_auth_service.service.AuthService;
 import com.bit.jwt_auth_service.service.JwtService;
 import com.bit.sharedClasses.dto.TokenValidationReq;
@@ -27,7 +27,7 @@ public class AuthServiceImpl implements AuthService {
     Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
 
     @Override
-    public JwtAuthResponse authenticateAndGetToken(LoginReq loginReq) {
+    public LoginRes login(LoginReq loginReq) {
         try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginReq.getUserCode(),
@@ -36,7 +36,7 @@ public class AuthServiceImpl implements AuthService {
                     .orElseThrow(() -> new IllegalArgumentException("User not found"));
             var jwt = jwtService.generateToken(user);
 
-            return JwtAuthResponse.builder().token(jwt).build();
+            return LoginRes.builder().token(jwt).build();
         }
         catch (BadCredentialsException ex){
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Bad credentials", ex);
