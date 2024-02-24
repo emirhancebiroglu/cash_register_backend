@@ -11,6 +11,8 @@ import com.bit.user_management_service.dto.UpdateUser.UpdateUserReq;
 import com.bit.user_management_service.exceptions.InvalidEmail.InvalidEmailException;
 import com.bit.user_management_service.exceptions.InvalidName.InvalidNameException;
 import com.bit.user_management_service.exceptions.RoleNotFound.RoleNotFoundException;
+import com.bit.user_management_service.exceptions.UserAlreadyActive.UserAlreadyActiveException;
+import com.bit.user_management_service.exceptions.UserAlreadyDeleted.UserAlreadyDeletedException;
 import com.bit.user_management_service.exceptions.UserAlreadyExists.UserAlreadyExistsException;
 import com.bit.user_management_service.exceptions.UserNotFound.UserNotFoundException;
 import com.bit.user_management_service.service.EmailService;
@@ -87,15 +89,21 @@ public class UserServiceImpl implements UserService {
     public void deleteUser(Long userId){
         User existingUser = getUserById(userId);
 
-        existingUser.setDeleted(true);
+        if (!existingUser.isDeleted()){
+            existingUser.setDeleted(true);
 
-        userRepository.save(existingUser);
-        adminInitializationConfig.initializeAdmin();
-        emailService.sendEmail(existingUser.getEmail(), "Thanks for your efforts",
-                "terminationOfRelationship-mail-template", existingUser.getFirstName(), existingUser.getLastName());
+            userRepository.save(existingUser);
+            adminInitializationConfig.initializeAdmin();
+            emailService.sendEmail(existingUser.getEmail(), "Thanks for your efforts",
+                    "terminationOfRelationship-mail-template", existingUser.getFirstName(), existingUser.getLastName());
 
-        logger.info("User with ID {} deleted successfully", userId);
-        logger.info("The user was informed via e-mail about the termination of his/her relationship with the company.");
+            logger.info("User with ID {} deleted successfully", userId);
+            logger.info("The user was informed via e-mail about the termination of his/her relationship with the company.");
+        }
+        else{
+            logger.info("User is already deleted");
+            throw new UserAlreadyDeletedException("this user is already deleted");
+        }
     }
 
     @Override
@@ -123,6 +131,7 @@ public class UserServiceImpl implements UserService {
         }
         else{
             logger.info("User is already active");
+            throw new UserAlreadyActiveException("this user is already active");
         }
     }
 
@@ -140,7 +149,7 @@ public class UserServiceImpl implements UserService {
     private void isExistingUser(AddUserReq addUserReq){
         Optional<User> existingUser = userRepository.findByEmail(addUserReq.getEmail());
 
-        if (existingUser.isPresent() && !existingUser.get().isDeleted()){
+        if (existingUser.isPresent() && existingUser.get().isDeleted()){
             throw new UserAlreadyExistsException("User already exists: " + existingUser.get().getEmail());
         }
     }
