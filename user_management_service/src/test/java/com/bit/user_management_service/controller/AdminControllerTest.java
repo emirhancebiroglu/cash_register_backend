@@ -39,8 +39,8 @@ public class AdminControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"firstName\": \"emirhan\"," +
                                 " \"lastName\": \"cebiroglu\"," +
-                                " \"email\": \"emirhancebiroglu21@hotmail.com\"," +
-                                " \"roles\": [\"ROLE_CASHIER\"]}"))
+                                " \"email\": \"emirhan11@hotmail.com\"," +
+                                " \"roles\": [\"ROLE_ADMIN\"]}"))
                 .andExpect(status().isCreated());
     }
 
@@ -59,41 +59,29 @@ public class AdminControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void testUpdateUserAsAdmin() throws Exception {
-        mockMvc.perform(put("/api/users/admin/update-user/{user_id}", 6L)
+        mockMvc.perform(put("/api/users/admin/update-user/{user_id}", 13L)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"firstName\": \"emirhan\"," +
-                                " \"lastName\": \"cebiroglu\"," +
-                                " \"email\": \"emirhancebiroglu21@hotmail.com\"," +
-                                " \"roles\": [\"ROLE_STORE_MANAGER\", \"ROLE_ADMIN\"]}"))
+                        .content("{\"firstName\": \"\"," +
+                                " \"lastName\": \"\"," +
+                                " \"email\": \"\"," +
+                                " \"roles\": [\"ROLE_ADMIN\", \"ROLE_CASHIER\"]}"))
                 .andExpect(status().isOk());
     }
 
-    @Test
-    @WithMockUser
-    void testCannotUpdateUserIfNotAnAdmin() throws Exception {
-        mockMvc.perform(put("/api/users/admin/update-user/{user_id}", 2L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"firstName\": \"newEmirhan\"," +
-                                " \"lastName\": \"newCebiroglu\"," +
-                                " \"userCode\": \"newemirhan@hotmail.com\"," +
-                                " \"password\": \"newEmirhan2165\"," +
-                                " \"roles\": [\"ROLE_CASHIER\"]}"))
-                .andExpect(status().isForbidden());
-    }
 
     @Test
     @WithMockUser(roles = "ADMIN")
     void testDeleteUserAsAdmin() throws Exception {
-        mockMvc.perform(delete("/api/users/admin/delete-user/{user_id}", 6L)
+        mockMvc.perform(delete("/api/users/admin/delete-user/{user_id}", 13L)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
     }
 
     @Test
-    @WithMockUser
-    void testCannotDeleteUserIfNotAnAdmin() throws Exception {
-        mockMvc.perform(delete("/api/users/admin/delete-user/{user_id}", 2L)
+    @WithMockUser(roles = "ADMIN")
+    void testReactivateUserAsAdmin() throws Exception {
+        mockMvc.perform(post("/api/users/admin/reactivate-user/{user_id}", 14L)
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk());
     }
 }

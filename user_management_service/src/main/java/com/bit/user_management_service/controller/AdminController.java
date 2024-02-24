@@ -3,7 +3,6 @@ package com.bit.user_management_service.controller;
 import com.bit.user_management_service.dto.AddUser.AddUserReq;
 import com.bit.user_management_service.dto.UpdateUser.UpdateUserReq;
 import com.bit.user_management_service.service.UserService;
-import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,14 +15,14 @@ public class AdminController {
     private UserService userService;
 
     @PostMapping("/add-user")
-    public ResponseEntity<String> addUser(@RequestBody @Valid AddUserReq addUserReq){
+    public ResponseEntity<String> addUser(@RequestBody AddUserReq addUserReq){
         userService.addUser(addUserReq);
         return ResponseEntity.status(HttpStatus.CREATED).body("User created successfully");
     }
 
     @PutMapping("/update-user/{user_id}")
     public ResponseEntity<String> updateUser(@PathVariable Long user_id,
-        @RequestBody UpdateUserReq updateUserReq){
+                                             @RequestBody UpdateUserReq updateUserReq){
         userService.updateUser(user_id, updateUserReq);
         return ResponseEntity.status(HttpStatus.OK).body("User updated successfully");
     }
@@ -32,5 +31,11 @@ public class AdminController {
     public ResponseEntity<String> deleteUser(@PathVariable Long user_id){
         userService.deleteUser(user_id);
         return ResponseEntity.status(HttpStatus.OK).body("User deleted successfully");
+    }
+
+    @PostMapping("/reactivate-user/{user_id}")
+    public ResponseEntity<String> reactivateUser(@PathVariable Long user_id){
+        userService.reactivateUser(user_id);
+        return ResponseEntity.status(HttpStatus.OK).body("User reactivated successfully");
     }
 }

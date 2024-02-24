@@ -23,15 +23,15 @@ public class RoleInitializationConfig implements CommandLineRunner {
     private final RoleRepository roleRepository;
     private static final Logger logger = LoggerFactory.getLogger(RoleInitializationConfig.class);
 
+    private static final List<String> ROLE_NAMES = Arrays.asList("ROLE_ADMIN", "ROLE_CASHIER", "ROLE_STORE_MANAGER");
+
     @Override
     public void run(String... args){
         initializeRoles();
     }
 
     protected void initializeRoles() {
-        List<String> roleNames = Arrays.asList("ROLE_ADMIN", "ROLE_CASHIER", "ROLE_STORE_MANAGER");
-
-        for(String roleName : roleNames){
+        for(String roleName : ROLE_NAMES){
             if(roleRepository.findByName(roleName).isEmpty()){
                 Role role = new Role(roleName);
                 roleRepository.save(role);

@@ -5,9 +5,11 @@ import com.bit.sharedClasses.entity.Role;
 import com.bit.sharedClasses.entity.User;
 import com.bit.sharedClasses.repository.RoleRepository;
 import com.bit.sharedClasses.repository.UserRepository;
+import com.bit.user_management_service.config.AdminInitializationConfig;
 import com.bit.user_management_service.dto.AddUser.AddUserReq;
 import com.bit.user_management_service.dto.UpdateUser.UpdateUserReq;
 import com.bit.user_management_service.exceptions.InvalidEmail.InvalidEmailException;
+import com.bit.user_management_service.exceptions.InvalidName.InvalidNameException;
 import com.bit.user_management_service.exceptions.RoleNotFound.RoleNotFoundException;
 import com.bit.user_management_service.exceptions.UserAlreadyExists.UserAlreadyExistsException;
 import com.bit.user_management_service.exceptions.UserNotFound.UserNotFoundException;
@@ -16,6 +18,7 @@ import com.bit.user_management_service.service.UserService;
 import com.bit.user_management_service.utils.PasswordGenerator;
 import com.bit.user_management_service.utils.UserCodeGenerator;
 import com.bit.user_management_service.validators.EmailValidator;
+import com.bit.user_management_service.validators.NameValidator;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,20 +36,20 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoderConfig passwordEncoderConfig;
     private final PasswordGenerator passwordGenerator;
     private final UserCodeGenerator userCodeGenerator;
+    private final NameValidator nameValidator;
     private final EmailValidator emailValidator;
     private final EmailService emailService;
+    private final AdminInitializationConfig adminInitializationConfig;
     private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
     @Override
     public void addUser(AddUserReq addUserReq) {
-        if (!isExistingUser(addUserReq)){
-            return;
-        }
-
+        isExistingUser(addUserReq);
         validateEmail(addUserReq.getEmail());
+        validateFirstName(addUserReq.getFirstName());
+        validateLastName(addUserReq.getLastName());
 
         Set<Role> roles = mapRolesForAddUser(addUserReq);
-
         handleInitialAdmin(roles);
 
         String userCode = userCodeGenerator.createUserCode(addUserReq.getRoles(), findMaxId() + 1);
@@ -60,7 +63,7 @@ public class UserServiceImpl implements UserService {
                 newUser.getUserCode(), password, newUser.getFirstName(), newUser.getLastName());
 
         logger.info("User added successfully: {}", newUser.getUserCode());
-        logger.info("User credentials sent to the user's email");
+        logger.info("User credentials sent to the user via email");
     }
 
     @Override
@@ -68,16 +71,14 @@ public class UserServiceImpl implements UserService {
         User existingUser = getUserById(userId);
 
         if(existingUser.isDeleted()){
-            throw new UserNotFoundException("User is deleted: " + existingUser.getEmail());
-        }
-
-        if (!updateUserReq.getEmail().isEmpty()){
-            validateEmail(updateUserReq.getEmail());
+            throw new UserNotFoundException("This user no longer exist in the system: " + existingUser.getEmail());
         }
 
         Set<Role> roles = mapRolesForUpdateUser(updateUserReq);
 
         updateExistingUser(existingUser, updateUserReq, roles);
+        adminInitializationConfig.initializeAdmin();
+        handleInitialAdmin(roles);
 
         logger.info("User with ID {} updated successfully", userId);
     }
@@ -89,12 +90,40 @@ public class UserServiceImpl implements UserService {
         existingUser.setDeleted(true);
 
         userRepository.save(existingUser);
-
+        adminInitializationConfig.initializeAdmin();
         emailService.sendEmail(existingUser.getEmail(), "Thanks for your efforts",
                 "terminationOfRelationship-mail-template", existingUser.getFirstName(), existingUser.getLastName());
 
         logger.info("User with ID {} deleted successfully", userId);
         logger.info("The user was informed via e-mail about the termination of his/her relationship with the company.");
+    }
+
+    @Override
+    public void reactivateUser(Long user_id) {
+        Optional<User> existingUser = userRepository.findById(user_id);
+
+        if (existingUser.isEmpty()) {
+            throw new UserNotFoundException("User not found");
+        }
+
+        if (existingUser.get().isDeleted()){
+            existingUser.get().setDeleted(false);
+
+            String password = generatePassword(existingUser.get().getEmail(), existingUser.get().getId());
+            String encodedPassword = passwordEncoderConfig.passwordEncoder().encode(password);
+            existingUser.get().setPassword(encodedPassword);
+
+            userRepository.save(existingUser.get());
+            handleInitialAdmin(existingUser.get().getRoles());
+            emailService.sendEmail(existingUser.get().getEmail(), "Welcome Back!", "reHired-mail-template",
+                    existingUser.get().getUserCode(), password, existingUser.get().getFirstName(), existingUser.get().getLastName());
+
+            logger.info("An existing user re-added to the system: {}", existingUser.get().getEmail());
+            logger.info("A welcome back mail sent to the user");
+        }
+        else{
+            logger.info("User is already active");
+        }
     }
 
     private User buildUser(AddUserReq addUserReq, String userCode, String password, Set<Role> roles){
@@ -108,40 +137,29 @@ public class UserServiceImpl implements UserService {
                 .build();
     }
 
-    private boolean isExistingUser(AddUserReq addUserReq){
+    private void isExistingUser(AddUserReq addUserReq){
         Optional<User> existingUser = userRepository.findByEmail(addUserReq.getEmail());
 
         if (existingUser.isPresent() && !existingUser.get().isDeleted()){
             throw new UserAlreadyExistsException("User already exists: " + existingUser.get().getEmail());
-        } else if (existingUser.isPresent()){
-            reactivateExistingUser(addUserReq, existingUser.get());
-            return false;
         }
-        return true;
-    }
-
-    private void reactivateExistingUser(AddUserReq addUserReq, User existingUser) {
-        existingUser.setDeleted(false);
-
-        String password = generatePassword(addUserReq.getEmail(), existingUser.getId());
-        String encodedPassword = passwordEncoderConfig.passwordEncoder().encode(password);
-
-        existingUser.setRoles(mapRolesForAddUser(addUserReq));
-        existingUser.setFirstName(addUserReq.getFirstName());
-        existingUser.setLastName(addUserReq.getLastName());
-        existingUser.setPassword(encodedPassword);
-
-        userRepository.save(existingUser);
-        emailService.sendEmail(existingUser.getEmail(), "Welcome Back!", "reHired-mail-template",
-                existingUser.getUserCode(), password, existingUser.getFirstName(), existingUser.getLastName());
-
-        logger.info("An existing user re-added to the system: {}", addUserReq.getEmail());
-        logger.info("A welcome back mail sent to the user");
     }
 
     private void validateEmail(String email) {
         if (!emailValidator.isValidEmail(email)){
             throw new InvalidEmailException("Invalid email: " + email);
+        }
+    }
+
+    private void validateFirstName(String firstName){
+        if (!nameValidator.validateFirstName(firstName)){
+            throw new InvalidNameException("Invalid first name: " + firstName);
+        }
+    }
+
+    private void validateLastName(String lastName){
+        if (!nameValidator.validateLastName(lastName)){
+            throw new InvalidNameException("Invalid last name: " + lastName);
         }
     }
 
@@ -184,20 +202,22 @@ public class UserServiceImpl implements UserService {
 
     private void updateExistingUser(User existingUser, UpdateUserReq updateUserReq, Set<Role> roles) {
         if (!updateUserReq.getFirstName().isEmpty()){
+            validateFirstName(updateUserReq.getFirstName());
             existingUser.setFirstName(updateUserReq.getFirstName());
         }
 
         if (!updateUserReq.getLastName().isEmpty()){
+            validateLastName(updateUserReq.getLastName());
             existingUser.setLastName(updateUserReq.getLastName());
         }
 
         if (!updateUserReq.getEmail().isEmpty()){
+            validateEmail(updateUserReq.getEmail());
             existingUser.setEmail(updateUserReq.getEmail());
         }
 
         if (!updateUserReq.getRoles().isEmpty()){
             updateUserCodeIfRolesAreChanged(existingUser, updateUserReq);
-
             existingUser.setRoles(roles);
         }
 

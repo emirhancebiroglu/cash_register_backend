@@ -8,9 +8,10 @@ import com.bit.sharedClasses.repository.UserRepository;
 import com.bit.user_management_service.exceptions.RoleNotFound.RoleNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.Collections;
@@ -22,8 +23,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 class AdminInitializationConfigTest {
-
     @Mock
     private UserRepository userRepository;
 
@@ -39,16 +40,29 @@ class AdminInitializationConfigTest {
     @InjectMocks
     private AdminInitializationConfig adminInitializationConfig;
 
+    private Role adminRole;
+    private Set<Role> roles;
+    private User adminUser;
+
     @BeforeEach
     public void setup() {
-        MockitoAnnotations.openMocks(this);
+        adminRole = new Role("ROLE_ADMIN");
+
+        roles = new HashSet<>();
+        roles.add(adminRole);
+
+        adminUser = User.builder()
+                .firstName("admin")
+                .lastName("admin")
+                .email("admin@gmail.com")
+                .userCode("admin")
+                .password("password")
+                .roles(roles)
+                .build();
     }
 
     @Test
-    public void testInitializeAdminIfNoAdminExists() {
-        Role adminRole = new Role("ROLE_ADMIN");
-        adminRole.setId(1L);
-
+    public void initializeAdminIfNoAdminExists() {
         when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.of(adminRole));
         when(userRepository.findByRoles(any())).thenReturn(Collections.emptyList());
         when(passwordEncoderConfig.passwordEncoder()).thenReturn(passwordEncoder);
@@ -60,26 +74,9 @@ class AdminInitializationConfigTest {
     }
 
     @Test
-    public void testInitializeAdminIfAdminExists() {
-        Role adminRole = new Role();
-        adminRole.setId(1L);
-        adminRole.setName("ROLE_ADMIN");
-
-        Set<Role> adminRoles = new HashSet<>();
-        adminRoles.add(adminRole);
-
-        User existingAdminUser = User.builder()
-                .id(1L)
-                .firstName("emirhan")
-                .lastName("cebiroglu")
-                .email("emirhan@hotmail.com")
-                .userCode("admin")
-                .password("Emirhan2165")
-                .roles(Collections.singleton(adminRole))
-                .build();
-
+    public void initializeAdminIfAdminExists() {
         when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.of(adminRole));
-        when(userRepository.findByRoles(adminRoles)).thenReturn(Collections.singletonList(existingAdminUser));
+        when(userRepository.findByRoles(roles)).thenReturn(Collections.singletonList(adminUser));
 
         adminInitializationConfig.initializeAdmin();
 

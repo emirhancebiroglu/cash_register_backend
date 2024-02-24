@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
@@ -20,7 +19,6 @@ import java.util.Set;
 
 @Configuration
 @AllArgsConstructor
-@Transactional
 @Order(2)
 public class AdminInitializationConfig implements CommandLineRunner {
     private final UserRepository userRepository;
@@ -33,30 +31,36 @@ public class AdminInitializationConfig implements CommandLineRunner {
         initializeAdmin();
     }
 
-    protected void initializeAdmin() {
+    public void initializeAdmin() throws RoleNotFoundException{
         Role adminRole = roleRepository.findByName("ROLE_ADMIN")
                 .orElseThrow(() -> new RoleNotFoundException("ROLE_ADMIN not found"));
 
-        Set<Role> roles = new HashSet<>();
-        roles.add(adminRole);
-
-        List<User> usersWithAdminRole = userRepository.findByRoles(roles);
-
-        if (usersWithAdminRole.isEmpty()){
-            User adminUser = User.builder()
-                    .firstName("admin")
-                    .lastName("admin")
-                    .email("admin@gmail.com")
-                    .userCode("admin")
-                    .password(passwordEncoderConfig.passwordEncoder().encode("admin"))
-                    .roles(roles)
-                    .build();
-
-            userRepository.save(adminUser);
-            logger.info("Admin user initialized successfully.");
+        if (isAdminInitializationRequired(adminRole)) {
+            createAdminUser(adminRole);
         }
         else{
             logger.info("Admin user already exists. Skipping initialization.");
         }
+    }
+
+    private boolean isAdminInitializationRequired(Role adminRole) {
+        Set<Role> roles = new HashSet<>();
+        roles.add(adminRole);
+        List<User> usersWithAdminRole = userRepository.findByRoles(roles);
+
+        return usersWithAdminRole.isEmpty() || usersWithAdminRole.stream().allMatch(User::isDeleted);
+    }
+    private void createAdminUser(Role adminRole) {
+        User adminUser = User.builder()
+                .firstName("admin")
+                .lastName("admin")
+                .email("admin@gmail.com")
+                .userCode("admin")
+                .password(passwordEncoderConfig.passwordEncoder().encode("admin"))
+                .roles(Set.of(adminRole))
+                .build();
+
+        userRepository.save(adminUser);
+        logger.info("Admin user initialized successfully.");
     }
 }

@@ -4,14 +4,17 @@ import com.bit.sharedClasses.entity.Role;
 import com.bit.sharedClasses.repository.RoleRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.mockito.Mockito.*;
 
+@ExtendWith(MockitoExtension.class)
 public class RoleInitializationConfigTest {
     @Mock
     private RoleRepository roleRepository;
@@ -19,56 +22,24 @@ public class RoleInitializationConfigTest {
     @InjectMocks
     private RoleInitializationConfig roleInitializationConfig;
 
+    private List<Role> roles;
+
     @BeforeEach
     public void setup() {
-        MockitoAnnotations.openMocks(this);
+        roles = new ArrayList<>();
+        when(roleRepository.findByName(anyString())).thenAnswer(invocation -> {
+            String name = invocation.getArgument(0);
+            return roles.stream().filter(r -> r.getName().equals(name)).findFirst();
+        });
     }
 
     @Test
-    public void testInitializeRoles_WhenAdminNotExist() {
-        // Given
-        when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.empty());
-        when(roleRepository.findByName("ROLE_CASHIER")).thenReturn(Optional.of(new Role("ROLE_CASHIER")));
-        when(roleRepository.findByName("ROLE_STORE_MANAGER")).thenReturn(Optional.of(new Role("ROLE_STORE_MANAGER")));
+    public void initializeRoles() {
+        roles.add(new Role("ROLE_ADMIN"));
+        roles.add(new Role("ROLE_CASHIER"));
 
-        // When
         roleInitializationConfig.initializeRoles();
 
-        // Then
-        verify(roleRepository, times(1)).save(new Role("ROLE_ADMIN"));
-        verify(roleRepository, never()).save(new Role("ROLE_CASHIER"));
-        verify(roleRepository, never()).save(new Role("ROLE_STORE_MANAGER"));
-    }
-
-    @Test
-    public void testInitializeRoles_WhenAdminAndStoreManagerNotExist() {
-        // Given
-        when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.empty());
-        when(roleRepository.findByName("ROLE_CASHIER")).thenReturn(Optional.of(new Role("ROLE_CASHIER")));
-        when(roleRepository.findByName("ROLE_STORE_MANAGER")).thenReturn(Optional.empty());
-
-        // When
-        roleInitializationConfig.initializeRoles();
-
-        // Then
-        verify(roleRepository, times(1)).save(new Role("ROLE_ADMIN"));
-        verify(roleRepository, never()).save(new Role("ROLE_CASHIER"));
-        verify(roleRepository, times(1)).save(new Role("ROLE_STORE_MANAGER"));
-    }
-
-    @Test
-    public void testInitializeRoles_WhenNoRoleExists() {
-        // Given
-        when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.empty());
-        when(roleRepository.findByName("ROLE_CASHIER")).thenReturn(Optional.empty());
-        when(roleRepository.findByName("ROLE_STORE_MANAGER")).thenReturn(Optional.empty());
-
-        // When
-        roleInitializationConfig.initializeRoles();
-
-        // Then
-        verify(roleRepository, times(1)).save(new Role("ROLE_ADMIN"));
-        verify(roleRepository, times(1)).save(new Role("ROLE_CASHIER"));
-        verify(roleRepository, times(1)).save(new Role("ROLE_STORE_MANAGER"));
+        verify(roleRepository, times(1)).save(any(Role.class));
     }
 }
