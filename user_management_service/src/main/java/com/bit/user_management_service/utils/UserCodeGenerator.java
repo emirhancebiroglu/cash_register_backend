@@ -3,13 +3,16 @@ package com.bit.user_management_service.utils;
 import org.springframework.stereotype.Component;
 
 import java.util.Set;
+import java.util.TreeSet;
 
 @Component
 public class UserCodeGenerator {
     public String createUserCode(Set<String> roles, Long userId){
         StringBuilder userCode = new StringBuilder();
 
-        for (String role : roles) {
+        Set<String> sortedRoles = new TreeSet<>(roles);
+
+        for (String role : sortedRoles) {
             switch (role) {
                 case "ROLE_ADMIN":
                     userCode.append("A");

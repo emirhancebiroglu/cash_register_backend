@@ -11,6 +11,7 @@ import com.bit.user_management_service.exceptions.InvalidEmail.InvalidEmailExcep
 import com.bit.user_management_service.exceptions.RoleNotFound.RoleNotFoundException;
 import com.bit.user_management_service.exceptions.UserAlreadyExists.UserAlreadyExistsException;
 import com.bit.user_management_service.exceptions.UserNotFound.UserNotFoundException;
+import com.bit.user_management_service.service.EmailService;
 import com.bit.user_management_service.service.UserService;
 import com.bit.user_management_service.utils.PasswordGenerator;
 import com.bit.user_management_service.utils.UserCodeGenerator;
@@ -33,6 +34,7 @@ public class UserServiceImpl implements UserService {
     private final PasswordGenerator passwordGenerator;
     private final UserCodeGenerator userCodeGenerator;
     private final EmailValidator emailValidator;
+    private final EmailService emailService;
     private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
     @Override
@@ -43,24 +45,22 @@ public class UserServiceImpl implements UserService {
 
         validateEmail(addUserReq.getEmail());
 
-        Long maxId = userRepository.findMaxId();
-        if (maxId == null) {
-            logger.warn("User ID is null. Defaulting to ID 1.");
-            maxId = 0L;
-        }
-
         Set<Role> roles = mapRolesForAddUser(addUserReq);
 
         handleInitialAdmin(roles);
 
-        String userCode = userCodeGenerator.createUserCode(addUserReq.getRoles(), maxId + 1);
-        String password = generateEncodedPassword(addUserReq.getEmail(), maxId + 1);
+        String userCode = userCodeGenerator.createUserCode(addUserReq.getRoles(), findMaxId() + 1);
+        String password = generatePassword(addUserReq.getEmail(), findMaxId() + 1);
+        String encodedPassword = passwordEncoderConfig.passwordEncoder().encode(password);
 
-        User newUser = buildUser(addUserReq, userCode, password, roles);
+        User newUser = buildUser(addUserReq, userCode, encodedPassword, roles);
 
         userRepository.save(newUser);
+        emailService.sendEmail(addUserReq.getEmail(), "Welcome!", "userCredentials-mail-template",
+                newUser.getUserCode(), password, newUser.getFirstName(), newUser.getLastName());
 
         logger.info("User added successfully: {}", newUser.getUserCode());
+        logger.info("User credentials sent to the user's email");
     }
 
     @Override
@@ -71,7 +71,9 @@ public class UserServiceImpl implements UserService {
             throw new UserNotFoundException("User is deleted: " + existingUser.getEmail());
         }
 
-        validateEmail(updateUserReq.getEmail());
+        if (!updateUserReq.getEmail().isEmpty()){
+            validateEmail(updateUserReq.getEmail());
+        }
 
         Set<Role> roles = mapRolesForUpdateUser(updateUserReq);
 
@@ -85,9 +87,14 @@ public class UserServiceImpl implements UserService {
         User existingUser = getUserById(userId);
 
         existingUser.setDeleted(true);
+
         userRepository.save(existingUser);
 
+        emailService.sendEmail(existingUser.getEmail(), "Thanks for your efforts",
+                "terminationOfRelationship-mail-template", existingUser.getFirstName(), existingUser.getLastName());
+
         logger.info("User with ID {} deleted successfully", userId);
+        logger.info("The user was informed via e-mail about the termination of his/her relationship with the company.");
     }
 
     private User buildUser(AddUserReq addUserReq, String userCode, String password, Set<Role> roles){
@@ -116,13 +123,20 @@ public class UserServiceImpl implements UserService {
     private void reactivateExistingUser(AddUserReq addUserReq, User existingUser) {
         existingUser.setDeleted(false);
 
+        String password = generatePassword(addUserReq.getEmail(), existingUser.getId());
+        String encodedPassword = passwordEncoderConfig.passwordEncoder().encode(password);
+
         existingUser.setRoles(mapRolesForAddUser(addUserReq));
         existingUser.setFirstName(addUserReq.getFirstName());
         existingUser.setLastName(addUserReq.getLastName());
-        existingUser.setPassword(generateEncodedPassword(addUserReq.getEmail(), existingUser.getId()));
+        existingUser.setPassword(encodedPassword);
+
         userRepository.save(existingUser);
+        emailService.sendEmail(existingUser.getEmail(), "Welcome Back!", "reHired-mail-template",
+                existingUser.getUserCode(), password, existingUser.getFirstName(), existingUser.getLastName());
 
         logger.info("An existing user re-added to the system: {}", addUserReq.getEmail());
+        logger.info("A welcome back mail sent to the user");
     }
 
     private void validateEmail(String email) {
@@ -148,14 +162,24 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new RoleNotFoundException("Role not found: " + roleName));
     }
 
-    private String generateEncodedPassword(String email, Long id) {
-        return passwordEncoderConfig.passwordEncoder()
-                .encode(passwordGenerator.createPassword(email, id));
+    private String generatePassword(String email, Long id) {
+        return passwordGenerator.createPassword(email, id);
     }
 
     private User getUserById(Long userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
+    }
+
+    private Long findMaxId(){
+        Long maxId = userRepository.findMaxId();
+        if (maxId == null) {
+            logger.warn("User ID is null. Defaulting to ID 1.");
+            maxId = 0L;
+
+            return maxId;
+        }
+        return maxId;
     }
 
     private void updateExistingUser(User existingUser, UpdateUserReq updateUserReq, Set<Role> roles) {
@@ -172,10 +196,28 @@ public class UserServiceImpl implements UserService {
         }
 
         if (!updateUserReq.getRoles().isEmpty()){
+            updateUserCodeIfRolesAreChanged(existingUser, updateUserReq);
+
             existingUser.setRoles(roles);
         }
 
         userRepository.save(existingUser);
+    }
+
+    private void updateUserCodeIfRolesAreChanged(User existingUser, UpdateUserReq updateUserReq){
+        Set<String> existingRoleNames = existingUser.getRoles().stream()
+                .map(Role::getName).collect(Collectors.toSet());
+
+        if (!existingRoleNames.equals(updateUserReq.getRoles())){
+            String updatedUserCode = userCodeGenerator.createUserCode(updateUserReq.getRoles(), existingUser.getId());
+            existingUser.setUserCode(updatedUserCode);
+
+            emailService.sendEmail(updateUserReq.getEmail(), "User Code Updated",
+                    "updatedUserCode-mail-template", updatedUserCode, existingUser.getFirstName(),
+                    existingUser.getLastName());
+
+            logger.info("New user code created and sent to user's email");
+        }
     }
 
     private void handleInitialAdmin(Set<Role> roles){

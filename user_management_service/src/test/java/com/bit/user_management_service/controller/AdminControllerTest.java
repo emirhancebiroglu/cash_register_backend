@@ -37,9 +37,9 @@ public class AdminControllerTest {
     void testAddUserAsAdmin() throws Exception {
         mockMvc.perform(post("/api/users/admin/add-user")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"firstName\": \"emir\"," +
+                        .content("{\"firstName\": \"emirhan\"," +
                                 " \"lastName\": \"cebiroglu\"," +
-                                " \"email\": \"emirhan12@hotmail.com\"," +
+                                " \"email\": \"emirhancebiroglu21@hotmail.com\"," +
                                 " \"roles\": [\"ROLE_CASHIER\"]}"))
                 .andExpect(status().isCreated());
     }
@@ -63,8 +63,8 @@ public class AdminControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"firstName\": \"emirhan\"," +
                                 " \"lastName\": \"cebiroglu\"," +
-                                " \"email\": \"emirhan12@hotmail.com\"," +
-                                " \"roles\": [\"ROLE_ADMIN\"]}"))
+                                " \"email\": \"emirhancebiroglu21@hotmail.com\"," +
+                                " \"roles\": [\"ROLE_STORE_MANAGER\", \"ROLE_ADMIN\"]}"))
                 .andExpect(status().isOk());
     }
 
