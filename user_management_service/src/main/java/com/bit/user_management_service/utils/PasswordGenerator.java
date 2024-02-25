@@ -1,13 +1,16 @@
 package com.bit.user_management_service.utils;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.util.Random;
+import java.security.SecureRandom;
 
 @Component
 public class PasswordGenerator {
+    private final static Logger logger = LoggerFactory.getLogger(PasswordGenerator.class);
+    private static final String SPECIAL_CHARACTERS = "!@#*_,.?";
+
     public String createPassword(String email, Long userId){
         StringBuilder password = new StringBuilder();
 
@@ -16,16 +19,26 @@ public class PasswordGenerator {
 
         password.append(userId);
 
-        Random random = new Random();
-        for (int i = 0; i < 3; i++) {
-            password.append(random.nextInt(10));
-        }
+        password.append(generateRandomNumbers());
 
-        String specialCharacters = "!@#*_,.?";
-        char randomSpecialCharacter = specialCharacters.charAt(random.nextInt(specialCharacters.length()));
-        password.append(randomSpecialCharacter);
+        password.append(generateRandomSpecialCharacter());
 
+
+        logger.info("Generated Password: " + password);
         return password.toString();
     }
 
+    private String generateRandomNumbers() {
+        StringBuilder numbers = new StringBuilder();
+        SecureRandom random = new SecureRandom();
+        for (int i = 0; i < 3; i++) {
+            numbers.append(random.nextInt(10));
+        }
+        return numbers.toString();
+    }
+
+    private char generateRandomSpecialCharacter() {
+        SecureRandom random = new SecureRandom();
+        return SPECIAL_CHARACTERS.charAt(random.nextInt(SPECIAL_CHARACTERS.length()));
+    }
 }

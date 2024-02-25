@@ -21,24 +21,23 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     public void sendEmail(String to, String subject, String templateName, String userCode, String userPassword,
-                                          String firstName, String lastName) {
+                          String firstName, String lastName){
         Context context = new Context();
 
+        setContext(firstName, lastName, context);
         context.setVariable("userCode", userCode);
         context.setVariable("userPassword", userPassword);
-        context.setVariable("firstName", firstName);
-        context.setVariable("lastName", lastName);
 
         setHelper(to, subject, templateName, context);
     }
 
     @Override
-    public void sendEmail(String to, String subject, String templateName, String userCode, String firstName, String lastName) {
+    public void sendEmail(String to, String subject, String templateName,
+                          String userCode, String firstName, String lastName) {
         Context context = new Context();
 
+        setContext(firstName, lastName, context);
         context.setVariable("userCode", userCode);
-        context.setVariable("firstName", firstName);
-        context.setVariable("lastName", lastName);
 
         setHelper(to, subject, templateName, context);
     }
@@ -47,13 +46,12 @@ public class EmailServiceImpl implements EmailService {
     public void sendEmail(String to, String subject, String templateName, String firstName, String lastName) {
         Context context = new Context();
 
-        context.setVariable("firstName", firstName);
-        context.setVariable("lastName", lastName);
+        setContext(firstName, lastName, context);
 
         setHelper(to, subject, templateName, context);
     }
 
-    private void setHelper (String to, String subject, String templateName, Context context){
+    private void setHelper (String to, String subject, String templateName, Context context) {
         MimeMessage mimeMessage = mailSender.createMimeMessage();
         MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "UTF-8");
 
@@ -63,8 +61,15 @@ public class EmailServiceImpl implements EmailService {
             String htmlContent = templateEngine.process(templateName, context);
             helper.setText(htmlContent, true);
             mailSender.send(mimeMessage);
+            logger.info("Mail is sent successfully");
+
         } catch (MessagingException e) {
             logger.error(e.getMessage());
         }
+    }
+
+    private void setContext(String firstName, String lastName, Context context){
+        context.setVariable("firstName", firstName);
+        context.setVariable("lastName", lastName);
     }
 }

@@ -46,34 +46,31 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void addUser(AddUserReq addUserReq) {
-        isExistingUser(addUserReq);
-        validateEmail(addUserReq.getEmail());
-        validateFirstName(addUserReq.getFirstName());
-        validateLastName(addUserReq.getLastName());
+        checkIfUserExists(addUserReq);
+        validateUserData(addUserReq);
 
         Set<Role> roles = mapRolesForAddUser(addUserReq);
         handleInitialAdmin(roles);
 
         String userCode = userCodeGenerator.createUserCode(addUserReq.getRoles(), findMaxId() + 1);
+
         String password = generatePassword(addUserReq.getEmail(), findMaxId() + 1);
         String encodedPassword = passwordEncoderConfig.passwordEncoder().encode(password);
 
         User newUser = buildUser(addUserReq, userCode, encodedPassword, roles);
 
         userRepository.save(newUser);
-        emailService.sendEmail(addUserReq.getEmail(), "Welcome!", "userCredentials-mail-template",
-                newUser.getUserCode(), password, newUser.getFirstName(), newUser.getLastName());
-
         logger.info("User added successfully: {}", newUser.getUserCode());
-        logger.info("User credentials sent to the user via email");
+
+        sendUserCredentialsByEmail(newUser, password);
     }
 
     @Override
     public void updateUser(Long userId, UpdateUserReq updateUserReq){
-        User existingUser = getUserById(userId);
+        User existingUser = findUserByIdOrThrow(userId);
 
         if(existingUser.isDeleted()){
-            throw new UserNotFoundException("This user no longer exist in the system: " + existingUser.getEmail());
+            throw new UserNotFoundException("This user no longer exists in the system: " + existingUser.getEmail());
         }
 
         Set<Role> roles = mapRolesForUpdateUser(updateUserReq);
@@ -87,51 +84,40 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteUser(Long userId){
-        User existingUser = getUserById(userId);
+        User existingUser = findUserByIdOrThrow(userId);
 
         if (!existingUser.isDeleted()){
             existingUser.setDeleted(true);
-
             userRepository.save(existingUser);
             adminInitializationConfig.initializeAdmin();
-            emailService.sendEmail(existingUser.getEmail(), "Thanks for your efforts",
-                    "terminationOfRelationship-mail-template", existingUser.getFirstName(), existingUser.getLastName());
-
             logger.info("User with ID {} deleted successfully", userId);
-            logger.info("The user was informed via e-mail about the termination of his/her relationship with the company.");
+
+            sendTerminationInfoByEmail(existingUser);
         }
         else{
             logger.info("User is already deleted");
-            throw new UserAlreadyDeletedException("this user is already deleted");
+            throw new UserAlreadyDeletedException("This user is already deleted");
         }
     }
 
     @Override
     public void reactivateUser(Long user_id) {
-        Optional<User> existingUser = userRepository.findById(user_id);
+        User existingUser = findUserByIdOrThrow(user_id);
 
-        if (existingUser.isEmpty()) {
-            throw new UserNotFoundException("User not found");
-        }
+        if (existingUser.isDeleted()){
+            existingUser.setDeleted(false);
 
-        if (existingUser.get().isDeleted()){
-            existingUser.get().setDeleted(false);
+            String newPassword = resetUserPassword(existingUser);
 
-            String password = generatePassword(existingUser.get().getEmail(), existingUser.get().getId());
-            String encodedPassword = passwordEncoderConfig.passwordEncoder().encode(password);
-            existingUser.get().setPassword(encodedPassword);
+            userRepository.save(existingUser);
+            handleInitialAdmin(existingUser.getRoles());
+            logger.info("An existing user re-added to the system: {}", existingUser.getEmail());
 
-            userRepository.save(existingUser.get());
-            handleInitialAdmin(existingUser.get().getRoles());
-            emailService.sendEmail(existingUser.get().getEmail(), "Welcome Back!", "reHired-mail-template",
-                    existingUser.get().getUserCode(), password, existingUser.get().getFirstName(), existingUser.get().getLastName());
-
-            logger.info("An existing user re-added to the system: {}", existingUser.get().getEmail());
-            logger.info("A welcome back mail sent to the user");
+            sendWelcomeBackMessageByEmail(existingUser, newPassword);
         }
         else{
-            logger.info("User is already active");
-            throw new UserAlreadyActiveException("this user is already active");
+            logger.error("This user is already active");
+            throw new UserAlreadyActiveException("This user is already active");
         }
     }
 
@@ -146,12 +132,19 @@ public class UserServiceImpl implements UserService {
                 .build();
     }
 
-    private void isExistingUser(AddUserReq addUserReq){
+    private void checkIfUserExists(AddUserReq addUserReq){
         Optional<User> existingUser = userRepository.findByEmail(addUserReq.getEmail());
 
-        if (existingUser.isPresent() && existingUser.get().isDeleted()){
-            throw new UserAlreadyExistsException("User already exists: " + existingUser.get().getEmail());
+        if (existingUser.isPresent()){
+            String userEmail = existingUser.get().getEmail();
+            throw new UserAlreadyExistsException("User already exists: " + userEmail);
         }
+    }
+
+    private void validateUserData(AddUserReq addUserReq){
+        validateEmail(addUserReq.getEmail());
+        validateFirstName(addUserReq.getFirstName());
+        validateLastName(addUserReq.getLastName());
     }
 
     private void validateEmail(String email) {
@@ -189,22 +182,27 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new RoleNotFoundException("Role not found: " + roleName));
     }
 
+    private User findUserByIdOrThrow(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+    }
+
     private String generatePassword(String email, Long id) {
         return passwordGenerator.createPassword(email, id);
     }
 
-    private User getUserById(Long userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+    private String resetUserPassword(User user) {
+        String newPassword = generatePassword(user.getEmail(), user.getId());
+        String encodedPassword = passwordEncoderConfig.passwordEncoder().encode(newPassword);
+        user.setPassword(encodedPassword);
+        return newPassword;
     }
 
     private Long findMaxId(){
         Long maxId = userRepository.findMaxId();
         if (maxId == null) {
             logger.warn("User ID is null. Defaulting to ID 1.");
-            maxId = 0L;
-
-            return maxId;
+            maxId = 1L;
         }
         return maxId;
     }
@@ -241,21 +239,43 @@ public class UserServiceImpl implements UserService {
             String updatedUserCode = userCodeGenerator.createUserCode(updateUserReq.getRoles(), existingUser.getId());
             existingUser.setUserCode(updatedUserCode);
 
-            emailService.sendEmail(updateUserReq.getEmail(), "User Code Updated",
-                    "updatedUserCode-mail-template", updatedUserCode, existingUser.getFirstName(),
-                    existingUser.getLastName());
+            sendUpdatedUserCodeByEmail(existingUser, updatedUserCode);
 
             logger.info("New user code created and sent to user's email");
         }
     }
 
-    private void handleInitialAdmin(Set<Role> roles){
-        Optional<User> initialAdmin = userRepository.findByEmail("admin@gmail.com");
-        Optional<Role> adminRole = roleRepository.findByName("ROLE_ADMIN");
+    private void sendUpdatedUserCodeByEmail(User user, String updatedUserCode) {
+        emailService.sendEmail(user.getEmail(), "User Code Updated",
+                "updatedUserCode-mail-template", updatedUserCode, user.getFirstName(),
+                user.getLastName());
+    }
 
-        if (adminRole.isPresent() && roles.contains(adminRole.get()) && initialAdmin.isPresent()){
-            userRepository.delete(initialAdmin.get());
-            logger.info("Initial admin is deleted");
+    private void sendUserCredentialsByEmail(User newUser, String password) {
+        emailService.sendEmail(newUser.getEmail(), "Welcome!", "userCredentials-mail-template",
+                newUser.getUserCode(), password, newUser.getFirstName(), newUser.getLastName());
+        logger.info("User credentials sent to the user via email");
+    }
+
+    private void sendTerminationInfoByEmail(User user) {
+        emailService.sendEmail(user.getEmail(), "Thanks for your efforts",
+                "terminationOfRelationship-mail-template", user.getFirstName(), user.getLastName());
+        logger.info("The user was informed via e-mail about the termination of his/her relationship.");
+    }
+
+    private void sendWelcomeBackMessageByEmail(User user, String newPassword) {
+        emailService.sendEmail(user.getEmail(), "Welcome Back!", "reHired-mail-template",
+                user.getUserCode(), newPassword, user.getFirstName(), user.getLastName());
+        logger.info("A welcome back email sent to the user: {}", user.getEmail());
+    }
+
+    private void handleInitialAdmin(Set<Role> roles){
+        if (roles.stream().anyMatch(role -> role.getName().equals("ROLE_ADMIN"))) {
+            userRepository.findByEmail("admin@gmail.com")
+                    .ifPresent(admin -> {
+                        userRepository.delete(admin);
+                        logger.info("Initial admin is deleted");
+                    });
         }
     }
 }

@@ -1,51 +1,44 @@
 package com.bit.user_management_service.validators;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Component
 public class NameValidator {
-    private static final int MIN_LENGTH = 3;
-    private static final int MAX_LENGTH = 18;
+    private static final Logger logger = LoggerFactory.getLogger(NameValidator.class);
     private static final String NAME_REGEX = "^[a-zA-Z]{3,18}$";
 
     public boolean validateFirstName(String firstName) {
-        return isValidFirstName(firstName);
+        return isValidName(firstName, "first");
     }
 
     public boolean validateLastName(String lastName) {
-        return isValidLastName(lastName);
+        return isValidName(lastName, "last");
     }
 
-    private boolean isValidFirstName(String firstName) {
-        if (firstName == null || firstName.trim().isEmpty()) {
+    private boolean isValidName(String name, String type) {
+        if (name == null || name.trim().isEmpty()) {
+            logger.error("ERROR: Invalid " + type + " name");
             return false;
         }
 
-        if (!firstName.matches(NAME_REGEX) || firstName.trim().length() < MIN_LENGTH || firstName.trim().length() > MAX_LENGTH) {
+        if (!name.matches(NAME_REGEX)) {
+            logger.error("ERROR: Invalid " + type + " name format");
             return false;
         }
 
-        if (!Character.isUpperCase(firstName.charAt(0))) {
+        if (type.equals("first") && !Character.isUpperCase(name.charAt(0))) {
+            logger.error("ERROR: First name should start with an uppercase letter");
             return false;
         }
-        for (int i = 1; i < firstName.length(); i++) {
-            if (!Character.isLowerCase(firstName.charAt(i))) {
-                return false;
-            }
+
+        if (type.equals("last") && !name.equals(name.toUpperCase())) {
+            logger.error("ERROR: Last name should be all uppercase letters");
+            return false;
         }
 
+        logger.info("INFO: Valid " + type + " name");
         return true;
-    }
-
-    private boolean isValidLastName(String lastName) {
-        if (lastName == null || lastName.trim().isEmpty()) {
-            return false;
-        }
-
-        if (!lastName.matches(NAME_REGEX) || lastName.trim().length() < MIN_LENGTH || lastName.trim().length() > MAX_LENGTH) {
-            return false;
-        }
-
-        return lastName.equals(lastName.toUpperCase());
     }
 }

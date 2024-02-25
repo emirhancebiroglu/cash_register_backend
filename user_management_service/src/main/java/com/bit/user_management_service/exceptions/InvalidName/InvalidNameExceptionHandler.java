@@ -16,6 +16,7 @@ public class InvalidNameExceptionHandler {
               .builder()
               .errorMessage(ex.getMessage())
               .status(HttpStatus.BAD_REQUEST.name())
+              .statusCode(HttpStatus.BAD_REQUEST.value())
               .timeStamp(LocalDateTime.now())
               .build();
         return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
