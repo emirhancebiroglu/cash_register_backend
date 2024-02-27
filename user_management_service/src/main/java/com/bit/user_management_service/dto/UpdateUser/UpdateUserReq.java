@@ -1,6 +1,5 @@
 package com.bit.user_management_service.dto.UpdateUser;
 
-import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

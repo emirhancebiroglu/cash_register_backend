@@ -42,7 +42,7 @@ public class UserCodeGenerator {
 
         userCode.append(generateRandomDigits());
 
-        logger.info("Password generated: " + userCode);
+        logger.info("User Code generated: " + userCode);
         return userCode.toString();
     }
 

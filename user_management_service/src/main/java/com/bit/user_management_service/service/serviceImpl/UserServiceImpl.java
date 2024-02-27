@@ -70,7 +70,7 @@ public class UserServiceImpl implements UserService {
         User existingUser = findUserByIdOrThrow(userId);
 
         if(existingUser.isDeleted()){
-            throw new UserNotFoundException("This user no longer exists in the system: " + existingUser.getEmail());
+            throw new UserNotFoundException("This user no longer exists: " + existingUser.getEmail());
         }
 
         Set<Role> roles = mapRolesForUpdateUser(updateUserReq);
@@ -95,7 +95,7 @@ public class UserServiceImpl implements UserService {
             sendTerminationInfoByEmail(existingUser);
         }
         else{
-            logger.info("User is already deleted");
+            logger.error("User is already deleted");
             throw new UserAlreadyDeletedException("This user is already deleted");
         }
     }
@@ -111,7 +111,7 @@ public class UserServiceImpl implements UserService {
 
             userRepository.save(existingUser);
             handleInitialAdmin(existingUser.getRoles());
-            logger.info("An existing user re-added to the system: {}", existingUser.getEmail());
+            logger.info("An existing user has been re-added to the system: {}", existingUser.getEmail());
 
             sendWelcomeBackMessageByEmail(existingUser, newPassword);
         }
@@ -240,8 +240,6 @@ public class UserServiceImpl implements UserService {
             existingUser.setUserCode(updatedUserCode);
 
             sendUpdatedUserCodeByEmail(existingUser, updatedUserCode);
-
-            logger.info("New user code created and sent to user's email");
         }
     }
 
@@ -249,24 +247,26 @@ public class UserServiceImpl implements UserService {
         emailService.sendEmail(user.getEmail(), "User Code Updated",
                 "updatedUserCode-mail-template", updatedUserCode, user.getFirstName(),
                 user.getLastName());
+        logger.info("A new user code has been created and sent to the user's email.");
+
     }
 
     private void sendUserCredentialsByEmail(User newUser, String password) {
         emailService.sendEmail(newUser.getEmail(), "Welcome!", "userCredentials-mail-template",
                 newUser.getUserCode(), password, newUser.getFirstName(), newUser.getLastName());
-        logger.info("User credentials sent to the user via email");
+        logger.info("The user credentials have been sent to the user via email.");
     }
 
     private void sendTerminationInfoByEmail(User user) {
         emailService.sendEmail(user.getEmail(), "Thanks for your efforts",
                 "terminationOfRelationship-mail-template", user.getFirstName(), user.getLastName());
-        logger.info("The user was informed via e-mail about the termination of his/her relationship.");
+        logger.info("The user has been informed via email about the termination of their relationship.");
     }
 
     private void sendWelcomeBackMessageByEmail(User user, String newPassword) {
         emailService.sendEmail(user.getEmail(), "Welcome Back!", "reHired-mail-template",
                 user.getUserCode(), newPassword, user.getFirstName(), user.getLastName());
-        logger.info("A welcome back email sent to the user: {}", user.getEmail());
+        logger.info("A welcome-back email has been sent to the user: {}", user.getEmail());
     }
 
     private void handleInitialAdmin(Set<Role> roles){
@@ -274,7 +274,7 @@ public class UserServiceImpl implements UserService {
             userRepository.findByEmail("admin@gmail.com")
                     .ifPresent(admin -> {
                         userRepository.delete(admin);
-                        logger.info("Initial admin is deleted");
+                        logger.info("The initial admin has been deleted.");
                     });
         }
     }

@@ -19,26 +19,26 @@ public class NameValidator {
 
     private boolean isValidName(String name, String type) {
         if (name == null || name.trim().isEmpty()) {
-            logger.error("ERROR: Invalid " + type + " name");
+            logger.error("Invalid " + type + " name: Name is null or empty");
             return false;
         }
 
         if (!name.matches(NAME_REGEX)) {
-            logger.error("ERROR: Invalid " + type + " name format");
+            logger.error("Invalid " + type + " name format: Name does not match the required pattern");
             return false;
         }
 
         if (type.equals("first") && !Character.isUpperCase(name.charAt(0))) {
-            logger.error("ERROR: First name should start with an uppercase letter");
+            logger.error("First name should start with an uppercase letter: " + name);
             return false;
         }
 
         if (type.equals("last") && !name.equals(name.toUpperCase())) {
-            logger.error("ERROR: Last name should be all uppercase letters");
+            logger.error("Last name should be all uppercase letters: " + name);
             return false;
         }
 
-        logger.info("INFO: Valid " + type + " name");
+        logger.info("Valid " + type + " name: " + name);
         return true;
     }
 }

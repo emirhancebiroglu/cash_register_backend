@@ -39,7 +39,7 @@ public class AdminInitializationConfig implements CommandLineRunner {
             createAdminUser(adminRole);
         }
         else{
-            logger.info("Admin user already exists. Skipping initialization.");
+            logger.info("There is already a user with admin role. Skipping default admin initialization.");
         }
     }
 
@@ -61,6 +61,6 @@ public class AdminInitializationConfig implements CommandLineRunner {
                 .build();
 
         userRepository.save(adminUser);
-        logger.info("Admin user initialized successfully.");
+        logger.info("There is no user with admin role. Default admin user is initialized");
     }
 }

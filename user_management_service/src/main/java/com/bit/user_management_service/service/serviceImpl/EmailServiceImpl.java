@@ -61,7 +61,7 @@ public class EmailServiceImpl implements EmailService {
             String htmlContent = templateEngine.process(templateName, context);
             helper.setText(htmlContent, true);
             mailSender.send(mimeMessage);
-            logger.info("Mail is sent successfully");
+            logger.info("The mail has been successfully sent.");
 
         } catch (MessagingException e) {
             logger.error(e.getMessage());

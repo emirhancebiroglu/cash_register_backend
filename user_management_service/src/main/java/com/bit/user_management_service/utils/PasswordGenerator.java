@@ -23,8 +23,7 @@ public class PasswordGenerator {
 
         password.append(generateRandomSpecialCharacter());
 
-
-        logger.info("Generated Password: " + password);
+        logger.info("Generated Password for User with ID " + userId + ": " + password);
         return password.toString();
     }
 

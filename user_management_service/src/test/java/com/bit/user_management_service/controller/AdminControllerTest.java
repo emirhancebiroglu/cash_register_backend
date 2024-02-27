@@ -37,9 +37,9 @@ public class AdminControllerTest {
     void testAddUserAsAdmin() throws Exception {
         mockMvc.perform(post("/api/users/admin/add-user")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"firstName\": \"emirhan\"," +
-                                " \"lastName\": \"cebiroglu\"," +
-                                " \"email\": \"emirhan11@hotmail.com\"," +
+                        .content("{\"firstName\": \"Emirhan\"," +
+                                " \"lastName\": \"CEBIROGLU\"," +
+                                " \"email\": \"emirhan14@hotmail.com\"," +
                                 " \"roles\": [\"ROLE_ADMIN\"]}"))
                 .andExpect(status().isCreated());
     }
@@ -59,7 +59,7 @@ public class AdminControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void testUpdateUserAsAdmin() throws Exception {
-        mockMvc.perform(put("/api/users/admin/update-user/{user_id}", 13L)
+        mockMvc.perform(put("/api/users/admin/update-user/{user_id}", 20L)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"firstName\": \"\"," +
                                 " \"lastName\": \"\"," +
@@ -72,7 +72,7 @@ public class AdminControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void testDeleteUserAsAdmin() throws Exception {
-        mockMvc.perform(delete("/api/users/admin/delete-user/{user_id}", 13L)
+        mockMvc.perform(delete("/api/users/admin/delete-user/{user_id}", 21L)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
     }
@@ -80,7 +80,7 @@ public class AdminControllerTest {
     @Test
     @WithMockUser(roles = "ADMIN")
     void testReactivateUserAsAdmin() throws Exception {
-        mockMvc.perform(post("/api/users/admin/reactivate-user/{user_id}", 14L)
+        mockMvc.perform(post("/api/users/admin/reactivate-user/{user_id}", 22L)
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
     }

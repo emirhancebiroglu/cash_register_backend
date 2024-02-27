@@ -1,6 +1,8 @@
 package com.bit.user_management_service.exceptions.RoleNotFound;
 
-public class RoleNotFoundException extends RuntimeException{
+import org.springframework.dao.DataAccessException;
+
+public class RoleNotFoundException extends DataAccessException {
     public RoleNotFoundException(String message) {
         super(message);
     }
