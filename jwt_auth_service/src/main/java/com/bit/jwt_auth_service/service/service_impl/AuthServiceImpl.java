@@ -1,12 +1,12 @@
 package com.bit.jwt_auth_service.service.service_impl;
 
-import com.bit.jwt_auth_service.dto.Login.LoginRes;
 import com.bit.jwt_auth_service.dto.Login.LoginReq;
+import com.bit.jwt_auth_service.dto.Login.LoginRes;
+import com.bit.jwt_auth_service.entity.User;
+import com.bit.jwt_auth_service.repository.UserRepository;
 import com.bit.jwt_auth_service.service.AuthService;
 import com.bit.jwt_auth_service.service.JwtService;
 import com.bit.sharedClasses.dto.TokenValidationReq;
-import com.bit.sharedClasses.entity.User;
-import com.bit.sharedClasses.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

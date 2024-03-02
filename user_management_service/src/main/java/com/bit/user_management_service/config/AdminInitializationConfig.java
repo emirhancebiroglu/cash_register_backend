@@ -5,7 +5,9 @@ import com.bit.sharedClasses.entity.Role;
 import com.bit.sharedClasses.entity.User;
 import com.bit.sharedClasses.repository.RoleRepository;
 import com.bit.sharedClasses.repository.UserRepository;
+import com.bit.user_management_service.dto.UserCredentialsDTO;
 import com.bit.user_management_service.exceptions.RoleNotFound.RoleNotFoundException;
+import com.bit.user_management_service.utils.CredentialsProducer;
 import lombok.AllArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +26,7 @@ public class AdminInitializationConfig implements CommandLineRunner {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoderConfig passwordEncoderConfig;
+    private final CredentialsProducer credentialsProducer;
     private static final Logger logger = LoggerFactory.getLogger(AdminInitializationConfig.class);
 
     @Override
@@ -61,6 +64,14 @@ public class AdminInitializationConfig implements CommandLineRunner {
                 .build();
 
         userRepository.save(adminUser);
+
+        UserCredentialsDTO userCredentialsDTO = new UserCredentialsDTO();
+        userCredentialsDTO.setUserCode(adminUser.getUserCode());
+        userCredentialsDTO.setPassword(adminUser.getPassword());
+        userCredentialsDTO.setRoles(adminUser.getRoles());
+
+        credentialsProducer.sendMessage("user-credentials" ,userCredentialsDTO);
+
         logger.info("There is no user with admin role. Default admin user is initialized");
     }
 }

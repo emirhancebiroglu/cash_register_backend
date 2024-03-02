@@ -8,6 +8,7 @@ import com.bit.sharedClasses.repository.UserRepository;
 import com.bit.user_management_service.config.AdminInitializationConfig;
 import com.bit.user_management_service.dto.AddUser.AddUserReq;
 import com.bit.user_management_service.dto.UpdateUser.UpdateUserReq;
+import com.bit.user_management_service.dto.UserCredentialsDTO;
 import com.bit.user_management_service.exceptions.InvalidEmail.InvalidEmailException;
 import com.bit.user_management_service.exceptions.InvalidName.InvalidNameException;
 import com.bit.user_management_service.exceptions.RoleNotFound.RoleNotFoundException;
@@ -17,6 +18,7 @@ import com.bit.user_management_service.exceptions.UserAlreadyExists.UserAlreadyE
 import com.bit.user_management_service.exceptions.UserNotFound.UserNotFoundException;
 import com.bit.user_management_service.service.EmailService;
 import com.bit.user_management_service.service.UserService;
+import com.bit.user_management_service.utils.CredentialsProducer;
 import com.bit.user_management_service.utils.PasswordGenerator;
 import com.bit.user_management_service.utils.UserCodeGenerator;
 import com.bit.user_management_service.validators.EmailValidator;
@@ -42,6 +44,7 @@ public class UserServiceImpl implements UserService {
     private final EmailValidator emailValidator;
     private final EmailService emailService;
     private final AdminInitializationConfig adminInitializationConfig;
+    private final CredentialsProducer credentialsProducer;
     private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
     @Override
@@ -61,6 +64,13 @@ public class UserServiceImpl implements UserService {
 
         userRepository.save(newUser);
         logger.info("User added successfully: {}", newUser.getUserCode());
+
+        UserCredentialsDTO userCredentialsDTO = new UserCredentialsDTO();
+        userCredentialsDTO.setUserCode(newUser.getUserCode());
+        userCredentialsDTO.setPassword(newUser.getPassword());
+        userCredentialsDTO.setRoles(newUser.getRoles());
+
+        credentialsProducer.sendMessage("user-credentials", userCredentialsDTO);
 
         sendUserCredentialsByEmail(newUser, password);
     }
