@@ -6,6 +6,7 @@ import com.bit.sharedClasses.entity.User;
 import com.bit.sharedClasses.repository.RoleRepository;
 import com.bit.sharedClasses.repository.UserRepository;
 import com.bit.user_management_service.dto.UserCredentialsDTO;
+import com.bit.user_management_service.dto.UserSafeDeletionDTO;
 import com.bit.user_management_service.exceptions.RoleNotFound.RoleNotFoundException;
 import com.bit.user_management_service.utils.CredentialsProducer;
 import lombok.AllArgsConstructor;
@@ -17,6 +18,7 @@ import org.springframework.core.annotation.Order;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 @Configuration
@@ -54,23 +56,39 @@ public class AdminInitializationConfig implements CommandLineRunner {
         return usersWithAdminRole.isEmpty() || usersWithAdminRole.stream().allMatch(User::isDeleted);
     }
     private void createAdminUser(Role adminRole) {
-        User adminUser = User.builder()
-                .firstName("admin")
-                .lastName("admin")
-                .email("admin@gmail.com")
-                .userCode("admin")
-                .password(passwordEncoderConfig.passwordEncoder().encode("admin"))
-                .roles(Set.of(adminRole))
-                .build();
+        Optional<User> initialAdmin = userRepository.findByUserCode("admin");
 
-        userRepository.save(adminUser);
+        if (initialAdmin.isEmpty()){
+            User adminUser = User.builder()
+                    .firstName("admin")
+                    .lastName("admin")
+                    .email("admin@gmail.com")
+                    .userCode("admin")
+                    .password(passwordEncoderConfig.passwordEncoder().encode("admin"))
+                    .roles(Set.of(adminRole))
+                    .build();
 
-        UserCredentialsDTO userCredentialsDTO = new UserCredentialsDTO();
-        userCredentialsDTO.setUserCode(adminUser.getUserCode());
-        userCredentialsDTO.setPassword(adminUser.getPassword());
-        userCredentialsDTO.setRoles(adminUser.getRoles());
+            userRepository.save(adminUser);
 
-        credentialsProducer.sendMessage("user-credentials" ,userCredentialsDTO);
+            UserCredentialsDTO userCredentialsDTO = new UserCredentialsDTO();
+            userCredentialsDTO.setId(adminUser.getId());
+            userCredentialsDTO.setUserCode(adminUser.getUserCode());
+            userCredentialsDTO.setPassword(adminUser.getPassword());
+            userCredentialsDTO.setRoles(adminUser.getRoles());
+
+            credentialsProducer.sendMessage("user-credentials" ,userCredentialsDTO);
+        }
+        else{
+            initialAdmin.get().setDeleted(false);
+
+            UserSafeDeletionDTO userSafeDeletionDTO = new UserSafeDeletionDTO();
+            userSafeDeletionDTO.setId(initialAdmin.get().getId());
+            userSafeDeletionDTO.setDeleted(initialAdmin.get().isDeleted());
+
+            credentialsProducer.sendMessage("user-deletion", userSafeDeletionDTO);
+
+            userRepository.save(initialAdmin.get());
+        }
 
         logger.info("There is no user with admin role. Default admin user is initialized");
     }

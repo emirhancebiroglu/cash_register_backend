@@ -7,10 +7,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Data
-public class UserCredentialsDTO {
+public class UserUpdateDTO {
     private Long id;
     private String userCode;
-    private String password;
     private Set<Role> roles = new HashSet<>();
-    boolean isDeleted = false;
 }

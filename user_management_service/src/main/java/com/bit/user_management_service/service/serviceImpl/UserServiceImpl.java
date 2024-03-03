@@ -9,6 +9,9 @@ import com.bit.user_management_service.config.AdminInitializationConfig;
 import com.bit.user_management_service.dto.AddUser.AddUserReq;
 import com.bit.user_management_service.dto.UpdateUser.UpdateUserReq;
 import com.bit.user_management_service.dto.UserCredentialsDTO;
+import com.bit.user_management_service.dto.UserReactivateDTO;
+import com.bit.user_management_service.dto.UserSafeDeletionDTO;
+import com.bit.user_management_service.dto.UserUpdateDTO;
 import com.bit.user_management_service.exceptions.InvalidEmail.InvalidEmailException;
 import com.bit.user_management_service.exceptions.InvalidName.InvalidNameException;
 import com.bit.user_management_service.exceptions.RoleNotFound.RoleNotFoundException;
@@ -66,6 +69,7 @@ public class UserServiceImpl implements UserService {
         logger.info("User added successfully: {}", newUser.getUserCode());
 
         UserCredentialsDTO userCredentialsDTO = new UserCredentialsDTO();
+        userCredentialsDTO.setId(newUser.getId());
         userCredentialsDTO.setUserCode(newUser.getUserCode());
         userCredentialsDTO.setPassword(newUser.getPassword());
         userCredentialsDTO.setRoles(newUser.getRoles());
@@ -100,6 +104,13 @@ public class UserServiceImpl implements UserService {
             existingUser.setDeleted(true);
             userRepository.save(existingUser);
             adminInitializationConfig.initializeAdmin();
+
+            UserSafeDeletionDTO userSafeDeletionDTO = new UserSafeDeletionDTO();
+            userSafeDeletionDTO.setId(existingUser.getId());
+            userSafeDeletionDTO.setDeleted(existingUser.isDeleted());
+
+            credentialsProducer.sendMessage("user-deletion", userSafeDeletionDTO);
+
             logger.info("User with ID {} deleted successfully", userId);
 
             sendTerminationInfoByEmail(existingUser);
@@ -120,6 +131,14 @@ public class UserServiceImpl implements UserService {
             String newPassword = resetUserPassword(existingUser);
 
             userRepository.save(existingUser);
+
+            UserReactivateDTO userReactivateDTO = new UserReactivateDTO();
+            userReactivateDTO.setId(existingUser.getId());
+            userReactivateDTO.setDeleted(existingUser.isDeleted());
+            userReactivateDTO.setPassword(existingUser.getPassword());
+
+            credentialsProducer.sendMessage("user-reactivate", userReactivateDTO);
+
             handleInitialAdmin(existingUser.getRoles());
             logger.info("An existing user has been re-added to the system: {}", existingUser.getEmail());
 
@@ -236,6 +255,14 @@ public class UserServiceImpl implements UserService {
         if (!updateUserReq.getRoles().isEmpty()){
             updateUserCodeIfRolesAreChanged(existingUser, updateUserReq);
             existingUser.setRoles(roles);
+
+            UserUpdateDTO userUpdateDTO = new UserUpdateDTO();
+
+            userUpdateDTO.setId(existingUser.getId());
+            userUpdateDTO.setUserCode(existingUser.getUserCode());
+            userUpdateDTO.setRoles(existingUser.getRoles());
+
+            credentialsProducer.sendMessage("user-update", userUpdateDTO);
         }
 
         userRepository.save(existingUser);
@@ -281,9 +308,17 @@ public class UserServiceImpl implements UserService {
 
     private void handleInitialAdmin(Set<Role> roles){
         if (roles.stream().anyMatch(role -> role.getName().equals("ROLE_ADMIN"))) {
-            userRepository.findByEmail("admin@gmail.com")
+            userRepository.findByUserCode("admin")
                     .ifPresent(admin -> {
-                        userRepository.delete(admin);
+                        admin.setDeleted(true);
+
+                        userRepository.save(admin);
+
+                        UserSafeDeletionDTO userSafeDeletionDTO = new UserSafeDeletionDTO();
+                        userSafeDeletionDTO.setId(admin.getId());
+                        userSafeDeletionDTO.setDeleted(admin.isDeleted());
+
+                        credentialsProducer.sendMessage("user-deletion", userSafeDeletionDTO);
                         logger.info("The initial admin has been deleted.");
                     });
         }

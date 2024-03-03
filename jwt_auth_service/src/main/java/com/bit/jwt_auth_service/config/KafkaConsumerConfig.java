@@ -1,6 +1,5 @@
 package com.bit.jwt_auth_service.config;
 
-import com.bit.jwt_auth_service.dto.UserCredentialsDTO;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.context.annotation.Bean;
@@ -17,21 +16,24 @@ import java.util.Map;
 public class KafkaConsumerConfig {
 
     @Bean
-    public ConsumerFactory<String, UserCredentialsDTO> consumerFactory() {
+    public ConsumerFactory<String, Object> consumerFactory() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         configProps.put(ConsumerConfig.GROUP_ID_CONFIG, "user-credentials");
         configProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         configProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
         configProps.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
-        configProps.put(JsonDeserializer.TYPE_MAPPINGS, "userCredentials:com.bit.jwt_auth_service.dto.UserCredentialsDTO");
+        configProps.put(JsonDeserializer.TYPE_MAPPINGS, "userCredentials:com.bit.jwt_auth_service.dto.UserCredentialsDTO, " +
+                "userSafeDeletion:com.bit.jwt_auth_service.dto.UserSafeDeletionDTO, " +
+                "userUpdate:com.bit.jwt_auth_service.dto.UserUpdateDTO, " +
+                "userReactivate:com.bit.jwt_auth_service.dto.UserReactivateDTO");
 
         return new DefaultKafkaConsumerFactory<>(configProps);
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, UserCredentialsDTO> kafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, UserCredentialsDTO> factory = new ConcurrentKafkaListenerContainerFactory<>();
+    public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
         return factory;
     }

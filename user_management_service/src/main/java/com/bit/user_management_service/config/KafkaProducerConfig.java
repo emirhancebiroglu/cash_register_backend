@@ -1,8 +1,7 @@
 package com.bit.user_management_service.config;
 
-import com.bit.user_management_service.dto.UserCredentialsDTO;
-import org.apache.kafka.common.serialization.StringSerializer;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
@@ -16,16 +15,19 @@ import java.util.Map;
 @Configuration
 public class KafkaProducerConfig {
     @Bean
-    public ProducerFactory<String, UserCredentialsDTO> producerFactory() {
+    public ProducerFactory<String, Object> producerFactory() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-        configProps.put(JsonSerializer.TYPE_MAPPINGS, "userCredentials:com.bit.user_management_service.dto.UserCredentialsDTO");
+        configProps.put(JsonSerializer.TYPE_MAPPINGS, "userCredentials:com.bit.user_management_service.dto.UserCredentialsDTO, " +
+                "userSafeDeletion:com.bit.user_management_service.dto.UserSafeDeletionDTO, " +
+                "userUpdate:com.bit.user_management_service.dto.UserUpdateDTO, " +
+                "userReactivate:com.bit.user_management_service.dto.UserReactivateDTO");
         return new DefaultKafkaProducerFactory<>(configProps);
     }
     @Bean
-    public KafkaTemplate<String, UserCredentialsDTO> kafkaTemplate() {
+    public KafkaTemplate<String, Object> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
 }
