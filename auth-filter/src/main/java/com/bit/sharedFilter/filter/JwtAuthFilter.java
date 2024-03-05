@@ -1,8 +1,10 @@
 package com.bit.sharedFilter.filter;
 
-import com.bit.sharedClasses.dto.TokenValidationReq;
-import com.bit.sharedClasses.service.CustomUserDetailsService;
 import com.bit.sharedFilter.client.JwtAuthServiceClient;
+import com.bit.sharedFilter.dto.TokenValidationReq;
+import com.bit.sharedFilter.dto.UserDetailsDTO;
+import com.bit.sharedFilter.utils.UserDetailsAdapter;
+import com.bit.sharedFilter.utils.UserDetailsConsumer;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,7 +26,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
     private final JwtAuthServiceClient jwtAuthServiceClient;
-    private final CustomUserDetailsService customUserDetailsService;
+    private final UserDetailsConsumer userDetailsConsumer;
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
@@ -44,7 +46,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         userCode = jwtAuthServiceClient.extractUsername(tokenValidationReqToExtractUsername);
 
         if(StringUtils.isNotEmpty(userCode) && SecurityContextHolder.getContext().getAuthentication() == null){
-            UserDetails userDetails = customUserDetailsService.userDetailsService().loadUserByUsername(userCode);
+            UserDetailsDTO userDetailsDTO = userDetailsConsumer.getCachedUserDetails();
+            if (userDetailsDTO == null || !userDetailsDTO.getUserCode().equals(userCode)) {
+                try {
+                    userDetailsDTO = userDetailsConsumer.consumeUserDetails();
+                    userDetailsConsumer.updateCachedUserDetails(userDetailsDTO);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+            UserDetails userDetails = new UserDetailsAdapter(userDetailsDTO);
 
             TokenValidationReq tokenValidationReqToValidateToken = new TokenValidationReq(jwt, userDetails.getUsername());
 

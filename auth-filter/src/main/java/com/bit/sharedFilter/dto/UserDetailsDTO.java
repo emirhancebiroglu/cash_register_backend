@@ -1,16 +1,16 @@
-package com.bit.user_management_service.dto;
+package com.bit.sharedFilter.dto;
 
-import com.bit.user_management_service.entity.Role;
+import com.bit.sharedFilter.model.Role;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.HashSet;
 import java.util.Set;
 
 @Data
-public class UserCredentialsDTO {
-    private Long id;
+@NoArgsConstructor
+public class UserDetailsDTO {
     private String userCode;
     private String password;
     private Set<Role> roles = new HashSet<>();
-    boolean isDeleted = false;
 }

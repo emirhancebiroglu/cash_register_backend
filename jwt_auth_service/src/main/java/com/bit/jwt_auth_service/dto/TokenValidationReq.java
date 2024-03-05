@@ -1,4 +1,4 @@
-package com.bit.sharedClasses.dto;
+package com.bit.jwt_auth_service.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

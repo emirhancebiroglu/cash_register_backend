@@ -1,4 +1,4 @@
-package com.bit.sharedClasses.config;
+package com.bit.user_management_service.config;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;

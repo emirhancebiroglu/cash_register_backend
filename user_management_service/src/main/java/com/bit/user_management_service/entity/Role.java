@@ -1,4 +1,4 @@
-package com.bit.sharedClasses.entity;
+package com.bit.user_management_service.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;

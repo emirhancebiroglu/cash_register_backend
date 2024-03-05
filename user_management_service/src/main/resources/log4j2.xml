@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration>\
     <Properties>
-        <Property name="logDirectory">./logs</Property>
+        <Property name="logDirectory">./user_management_service/logs</Property>
     </Properties>
     <Appenders>
         <RollingFile name="RollingFile" fileName="${logDirectory}/user_management.log"

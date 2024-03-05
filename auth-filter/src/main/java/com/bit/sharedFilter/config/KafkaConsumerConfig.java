@@ -1,5 +1,6 @@
-package com.bit.jwt_auth_service.config;
+package com.bit.sharedFilter.config;
 
+import com.bit.sharedFilter.dto.UserDetailsDTO;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.context.annotation.Bean;
@@ -16,25 +17,23 @@ import java.util.Map;
 public class KafkaConsumerConfig {
 
     @Bean
-    public ConsumerFactory<String, Object> consumerFactory() {
+    public ConsumerFactory<String, UserDetailsDTO> consumerFactory() {
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         configProps.put(ConsumerConfig.GROUP_ID_CONFIG, "user-credentials");
         configProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
         configProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
         configProps.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
-        configProps.put(JsonDeserializer.TYPE_MAPPINGS, "userCredentials:com.bit.jwt_auth_service.dto.UserCredentialsDTO, " +
-                "userSafeDeletion:com.bit.jwt_auth_service.dto.UserSafeDeletionDTO, " +
-                "userUpdate:com.bit.jwt_auth_service.dto.UserUpdateDTO, " +
-                "userReactivate:com.bit.jwt_auth_service.dto.UserReactivateDTO");
+        configProps.put(JsonDeserializer.TYPE_MAPPINGS, "userDetails:com.bit.sharedFilter.dto.UserDetailsDTO");
 
-        return new DefaultKafkaConsumerFactory<>(configProps);
+        return new DefaultKafkaConsumerFactory<>(configProps, new StringDeserializer(), new JsonDeserializer<>(UserDetailsDTO.class));
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
+    public ConcurrentKafkaListenerContainerFactory<String, UserDetailsDTO> kafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, UserDetailsDTO> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
         return factory;
     }
+
 }

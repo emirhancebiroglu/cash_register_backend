@@ -1,9 +1,9 @@
   package com.bit.jwt_auth_service.controller;
 
-  import com.bit.jwt_auth_service.dto.Login.LoginRes;
   import com.bit.jwt_auth_service.dto.Login.LoginReq;
+  import com.bit.jwt_auth_service.dto.Login.LoginRes;
+  import com.bit.jwt_auth_service.dto.TokenValidationReq;
   import com.bit.jwt_auth_service.service.AuthService;
-  import com.bit.sharedClasses.dto.TokenValidationReq;
   import lombok.Data;
   import org.springframework.web.bind.annotation.PostMapping;
   import org.springframework.web.bind.annotation.RequestBody;

@@ -3,7 +3,7 @@ package com.bit.jwt_auth_service.controller;
 import com.bit.jwt_auth_service.dto.Login.LoginReq;
 import com.bit.jwt_auth_service.repository.UserRepository;
 import com.bit.jwt_auth_service.service.JwtService;
-import com.bit.sharedClasses.dto.TokenValidationReq;
+import com.bit.jwt_auth_service.dto.TokenValidationReq;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

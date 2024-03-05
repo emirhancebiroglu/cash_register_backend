@@ -1,7 +1,7 @@
 package com.bit.user_management_service.config;
 
-import com.bit.sharedClasses.entity.Role;
-import com.bit.sharedClasses.repository.RoleRepository;
+import com.bit.user_management_service.entity.Role;
+import com.bit.user_management_service.repository.RoleRepository;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

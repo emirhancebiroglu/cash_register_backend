@@ -1,6 +1,6 @@
 package com.bit.user_management_service.dto;
 
-import com.bit.sharedClasses.entity.Role;
+import com.bit.user_management_service.entity.Role;
 import lombok.Data;
 
 import java.util.HashSet;

@@ -1,8 +1,9 @@
 package com.bit.sharedFilter.client;
 
 
-import com.bit.sharedClasses.dto.TokenValidationReq;
+import com.bit.sharedFilter.dto.TokenValidationReq;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

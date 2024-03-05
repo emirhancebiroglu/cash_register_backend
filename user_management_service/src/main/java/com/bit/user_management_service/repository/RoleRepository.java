@@ -1,6 +1,6 @@
-package com.bit.sharedClasses.repository;
+package com.bit.user_management_service.repository;
 
-import com.bit.sharedClasses.entity.Role;
+import com.bit.user_management_service.entity.Role;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

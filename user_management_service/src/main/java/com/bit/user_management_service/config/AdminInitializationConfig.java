@@ -1,10 +1,9 @@
 package com.bit.user_management_service.config;
 
-import com.bit.sharedClasses.config.PasswordEncoderConfig;
-import com.bit.sharedClasses.entity.Role;
-import com.bit.sharedClasses.entity.User;
-import com.bit.sharedClasses.repository.RoleRepository;
-import com.bit.sharedClasses.repository.UserRepository;
+import com.bit.user_management_service.entity.Role;
+import com.bit.user_management_service.entity.User;
+import com.bit.user_management_service.repository.RoleRepository;
+import com.bit.user_management_service.repository.UserRepository;
 import com.bit.user_management_service.dto.UserCredentialsDTO;
 import com.bit.user_management_service.dto.UserSafeDeletionDTO;
 import com.bit.user_management_service.exceptions.RoleNotFound.RoleNotFoundException;

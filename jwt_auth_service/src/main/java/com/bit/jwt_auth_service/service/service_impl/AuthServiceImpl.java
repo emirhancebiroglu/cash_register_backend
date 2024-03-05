@@ -2,11 +2,13 @@ package com.bit.jwt_auth_service.service.service_impl;
 
 import com.bit.jwt_auth_service.dto.Login.LoginReq;
 import com.bit.jwt_auth_service.dto.Login.LoginRes;
+import com.bit.jwt_auth_service.dto.TokenValidationReq;
+import com.bit.jwt_auth_service.dto.UserDetailsDTO;
 import com.bit.jwt_auth_service.entity.User;
 import com.bit.jwt_auth_service.repository.UserRepository;
 import com.bit.jwt_auth_service.service.AuthService;
 import com.bit.jwt_auth_service.service.JwtService;
-import com.bit.sharedClasses.dto.TokenValidationReq;
+import com.bit.jwt_auth_service.utils.UserDetailsProducer;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +25,7 @@ public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
     private final UserRepository userRepository;
     private final JwtService jwtService;
+    private final UserDetailsProducer userDetailsProducer;
 
     Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
 
@@ -34,6 +37,14 @@ public class AuthServiceImpl implements AuthService {
                             loginReq.getPassword()));
             User user = userRepository.findByUserCode(loginReq.getUserCode())
                     .orElseThrow(() -> new IllegalArgumentException("User not found"));
+
+            UserDetailsDTO userDetailsDTO = new UserDetailsDTO();
+            userDetailsDTO.setUserCode(user.getUserCode());
+            userDetailsDTO.setPassword(user.getPassword());
+            userDetailsDTO.setRoles(user.getRoles());
+
+            userDetailsProducer.sendMessage("user-details", userDetailsDTO);
+
             var jwt = jwtService.generateToken(user);
 
             return LoginRes.builder().token(jwt).build();

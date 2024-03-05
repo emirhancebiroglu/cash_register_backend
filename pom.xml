@@ -20,7 +20,6 @@
         <module>user_management_service</module>
         <module>eureka-server</module>
         <module>jwt_auth_service</module>
-        <module>library</module>
         <module>auth-filter</module>
     </modules>
 

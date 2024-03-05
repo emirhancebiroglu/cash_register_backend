@@ -1,10 +1,10 @@
 package com.bit.user_management_service.service.serviceImpl;
 
-import com.bit.sharedClasses.config.PasswordEncoderConfig;
-import com.bit.sharedClasses.entity.Role;
-import com.bit.sharedClasses.entity.User;
-import com.bit.sharedClasses.repository.RoleRepository;
-import com.bit.sharedClasses.repository.UserRepository;
+import com.bit.user_management_service.config.PasswordEncoderConfig;
+import com.bit.user_management_service.entity.Role;
+import com.bit.user_management_service.entity.User;
+import com.bit.user_management_service.repository.RoleRepository;
+import com.bit.user_management_service.repository.UserRepository;
 import com.bit.user_management_service.config.AdminInitializationConfig;
 import com.bit.user_management_service.dto.AddUser.AddUserReq;
 import com.bit.user_management_service.dto.UpdateUser.UpdateUserReq;

@@ -1,7 +1,7 @@
 package com.bit.user_management_service.config;
 
-import com.bit.sharedClasses.entity.Role;
-import com.bit.sharedClasses.repository.RoleRepository;
+import com.bit.user_management_service.entity.Role;
+import com.bit.user_management_service.repository.RoleRepository;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

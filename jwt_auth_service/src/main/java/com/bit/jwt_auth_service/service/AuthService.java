@@ -1,8 +1,8 @@
 package com.bit.jwt_auth_service.service;
 
-import com.bit.jwt_auth_service.dto.Login.LoginRes;
 import com.bit.jwt_auth_service.dto.Login.LoginReq;
-import com.bit.sharedClasses.dto.TokenValidationReq;
+import com.bit.jwt_auth_service.dto.Login.LoginRes;
+import com.bit.jwt_auth_service.dto.TokenValidationReq;
 import org.springframework.web.bind.annotation.RequestBody;
 
 public interface AuthService {
