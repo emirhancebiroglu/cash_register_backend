@@ -9,6 +9,7 @@ import com.bit.user_management_service.config.AdminInitializationConfig;
 import com.bit.user_management_service.dto.AddUser.AddUserReq;
 import com.bit.user_management_service.dto.UpdateUser.UpdateUserReq;
 import com.bit.user_management_service.service.serviceImpl.UserServiceImpl;
+import com.bit.user_management_service.utils.CredentialsProducer;
 import com.bit.user_management_service.utils.PasswordGenerator;
 import com.bit.user_management_service.utils.UserCodeGenerator;
 import com.bit.user_management_service.validators.EmailValidator;
@@ -60,6 +61,9 @@ public class UserServiceTest {
 
     @Mock
     AdminInitializationConfig adminInitializationConfig;
+
+    @Mock
+    CredentialsProducer credentialsProducer;
 
     @InjectMocks
     UserServiceImpl userService;

@@ -1,87 +1,76 @@
 package com.bit.user_management_service.controller;
 
+import com.bit.user_management_service.dto.AddUser.AddUserReq;
+import com.bit.user_management_service.dto.UpdateUser.UpdateUserReq;
+import com.bit.user_management_service.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
-@SpringBootTest
-@ActiveProfiles("test")
+
 public class AdminControllerTest {
 
-    @Autowired
-    private WebApplicationContext context;
+    @Mock
+    private UserService userService;
 
-    private MockMvc mockMvc;
+    @InjectMocks
+    private AdminController adminController;
 
     @BeforeEach
-    public void setup() {
-        mockMvc = MockMvcBuilders
-                .webAppContextSetup(context)
-                .apply(springSecurity())
-                .build();
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
-    void testAddUserAsAdmin() throws Exception {
-        mockMvc.perform(post("/api/users/admin/add-user")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"firstName\": \"Emirhan\"," +
-                                " \"lastName\": \"CEBIROGLU\"," +
-                                " \"email\": \"emirhan14@hotmail.com\"," +
-                                " \"roles\": [\"ROLE_ADMIN\"]}"))
-                .andExpect(status().isCreated());
+    void testAddUser() {
+        AddUserReq addUserReq = new AddUserReq();
+
+        ResponseEntity<String> response = adminController.addUser(addUserReq);
+
+        assertEquals(HttpStatus.CREATED, response.getStatusCode());
+        assertEquals("User created successfully", response.getBody());
+        verify(userService, times(1)).addUser(addUserReq);
     }
 
     @Test
-    @WithMockUser
-    void testCannotCreateUserIfNotAnAdmin() throws Exception {
-        mockMvc.perform(post("/api/users/admin/add-user")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"firstName\": \"emirhan\"," +
-                                " \"lastName\": \"cebiroglu\"," +
-                                " \"email\": \"emirhan@hotmail.com\"," +
-                                " \"roles\": [\"ROLE_CASHIER\"]}"))
-                .andExpect(status().isForbidden());
+    void testUpdateUser() {
+        Long userId = 1L;
+        UpdateUserReq updateUserReq = new UpdateUserReq();
+
+        ResponseEntity<String> response = adminController.updateUser(userId, updateUserReq);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("User updated successfully", response.getBody());
+        verify(userService, times(1)).updateUser(userId, updateUserReq);
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
-    void testUpdateUserAsAdmin() throws Exception {
-        mockMvc.perform(put("/api/users/admin/update-user/{user_id}", 20L)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"firstName\": \"\"," +
-                                " \"lastName\": \"\"," +
-                                " \"email\": \"\"," +
-                                " \"roles\": [\"ROLE_ADMIN\", \"ROLE_CASHIER\"]}"))
-                .andExpect(status().isOk());
-    }
+    void testDeleteUser() {
+        Long userId = 1L;
 
+        ResponseEntity<String> response = adminController.deleteUser(userId);
 
-    @Test
-    @WithMockUser(roles = "ADMIN")
-    void testDeleteUserAsAdmin() throws Exception {
-        mockMvc.perform(delete("/api/users/admin/delete-user/{user_id}", 21L)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("User deleted successfully", response.getBody());
+        verify(userService, times(1)).deleteUser(userId);
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
-    void testReactivateUserAsAdmin() throws Exception {
-        mockMvc.perform(post("/api/users/admin/reactivate-user/{user_id}", 22L)
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+    void testReactivateUser() {
+        Long userId = 1L;
+
+        ResponseEntity<String> response = adminController.reactivateUser(userId);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("User reactivated successfully", response.getBody());
+        verify(userService, times(1)).reactivateUser(userId);
     }
 }

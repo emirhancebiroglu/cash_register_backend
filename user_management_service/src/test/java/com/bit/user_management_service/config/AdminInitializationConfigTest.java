@@ -4,6 +4,8 @@ import com.bit.user_management_service.entity.Role;
 import com.bit.user_management_service.entity.User;
 import com.bit.user_management_service.repository.RoleRepository;
 import com.bit.user_management_service.repository.UserRepository;
+import com.bit.user_management_service.utils.CredentialsProducer;
+import lombok.Getter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +23,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@Getter
 class AdminInitializationConfigTest {
     @Mock
     private UserRepository userRepository;
@@ -33,6 +36,9 @@ class AdminInitializationConfigTest {
 
     @Mock
     private PasswordEncoder passwordEncoder;
+
+    @Mock
+    private CredentialsProducer credentialsProducer;
 
     @InjectMocks
     private AdminInitializationConfig adminInitializationConfig;
