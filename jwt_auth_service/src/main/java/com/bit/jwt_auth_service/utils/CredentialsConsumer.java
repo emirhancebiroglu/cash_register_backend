@@ -1,9 +1,9 @@
 package com.bit.jwt_auth_service.utils;
 
-import com.bit.jwt_auth_service.dto.UserCredentialsDTO;
-import com.bit.jwt_auth_service.dto.UserReactivateDTO;
-import com.bit.jwt_auth_service.dto.UserSafeDeletionDTO;
-import com.bit.jwt_auth_service.dto.UserUpdateDTO;
+import com.bit.jwt_auth_service.dto.kafka.UserCredentialsDTO;
+import com.bit.jwt_auth_service.dto.kafka.UserReactivateDTO;
+import com.bit.jwt_auth_service.dto.kafka.UserSafeDeletionDTO;
+import com.bit.jwt_auth_service.dto.kafka.UserUpdateDTO;
 import com.bit.jwt_auth_service.entity.User;
 import com.bit.jwt_auth_service.exceptions.UserNotFound.UserNotFoundException;
 import com.bit.jwt_auth_service.repository.UserRepository;
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component;
 public class CredentialsConsumer {
     private final UserRepository userRepository;
 
-    @KafkaListener(topics = "user-credentials", groupId = "user-credentials")
+    @KafkaListener(topics = "user-credentials", groupId = "users")
     public void listen(UserCredentialsDTO userCredentials) {
         User user = User
                 .builder()
@@ -30,7 +30,7 @@ public class CredentialsConsumer {
         userRepository.save(user);
     }
 
-    @KafkaListener(topics = "user-deletion", groupId = "user-credentials")
+    @KafkaListener(topics = "user-deletion", groupId = "users")
     public void listen(UserSafeDeletionDTO userSafeDeletionDTO) {
         User user = userRepository.findById(userSafeDeletionDTO.getId()).orElseThrow(() -> new UserNotFoundException("User not found"));
 
@@ -39,7 +39,7 @@ public class CredentialsConsumer {
         userRepository.save(user);
     }
 
-    @KafkaListener(topics = "user-update", groupId = "user-credentials")
+    @KafkaListener(topics = "user-update", groupId = "users")
     public void listen(UserUpdateDTO userUpdateDTO) {
         User user = userRepository.findById(userUpdateDTO.getId()).orElseThrow(() -> new UserNotFoundException("User not found"));
 
@@ -49,7 +49,7 @@ public class CredentialsConsumer {
         userRepository.save(user);
     }
 
-    @KafkaListener(topics = "user-reactivate", groupId = "user-credentials")
+    @KafkaListener(topics = "user-reactivate", groupId = "users")
     public void listen(UserReactivateDTO userReactivateDTO) {
         User user = userRepository.findById(userReactivateDTO.getId()).orElseThrow(() -> new UserNotFoundException("User not found"));
 

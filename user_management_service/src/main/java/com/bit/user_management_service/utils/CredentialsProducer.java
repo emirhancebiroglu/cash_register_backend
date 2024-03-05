@@ -1,9 +1,9 @@
 package com.bit.user_management_service.utils;
 
-import com.bit.user_management_service.dto.UserCredentialsDTO;
-import com.bit.user_management_service.dto.UserReactivateDTO;
-import com.bit.user_management_service.dto.UserSafeDeletionDTO;
-import com.bit.user_management_service.dto.UserUpdateDTO;
+import com.bit.user_management_service.dto.kafka.UserCredentialsDTO;
+import com.bit.user_management_service.dto.kafka.UserReactivateDTO;
+import com.bit.user_management_service.dto.kafka.UserSafeDeletionDTO;
+import com.bit.user_management_service.dto.kafka.UserUpdateDTO;
 import lombok.AllArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;

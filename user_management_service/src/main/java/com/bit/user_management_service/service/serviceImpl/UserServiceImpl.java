@@ -1,17 +1,15 @@
 package com.bit.user_management_service.service.serviceImpl;
 
-import com.bit.user_management_service.config.PasswordEncoderConfig;
-import com.bit.user_management_service.entity.Role;
-import com.bit.user_management_service.entity.User;
-import com.bit.user_management_service.repository.RoleRepository;
-import com.bit.user_management_service.repository.UserRepository;
 import com.bit.user_management_service.config.AdminInitializationConfig;
+import com.bit.user_management_service.config.PasswordEncoderConfig;
 import com.bit.user_management_service.dto.AddUser.AddUserReq;
 import com.bit.user_management_service.dto.UpdateUser.UpdateUserReq;
-import com.bit.user_management_service.dto.UserCredentialsDTO;
-import com.bit.user_management_service.dto.UserReactivateDTO;
-import com.bit.user_management_service.dto.UserSafeDeletionDTO;
-import com.bit.user_management_service.dto.UserUpdateDTO;
+import com.bit.user_management_service.dto.kafka.UserCredentialsDTO;
+import com.bit.user_management_service.dto.kafka.UserReactivateDTO;
+import com.bit.user_management_service.dto.kafka.UserSafeDeletionDTO;
+import com.bit.user_management_service.dto.kafka.UserUpdateDTO;
+import com.bit.user_management_service.entity.Role;
+import com.bit.user_management_service.entity.User;
 import com.bit.user_management_service.exceptions.InvalidEmail.InvalidEmailException;
 import com.bit.user_management_service.exceptions.InvalidName.InvalidNameException;
 import com.bit.user_management_service.exceptions.RoleNotFound.RoleNotFoundException;
@@ -19,6 +17,8 @@ import com.bit.user_management_service.exceptions.UserAlreadyActive.UserAlreadyA
 import com.bit.user_management_service.exceptions.UserAlreadyDeleted.UserAlreadyDeletedException;
 import com.bit.user_management_service.exceptions.UserAlreadyExists.UserAlreadyExistsException;
 import com.bit.user_management_service.exceptions.UserNotFound.UserNotFoundException;
+import com.bit.user_management_service.repository.RoleRepository;
+import com.bit.user_management_service.repository.UserRepository;
 import com.bit.user_management_service.service.EmailService;
 import com.bit.user_management_service.service.UserService;
 import com.bit.user_management_service.utils.CredentialsProducer;
@@ -26,6 +26,7 @@ import com.bit.user_management_service.utils.PasswordGenerator;
 import com.bit.user_management_service.utils.UserCodeGenerator;
 import com.bit.user_management_service.validators.EmailValidator;
 import com.bit.user_management_service.validators.NameValidator;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +38,7 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Data
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
@@ -68,13 +70,7 @@ public class UserServiceImpl implements UserService {
         userRepository.save(newUser);
         logger.info("User added successfully: {}", newUser.getUserCode());
 
-        UserCredentialsDTO userCredentialsDTO = new UserCredentialsDTO();
-        userCredentialsDTO.setId(newUser.getId());
-        userCredentialsDTO.setUserCode(newUser.getUserCode());
-        userCredentialsDTO.setPassword(newUser.getPassword());
-        userCredentialsDTO.setRoles(newUser.getRoles());
-
-        credentialsProducer.sendMessage("user-credentials", userCredentialsDTO);
+        sendUserCredentialsToAuthService(newUser);
 
         sendUserCredentialsByEmail(newUser, password);
     }
@@ -105,11 +101,7 @@ public class UserServiceImpl implements UserService {
             userRepository.save(existingUser);
             adminInitializationConfig.initializeAdmin();
 
-            UserSafeDeletionDTO userSafeDeletionDTO = new UserSafeDeletionDTO();
-            userSafeDeletionDTO.setId(existingUser.getId());
-            userSafeDeletionDTO.setDeleted(existingUser.isDeleted());
-
-            credentialsProducer.sendMessage("user-deletion", userSafeDeletionDTO);
+            sendDeletedUserInfoToAuthService(existingUser.getId(), existingUser.isDeleted());
 
             logger.info("User with ID {} deleted successfully", userId);
 
@@ -132,12 +124,7 @@ public class UserServiceImpl implements UserService {
 
             userRepository.save(existingUser);
 
-            UserReactivateDTO userReactivateDTO = new UserReactivateDTO();
-            userReactivateDTO.setId(existingUser.getId());
-            userReactivateDTO.setDeleted(existingUser.isDeleted());
-            userReactivateDTO.setPassword(existingUser.getPassword());
-
-            credentialsProducer.sendMessage("user-reactivate", userReactivateDTO);
+            sendReactivatedUserInfoToAuthService(existingUser.getId(), existingUser.isDeleted(), existingUser.getPassword());
 
             handleInitialAdmin(existingUser.getRoles());
             logger.info("An existing user has been re-added to the system: {}", existingUser.getEmail());
@@ -256,13 +243,7 @@ public class UserServiceImpl implements UserService {
             updateUserCodeIfRolesAreChanged(existingUser, updateUserReq);
             existingUser.setRoles(roles);
 
-            UserUpdateDTO userUpdateDTO = new UserUpdateDTO();
-
-            userUpdateDTO.setId(existingUser.getId());
-            userUpdateDTO.setUserCode(existingUser.getUserCode());
-            userUpdateDTO.setRoles(existingUser.getRoles());
-
-            credentialsProducer.sendMessage("user-update", userUpdateDTO);
+            sendUpdatedUserInfoToAuthService(existingUser.getId(), existingUser.getUserCode(), existingUser.getRoles());
         }
 
         userRepository.save(existingUser);
@@ -322,5 +303,41 @@ public class UserServiceImpl implements UserService {
                         logger.info("The initial admin has been deleted.");
                     });
         }
+    }
+
+    private void sendUserCredentialsToAuthService(User newUser){
+        UserCredentialsDTO userCredentialsDTO = new UserCredentialsDTO();
+        userCredentialsDTO.setId(newUser.getId());
+        userCredentialsDTO.setUserCode(newUser.getUserCode());
+        userCredentialsDTO.setPassword(newUser.getPassword());
+        userCredentialsDTO.setRoles(newUser.getRoles());
+
+        credentialsProducer.sendMessage("user-credentials", userCredentialsDTO);
+    }
+
+    private void sendUpdatedUserInfoToAuthService(Long userId, String userCode, Set<Role> roles){
+        UserUpdateDTO userUpdateDTO = new UserUpdateDTO();
+        userUpdateDTO.setId(userId);
+        userUpdateDTO.setUserCode(userCode);
+        userUpdateDTO.setRoles(roles);
+
+        credentialsProducer.sendMessage("user-update", userUpdateDTO);
+    }
+
+    private void sendDeletedUserInfoToAuthService(Long userId, boolean isDeleted){
+        UserSafeDeletionDTO userSafeDeletionDTO = new UserSafeDeletionDTO();
+        userSafeDeletionDTO.setId(userId);
+        userSafeDeletionDTO.setDeleted(isDeleted);
+
+        credentialsProducer.sendMessage("user-deletion", userSafeDeletionDTO);
+    }
+
+    private void sendReactivatedUserInfoToAuthService(Long userId, boolean isDeleted, String password){
+        UserReactivateDTO userReactivateDTO = new UserReactivateDTO();
+        userReactivateDTO.setId(userId);
+        userReactivateDTO.setDeleted(isDeleted);
+        userReactivateDTO.setPassword(password);
+
+        credentialsProducer.sendMessage("user-reactivate", userReactivateDTO);
     }
 }

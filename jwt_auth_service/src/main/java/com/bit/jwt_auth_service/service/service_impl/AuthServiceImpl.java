@@ -3,12 +3,14 @@ package com.bit.jwt_auth_service.service.service_impl;
 import com.bit.jwt_auth_service.dto.Login.LoginReq;
 import com.bit.jwt_auth_service.dto.Login.LoginRes;
 import com.bit.jwt_auth_service.dto.TokenValidationReq;
-import com.bit.jwt_auth_service.dto.UserDetailsDTO;
+import com.bit.jwt_auth_service.dto.kafka.UserDetailsDTO;
+import com.bit.jwt_auth_service.entity.Role;
 import com.bit.jwt_auth_service.entity.User;
 import com.bit.jwt_auth_service.repository.UserRepository;
 import com.bit.jwt_auth_service.service.AuthService;
 import com.bit.jwt_auth_service.service.JwtService;
 import com.bit.jwt_auth_service.utils.UserDetailsProducer;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +21,10 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Set;
+
 @Service
+@Data
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
     private final AuthenticationManager authenticationManager;
@@ -38,12 +43,7 @@ public class AuthServiceImpl implements AuthService {
             User user = userRepository.findByUserCode(loginReq.getUserCode())
                     .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-            UserDetailsDTO userDetailsDTO = new UserDetailsDTO();
-            userDetailsDTO.setUserCode(user.getUserCode());
-            userDetailsDTO.setPassword(user.getPassword());
-            userDetailsDTO.setRoles(user.getRoles());
-
-            userDetailsProducer.sendMessage("user-details", userDetailsDTO);
+            sendUserDetailsToAuthFilterModule(user.getUserCode(), user.getPassword(), user.getRoles());
 
             var jwt = jwtService.generateToken(user);
 
@@ -77,5 +77,14 @@ public class AuthServiceImpl implements AuthService {
             logger.info(ex.toString());
             throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Error extracting username from token", ex);
         }
+    }
+
+    private void sendUserDetailsToAuthFilterModule(String userCode, String password, Set<Role> roles){
+        UserDetailsDTO userDetailsDTO = new UserDetailsDTO();
+        userDetailsDTO.setUserCode(userCode);
+        userDetailsDTO.setPassword(password);
+        userDetailsDTO.setRoles(roles);
+
+        userDetailsProducer.sendMessage("user-details", userDetailsDTO);
     }
 }

@@ -1,4 +1,4 @@
-package com.bit.user_management_service.dto;
+package com.bit.user_management_service.dto.kafka;
 
 import com.bit.user_management_service.entity.Role;
 import lombok.Data;

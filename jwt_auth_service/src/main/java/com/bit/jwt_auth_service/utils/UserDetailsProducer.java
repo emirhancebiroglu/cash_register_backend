@@ -1,7 +1,7 @@
 package com.bit.jwt_auth_service.utils;
 
 
-import com.bit.jwt_auth_service.dto.UserDetailsDTO;
+import com.bit.jwt_auth_service.dto.kafka.UserDetailsDTO;
 import lombok.AllArgsConstructor;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;

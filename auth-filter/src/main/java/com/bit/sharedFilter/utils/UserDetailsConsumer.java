@@ -31,7 +31,7 @@ public class UserDetailsConsumer {
     }
 
     @Async
-    @KafkaListener(topics = "user-details", groupId = "user-credentials")
+    @KafkaListener(topics = "user-details", groupId = "users")
     public void listen(@Payload UserDetailsDTO userDetailsDTO) {
         try {
             userDetailsQueue.put(userDetailsDTO);
