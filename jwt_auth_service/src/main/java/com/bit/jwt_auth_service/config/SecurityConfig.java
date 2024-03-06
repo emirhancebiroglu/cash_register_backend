@@ -25,9 +25,6 @@ public class SecurityConfig {
         .authorizeHttpRequests(
             auth
             -> auth.requestMatchers("api/auth/login").permitAll()
-                    .requestMatchers("api/auth/extract-username").permitAll()
-                    .requestMatchers("api/auth/validate-token").permitAll()
-                    .requestMatchers("api/auth/get-user-details").permitAll()
                    .anyRequest()
                    .authenticated())
 

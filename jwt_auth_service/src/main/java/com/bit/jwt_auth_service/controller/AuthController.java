@@ -2,7 +2,6 @@
 
   import com.bit.jwt_auth_service.dto.Login.LoginReq;
   import com.bit.jwt_auth_service.dto.Login.LoginRes;
-  import com.bit.jwt_auth_service.dto.TokenValidationReq;
   import com.bit.jwt_auth_service.service.AuthService;
   import lombok.Data;
   import org.springframework.web.bind.annotation.PostMapping;
@@ -19,15 +18,5 @@
     @PostMapping("/login")
     public LoginRes login(@RequestBody LoginReq loginReq){
       return authService.login(loginReq);
-    }
-
-    @PostMapping("/validate-token")
-    public boolean validateToken(@RequestBody TokenValidationReq tokenValidationReq){
-      return authService.validateToken(tokenValidationReq);
-    }
-
-    @PostMapping("/extract-username")
-    public String extractUsername(@RequestBody TokenValidationReq tokenValidationReq){
-      return authService.extractUsername(tokenValidationReq);
     }
   }
