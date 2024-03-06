@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>NameValidator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">user_management_service</a> &gt; <a href="index.source.html" class="el_package">com.bit.usermanagementservice.validators</a> &gt; <span class="el_source">NameValidator.java</span></div><h1>NameValidator.java</h1><pre class="source lang-java linenums">package com.bit.usermanagementservice.validators;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+@Component
+<span class="fc" id="L8">public class NameValidator {</span>
+<span class="fc" id="L9">    private static final Logger logger = LoggerFactory.getLogger(NameValidator.class);</span>
+    private static final String NAME_REGEX = &quot;^[a-zA-Z]{3,18}$&quot;;
+
+    public boolean validateFirstName(String firstName) {
+<span class="fc" id="L13">        return isValidName(firstName, &quot;first&quot;);</span>
+    }
+
+    public boolean validateLastName(String lastName) {
+<span class="fc" id="L17">        return isValidName(lastName, &quot;last&quot;);</span>
+    }
+
+    private boolean isValidName(String name, String type) {
+<span class="pc bpc" id="L21" title="2 of 4 branches missed.">        if (name == null || name.trim().isEmpty()) {</span>
+<span class="nc" id="L22">            logger.error(&quot;Invalid &quot; + type + &quot; name: Name is null or empty&quot;);</span>
+<span class="nc" id="L23">            return false;</span>
+        }
+
+<span class="fc bfc" id="L26" title="All 2 branches covered.">        if (!name.matches(NAME_REGEX)) {</span>
+<span class="fc" id="L27">            logger.error(&quot;Invalid &quot; + type + &quot; name format: Name does not match the required pattern&quot;);</span>
+<span class="fc" id="L28">            return false;</span>
+        }
+
+<span class="pc bpc" id="L31" title="1 of 4 branches missed.">        if (type.equals(&quot;first&quot;) &amp;&amp; !Character.isUpperCase(name.charAt(0))) {</span>
+<span class="nc" id="L32">            logger.error(&quot;First name should start with an uppercase letter: &quot; + name);</span>
+<span class="nc" id="L33">            return false;</span>
+        }
+
+<span class="fc bfc" id="L36" title="All 4 branches covered.">        if (type.equals(&quot;last&quot;) &amp;&amp; !name.equals(name.toUpperCase())) {</span>
+<span class="fc" id="L37">            logger.error(&quot;Last name should be all uppercase letters: &quot; + name);</span>
+<span class="fc" id="L38">            return false;</span>
+        }
+
+<span class="fc" id="L41">        logger.info(&quot;Valid &quot; + type + &quot; name: &quot; + name);</span>
+<span class="fc" id="L42">        return true;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

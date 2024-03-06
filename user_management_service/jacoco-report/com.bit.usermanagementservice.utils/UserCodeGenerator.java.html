@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserCodeGenerator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">user_management_service</a> &gt; <a href="index.source.html" class="el_package">com.bit.usermanagementservice.utils</a> &gt; <span class="el_source">UserCodeGenerator.java</span></div><h1>UserCodeGenerator.java</h1><pre class="source lang-java linenums">package com.bit.usermanagementservice.utils;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
+
+import java.security.SecureRandom;
+import java.util.Set;
+import java.util.TreeSet;
+
+@Component
+<span class="fc" id="L12">public class UserCodeGenerator {</span>
+<span class="fc" id="L13">    private final static Logger logger = LoggerFactory.getLogger(PasswordGenerator.class);</span>
+    private static final String ADMIN_ROLE_CODE = &quot;A&quot;;
+    private static final String CASHIER_ROLE_CODE = &quot;C&quot;;
+    private static final String STORE_MANAGER_ROLE_CODE = &quot;S&quot;;
+    private static final int RANDOM_DIGIT_LENGTH = 6;
+    private static final String DIGITS = &quot;0123456789&quot;;
+
+    public String createUserCode(Set&lt;String&gt; roles, Long userId){
+<span class="fc" id="L21">        StringBuilder userCode = new StringBuilder();</span>
+
+<span class="fc" id="L23">        Set&lt;String&gt; sortedRoles = new TreeSet&lt;&gt;(roles);</span>
+
+<span class="fc bfc" id="L25" title="All 2 branches covered.">        for (String role : sortedRoles) {</span>
+<span class="pc bpc" id="L26" title="2 of 4 branches missed.">            switch (role) {</span>
+                case &quot;ROLE_ADMIN&quot;:
+<span class="fc" id="L28">                    userCode.append(ADMIN_ROLE_CODE);</span>
+<span class="fc" id="L29">                    break;</span>
+                case &quot;ROLE_CASHIER&quot;:
+<span class="nc" id="L31">                    userCode.append(CASHIER_ROLE_CODE);</span>
+<span class="nc" id="L32">                    break;</span>
+                case &quot;ROLE_STORE_MANAGER&quot;:
+<span class="fc" id="L34">                    userCode.append(STORE_MANAGER_ROLE_CODE);</span>
+<span class="fc" id="L35">                    break;</span>
+                default:
+                    break;
+            }
+<span class="fc" id="L39">        }</span>
+
+<span class="fc" id="L41">        userCode.append(userId);</span>
+
+<span class="fc" id="L43">        userCode.append(generateRandomDigits());</span>
+
+<span class="fc" id="L45">        logger.info(&quot;User Code generated: &quot; + userCode);</span>
+<span class="fc" id="L46">        return userCode.toString();</span>
+    }
+
+    private String generateRandomDigits() {
+<span class="fc" id="L50">        StringBuilder randomDigits = new StringBuilder();</span>
+<span class="fc" id="L51">        SecureRandom random = new SecureRandom();</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">        for (int i = 0; i &lt; UserCodeGenerator.RANDOM_DIGIT_LENGTH; i++) {</span>
+<span class="fc" id="L53">            randomDigits.append(DIGITS.charAt(random.nextInt(DIGITS.length())));</span>
+        }
+<span class="fc" id="L55">        return randomDigits.toString();</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

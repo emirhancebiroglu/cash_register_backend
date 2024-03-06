@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AdminController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">user_management_service</a> &gt; <a href="index.source.html" class="el_package">com.bit.usermanagementservice.controller</a> &gt; <span class="el_source">AdminController.java</span></div><h1>AdminController.java</h1><pre class="source lang-java linenums">package com.bit.usermanagementservice.controller;
+
+import com.bit.usermanagementservice.dto.AddUser.AddUserReq;
+import com.bit.usermanagementservice.dto.UpdateUser.UpdateUserReq;
+import com.bit.usermanagementservice.service.UserService;
+import lombok.AllArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping(&quot;/api/users/admin&quot;)
+<span class="fc" id="L13">@AllArgsConstructor</span>
+public class AdminController {
+    private UserService userService;
+
+    @PostMapping(&quot;/add-user&quot;)
+    public ResponseEntity&lt;String&gt; addUser(@RequestBody AddUserReq addUserReq){
+<span class="fc" id="L19">        userService.addUser(addUserReq);</span>
+<span class="fc" id="L20">        return ResponseEntity.status(HttpStatus.CREATED).body(&quot;User created successfully&quot;);</span>
+    }
+
+    @PutMapping(&quot;/update-user/{user_id}&quot;)
+    public ResponseEntity&lt;String&gt; updateUser(@PathVariable Long user_id,
+                                             @RequestBody UpdateUserReq updateUserReq){
+<span class="fc" id="L26">        userService.updateUser(user_id, updateUserReq);</span>
+<span class="fc" id="L27">        return ResponseEntity.status(HttpStatus.OK).body(&quot;User updated successfully&quot;);</span>
+    }
+
+    @DeleteMapping(&quot;/delete-user/{user_id}&quot;)
+    public ResponseEntity&lt;String&gt; deleteUser(@PathVariable Long user_id){
+<span class="fc" id="L32">        userService.deleteUser(user_id);</span>
+<span class="fc" id="L33">        return ResponseEntity.status(HttpStatus.OK).body(&quot;User deleted successfully&quot;);</span>
+    }
+
+    @PostMapping(&quot;/reactivate-user/{user_id}&quot;)
+    public ResponseEntity&lt;String&gt; reactivateUser(@PathVariable Long user_id){
+<span class="fc" id="L38">        userService.reactivateUser(user_id);</span>
+<span class="fc" id="L39">        return ResponseEntity.status(HttpStatus.OK).body(&quot;User reactivated successfully&quot;);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
