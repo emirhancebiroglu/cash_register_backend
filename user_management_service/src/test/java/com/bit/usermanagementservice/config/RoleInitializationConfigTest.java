@@ -8,6 +8,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.Optional;
+
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -23,5 +25,13 @@ class RoleInitializationConfigTest {
         roleInitializationConfig.initializeRoles();
 
         verify(roleRepository, times(3)).save(any(Role.class));
+    }
+
+    @Test
+    void shouldSkipInitializingRoles() {
+        when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.of(new Role()));
+        roleInitializationConfig.initializeRoles();
+
+        verify(roleRepository, times(2)).save(any(Role.class));
     }
 }

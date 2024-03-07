@@ -1,7 +1,7 @@
 package com.bit.usermanagementservice.controller;
 
-import com.bit.usermanagementservice.dto.AddUser.AddUserReq;
-import com.bit.usermanagementservice.dto.UpdateUser.UpdateUserReq;
+import com.bit.usermanagementservice.dto.adduser.AddUserReq;
+import com.bit.usermanagementservice.dto.updateuser.UpdateUserReq;
 import com.bit.usermanagementservice.service.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,22 +20,22 @@ public class AdminController {
         return ResponseEntity.status(HttpStatus.CREATED).body("User created successfully");
     }
 
-    @PutMapping("/update-user/{user_id}")
-    public ResponseEntity<String> updateUser(@PathVariable Long user_id,
+    @PutMapping("/update-user/{userId}")
+    public ResponseEntity<String> updateUser(@PathVariable Long userId,
                                              @RequestBody UpdateUserReq updateUserReq){
-        userService.updateUser(user_id, updateUserReq);
+        userService.updateUser(userId, updateUserReq);
         return ResponseEntity.status(HttpStatus.OK).body("User updated successfully");
     }
 
-    @DeleteMapping("/delete-user/{user_id}")
-    public ResponseEntity<String> deleteUser(@PathVariable Long user_id){
-        userService.deleteUser(user_id);
+    @DeleteMapping("/delete-user/{userId}")
+    public ResponseEntity<String> deleteUser(@PathVariable Long userId){
+        userService.deleteUser(userId);
         return ResponseEntity.status(HttpStatus.OK).body("User deleted successfully");
     }
 
-    @PostMapping("/reactivate-user/{user_id}")
-    public ResponseEntity<String> reactivateUser(@PathVariable Long user_id){
-        userService.reactivateUser(user_id);
+    @PostMapping("/reactivate-user/{userId}")
+    public ResponseEntity<String> reactivateUser(@PathVariable Long userId){
+        userService.reactivateUser(userId);
         return ResponseEntity.status(HttpStatus.OK).body("User reactivated successfully");
     }
 }

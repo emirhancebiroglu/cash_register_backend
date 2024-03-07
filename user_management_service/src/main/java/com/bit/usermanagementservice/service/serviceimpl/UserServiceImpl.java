@@ -2,21 +2,21 @@ package com.bit.usermanagementservice.service.serviceimpl;
 
 import com.bit.usermanagementservice.config.AdminInitializationConfig;
 import com.bit.usermanagementservice.config.PasswordEncoderConfig;
-import com.bit.usermanagementservice.dto.AddUser.AddUserReq;
-import com.bit.usermanagementservice.dto.UpdateUser.UpdateUserReq;
+import com.bit.usermanagementservice.dto.adduser.AddUserReq;
+import com.bit.usermanagementservice.dto.updateuser.UpdateUserReq;
 import com.bit.usermanagementservice.dto.kafka.UserCredentialsDTO;
 import com.bit.usermanagementservice.dto.kafka.UserReactivateDTO;
 import com.bit.usermanagementservice.dto.kafka.UserSafeDeletionDTO;
 import com.bit.usermanagementservice.dto.kafka.UserUpdateDTO;
 import com.bit.usermanagementservice.entity.Role;
 import com.bit.usermanagementservice.entity.User;
-import com.bit.usermanagementservice.exceptions.InvalidEmail.InvalidEmailException;
-import com.bit.usermanagementservice.exceptions.InvalidName.InvalidNameException;
-import com.bit.usermanagementservice.exceptions.RoleNotFound.RoleNotFoundException;
-import com.bit.usermanagementservice.exceptions.UserAlreadyActive.UserAlreadyActiveException;
-import com.bit.usermanagementservice.exceptions.UserAlreadyDeleted.UserAlreadyDeletedException;
-import com.bit.usermanagementservice.exceptions.UserAlreadyExists.UserAlreadyExistsException;
-import com.bit.usermanagementservice.exceptions.UserNotFound.UserNotFoundException;
+import com.bit.usermanagementservice.exceptions.invalidemail.InvalidEmailException;
+import com.bit.usermanagementservice.exceptions.invalidname.InvalidNameException;
+import com.bit.usermanagementservice.exceptions.rolenotfound.RoleNotFoundException;
+import com.bit.usermanagementservice.exceptions.useralreadyactive.UserAlreadyActiveException;
+import com.bit.usermanagementservice.exceptions.useralreadydeleted.UserAlreadyDeletedException;
+import com.bit.usermanagementservice.exceptions.useralreadyexists.UserAlreadyExistsException;
+import com.bit.usermanagementservice.exceptions.usernotfound.UserNotFoundException;
 import com.bit.usermanagementservice.repository.RoleRepository;
 import com.bit.usermanagementservice.repository.UserRepository;
 import com.bit.usermanagementservice.service.EmailService;
@@ -52,6 +52,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void addUser(AddUserReq addUserReq) {
+        logger.info("Adding user...");
+
         checkIfUserExists(addUserReq);
         validateUserData(addUserReq);
 
@@ -75,6 +77,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void updateUser(Long userId, UpdateUserReq updateUserReq){
+        logger.info("Updating user...");
+
         User existingUser = findUserByIdOrThrow(userId);
 
         if(existingUser.isDeleted()){
@@ -92,6 +96,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteUser(Long userId){
+        logger.info("Deleting user...");
+
         User existingUser = findUserByIdOrThrow(userId);
 
         if (!existingUser.isDeleted()){
@@ -113,6 +119,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void reactivateUser(Long userId) {
+        logger.info("Reactivating user...");
+
         User existingUser = findUserByIdOrThrow(userId);
 
         if (existingUser.isDeleted()){
@@ -136,14 +144,14 @@ public class UserServiceImpl implements UserService {
     }
 
     private User buildUser(AddUserReq addUserReq, String userCode, String password, Set<Role> roles){
-        return User.builder()
-                .firstName(addUserReq.getFirstName())
-                .lastName(addUserReq.getLastName())
-                .email(addUserReq.getEmail())
-                .userCode(userCode)
-                .password(password)
-                .roles(roles)
-                .build();
+        return new User(
+                addUserReq.getFirstName(),
+                addUserReq.getLastName(),
+                addUserReq.getEmail(),
+                userCode,
+                password,
+                roles
+        );
     }
 
     public void checkIfUserExists(AddUserReq addUserReq){
@@ -206,9 +214,11 @@ public class UserServiceImpl implements UserService {
     }
 
     private String resetUserPassword(User user) {
+        logger.info("Resetting password...");
         String newPassword = generatePassword(user.getEmail(), user.getId());
         String encodedPassword = passwordEncoderConfig.passwordEncoder().encode(newPassword);
         user.setPassword(encodedPassword);
+        logger.info("Password reset!");
         return newPassword;
     }
 
@@ -293,9 +303,10 @@ public class UserServiceImpl implements UserService {
 
                         userRepository.save(admin);
 
-                        UserSafeDeletionDTO userSafeDeletionDTO = new UserSafeDeletionDTO();
-                        userSafeDeletionDTO.setId(admin.getId());
-                        userSafeDeletionDTO.setDeleted(admin.isDeleted());
+                        UserSafeDeletionDTO userSafeDeletionDTO = new UserSafeDeletionDTO(
+                                admin.getId(),
+                                admin.isDeleted()
+                        );
 
                         credentialsProducer.sendMessage("user-deletion", userSafeDeletionDTO);
                         logger.info("The initial admin has been deleted.");
@@ -304,37 +315,42 @@ public class UserServiceImpl implements UserService {
     }
 
     private void sendUserCredentialsToAuthService(User newUser){
-        UserCredentialsDTO userCredentialsDTO = new UserCredentialsDTO();
-        userCredentialsDTO.setId(newUser.getId());
-        userCredentialsDTO.setUserCode(newUser.getUserCode());
-        userCredentialsDTO.setPassword(newUser.getPassword());
-        userCredentialsDTO.setRoles(newUser.getRoles());
+        UserCredentialsDTO userCredentialsDTO = new UserCredentialsDTO(
+                newUser.getId(),
+                newUser.getUserCode(),
+                newUser.getPassword(),
+                newUser.getRoles(),
+                newUser.isDeleted()
+        );
 
         credentialsProducer.sendMessage("user-credentials", userCredentialsDTO);
     }
 
     private void sendUpdatedUserInfoToAuthService(Long userId, String userCode, Set<Role> roles){
-        UserUpdateDTO userUpdateDTO = new UserUpdateDTO();
-        userUpdateDTO.setId(userId);
-        userUpdateDTO.setUserCode(userCode);
-        userUpdateDTO.setRoles(roles);
+        UserUpdateDTO userUpdateDTO = new UserUpdateDTO(
+                userId,
+                userCode,
+                roles
+        );
 
         credentialsProducer.sendMessage("user-update", userUpdateDTO);
     }
 
     private void sendDeletedUserInfoToAuthService(Long userId, boolean isDeleted){
-        UserSafeDeletionDTO userSafeDeletionDTO = new UserSafeDeletionDTO();
-        userSafeDeletionDTO.setId(userId);
-        userSafeDeletionDTO.setDeleted(isDeleted);
+        UserSafeDeletionDTO userSafeDeletionDTO = new UserSafeDeletionDTO(
+                userId,
+                isDeleted
+        );
 
         credentialsProducer.sendMessage("user-deletion", userSafeDeletionDTO);
     }
 
     private void sendReactivatedUserInfoToAuthService(Long userId, boolean isDeleted, String password){
-        UserReactivateDTO userReactivateDTO = new UserReactivateDTO();
-        userReactivateDTO.setId(userId);
-        userReactivateDTO.setDeleted(isDeleted);
-        userReactivateDTO.setPassword(password);
+        UserReactivateDTO userReactivateDTO = new UserReactivateDTO(
+                userId,
+                password,
+                isDeleted
+        );
 
         credentialsProducer.sendMessage("user-reactivate", userReactivateDTO);
     }

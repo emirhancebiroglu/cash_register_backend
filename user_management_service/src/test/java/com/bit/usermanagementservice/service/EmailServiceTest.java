@@ -2,6 +2,7 @@ package com.bit.usermanagementservice.service;
 
 import com.bit.usermanagementservice.service.serviceimpl.EmailServiceImpl;
 import jakarta.mail.internet.MimeMessage;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -23,7 +24,6 @@ class EmailServiceTest {
     private static final String USER_PASSWORD = "testUserPassword";
     private static final String FIRST_NAME = "testFirstName";
     private static final String LAST_NAME = "testLastName";
-
     @Mock
     private JavaMailSender mailSender;
 
@@ -33,15 +33,32 @@ class EmailServiceTest {
     @InjectMocks
     private EmailServiceImpl emailService;
 
-    @Test
-    void sendEmail(){
+    @BeforeEach
+    void setup(){
         ReflectionTestUtils.setField(emailService, "mailSender", mailSender);
         ReflectionTestUtils.setField(emailService, "templateEngine", templateEngine);
 
         when(templateEngine.process(eq(TEMPLATE_NAME), any(Context.class))).thenReturn("test html content");
         when(mailSender.createMimeMessage()).thenReturn(mock(MimeMessage.class));
+    }
 
+    @Test
+    void sendEmail_FirstMethod(){
         emailService.sendEmail(TO, SUBJECT, TEMPLATE_NAME, USER_CODE, USER_PASSWORD, FIRST_NAME, LAST_NAME);
+
+        verify(mailSender, times(1)).send(any(MimeMessage.class));
+    }
+
+    @Test
+    void sendEmail_SecondMethod(){
+        emailService.sendEmail(TO, SUBJECT, TEMPLATE_NAME, USER_CODE, FIRST_NAME, LAST_NAME);
+
+        verify(mailSender, times(1)).send(any(MimeMessage.class));
+    }
+
+    @Test
+    void sendEmail_ThirdMethod(){
+        emailService.sendEmail(TO, SUBJECT, TEMPLATE_NAME, FIRST_NAME, LAST_NAME);
 
         verify(mailSender, times(1)).send(any(MimeMessage.class));
     }

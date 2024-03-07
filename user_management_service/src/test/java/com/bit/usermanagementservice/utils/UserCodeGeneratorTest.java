@@ -18,13 +18,14 @@ class UserCodeGeneratorTest {
         Set<String> roles = new HashSet<>();
         roles.add("ROLE_ADMIN");
         roles.add("ROLE_STORE_MANAGER");
+        roles.add("ROLE_CASHIER");
 
         Long userId = 1L;
 
         String userCode = userCodeGenerator.createUserCode(roles, userId);
 
         assertNotNull(userCode);
-        assertTrue(userCode.startsWith("AS"));
+        assertTrue(userCode.startsWith("ACS"));
         assertTrue(userCode.contains(userId.toString()));
     }
 }

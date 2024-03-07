@@ -4,11 +4,10 @@ import com.bit.usermanagementservice.dto.kafka.UserCredentialsDTO;
 import com.bit.usermanagementservice.dto.kafka.UserSafeDeletionDTO;
 import com.bit.usermanagementservice.entity.Role;
 import com.bit.usermanagementservice.entity.User;
-import com.bit.usermanagementservice.exceptions.RoleNotFound.RoleNotFoundException;
+import com.bit.usermanagementservice.exceptions.rolenotfound.RoleNotFoundException;
 import com.bit.usermanagementservice.repository.RoleRepository;
 import com.bit.usermanagementservice.repository.UserRepository;
 import com.bit.usermanagementservice.utils.CredentialsProducer;
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,15 +22,14 @@ import java.util.Set;
 
 @Configuration
 @RequiredArgsConstructor
-@Data
 @Order(2)
 public class AdminInitializationConfig implements CommandLineRunner {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoderConfig passwordEncoderConfig;
     private final CredentialsProducer credentialsProducer;
-
     private static final Logger logger = LoggerFactory.getLogger(AdminInitializationConfig.class);
+    private static final String ADMIN_STRING = "admin";
 
     @Override
     public void run(String... args){
@@ -44,8 +42,7 @@ public class AdminInitializationConfig implements CommandLineRunner {
 
         if (isAdminInitializationRequired(adminRole)) {
             createAdminUser(adminRole);
-        }
-        else{
+        } else {
             logger.info("There is already a user with admin role. Skipping default admin initialization.");
         }
     }
@@ -58,21 +55,22 @@ public class AdminInitializationConfig implements CommandLineRunner {
         return usersWithAdminRole.isEmpty() || usersWithAdminRole.stream().allMatch(User::isDeleted);
     }
     private void createAdminUser(Role adminRole) {
-        Optional<User> initialAdmin = userRepository.findByUserCode("admin");
+        Optional<User> initialAdmin = userRepository.findByUserCode(ADMIN_STRING);
 
         if (initialAdmin.isEmpty()){
-            User adminUser = User.builder()
-                    .firstName("admin")
-                    .lastName("admin")
-                    .email("admin@gmail.com")
-                    .userCode("admin")
-                    .password(passwordEncoderConfig.passwordEncoder().encode("admin"))
-                    .roles(Set.of(adminRole))
-                    .build();
+            User adminUser = new User(
+                    ADMIN_STRING,
+                    ADMIN_STRING,
+                    "admin@gmail.com",
+                    ADMIN_STRING,
+                    passwordEncoderConfig.passwordEncoder().encode(ADMIN_STRING),
+                    Set.of(adminRole)
+            );
 
             userRepository.save(adminUser);
 
             sendCredentialsToAuthService(adminUser);
+            logger.info("There is no user with admin role. Default admin user is initialized");
         }
         else{
             initialAdmin.get().setDeleted(false);
@@ -80,28 +78,32 @@ public class AdminInitializationConfig implements CommandLineRunner {
             sendDeletionInfoToAuthService(initialAdmin);
 
             userRepository.save(initialAdmin.get());
+            logger.info("Default admin user is reactivated");
         }
-
-        logger.info("There is no user with admin role. Default admin user is initialized");
     }
 
     private void sendCredentialsToAuthService(User adminUser) {
-        UserCredentialsDTO userCredentialsDTO = new UserCredentialsDTO();
-        userCredentialsDTO.setId(adminUser.getId());
-        userCredentialsDTO.setUserCode(adminUser.getUserCode());
-        userCredentialsDTO.setPassword(adminUser.getPassword());
-        userCredentialsDTO.setRoles(adminUser.getRoles());
+        UserCredentialsDTO userCredentialsDTO = new UserCredentialsDTO(
+                adminUser.getId(),
+                adminUser.getUserCode(),
+                adminUser.getPassword(),
+                adminUser.getRoles(),
+                adminUser.isDeleted()
+        );
 
         credentialsProducer.sendMessage("user-credentials" ,userCredentialsDTO);
+        logger.info("User credentials sent to the authentication service.");
     }
     private void sendDeletionInfoToAuthService(Optional<User> initialAdmin){
         if (initialAdmin.isEmpty())
             return;
 
-        UserSafeDeletionDTO userSafeDeletionDTO = new UserSafeDeletionDTO();
-        userSafeDeletionDTO.setId(initialAdmin.get().getId());
-        userSafeDeletionDTO.setDeleted(initialAdmin.get().isDeleted());
+        UserSafeDeletionDTO userSafeDeletionDTO = new UserSafeDeletionDTO(
+                initialAdmin.get().getId(),
+                initialAdmin.get().isDeleted()
+        );
 
         credentialsProducer.sendMessage("user-deletion", userSafeDeletionDTO);
+        logger.info("User deletion information sent to the authentication service.");
     }
 }

@@ -8,10 +8,12 @@ import java.security.SecureRandom;
 
 @Component
 public class PasswordGenerator {
-    private final static Logger logger = LoggerFactory.getLogger(PasswordGenerator.class);
+    private static final Logger logger = LoggerFactory.getLogger(PasswordGenerator.class);
     private static final String SPECIAL_CHARACTERS = "!@#*_,.?";
 
     public String createPassword(String email, Long userId){
+        logger.info("Creating password");
+
         StringBuilder password = new StringBuilder();
 
         String emailPrefix = email.substring(0, 3).toUpperCase();
@@ -23,7 +25,7 @@ public class PasswordGenerator {
 
         password.append(generateRandomSpecialCharacter());
 
-        logger.info("Generated Password for User with ID " + userId + ": " + password);
+        logger.info("Password created");
         return password.toString();
     }
 

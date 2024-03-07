@@ -1,7 +1,7 @@
 package com.bit.usermanagementservice.service;
 
-import com.bit.usermanagementservice.dto.AddUser.AddUserReq;
-import com.bit.usermanagementservice.dto.UpdateUser.UpdateUserReq;
+import com.bit.usermanagementservice.dto.adduser.AddUserReq;
+import com.bit.usermanagementservice.dto.updateuser.UpdateUserReq;
 
 public interface UserService {
     void addUser(AddUserReq addUserReq);

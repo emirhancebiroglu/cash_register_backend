@@ -1,6 +1,6 @@
 package com.bit.jwt_auth_service.exceptions.UserAlreadyDeleted;
 
-import com.bit.jwt_auth_service.exceptions.ErrorDetails;
+import com.bit.usermanagementservice.exceptions.ErrorDetails;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -12,13 +12,18 @@ import java.time.LocalDateTime;
 public class UserAlreadyDeletedExceptionHandler {
     @ExceptionHandler(UserAlreadyDeletedException.class)
     public ResponseEntity<ErrorDetails> handleInvalidEmailException(UserAlreadyDeletedException ex) {
-        ErrorDetails errorDetails = ErrorDetails
-              .builder()
-              .errorMessage(ex.getMessage())
-              .status(HttpStatus.CONFLICT.name())
-              .statusCode(HttpStatus.CONFLICT.value())
-              .timeStamp(LocalDateTime.now())
-              .build();
+        ErrorDetails errorDetails = new ErrorDetails(
+                HttpStatus.CONFLICT.value(),
+                LocalDateTime.now(),
+                ex.getMessage(),
+                HttpStatus.CONFLICT.name()
+        );
+
+        errorDetails.setErrorMessage(ex.getMessage());
+        errorDetails.setStatus(HttpStatus.CONFLICT.name());
+        errorDetails.setStatusCode(HttpStatus.CONFLICT.value());
+        errorDetails.setTimeStamp(LocalDateTime.now());
+
         return new ResponseEntity<>(errorDetails, HttpStatus.CONFLICT);
     }
 

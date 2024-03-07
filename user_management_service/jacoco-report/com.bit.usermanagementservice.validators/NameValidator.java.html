@@ -18,27 +18,27 @@ import org.springframework.stereotype.Component;
     }
 
     private boolean isValidName(String name, String type) {
-<span class="pc bpc" id="L21" title="2 of 4 branches missed.">        if (name == null || name.trim().isEmpty()) {</span>
-<span class="nc" id="L22">            logger.error(&quot;Invalid &quot; + type + &quot; name: Name is null or empty&quot;);</span>
-<span class="nc" id="L23">            return false;</span>
+<span class="pc bpc" id="L21" title="1 of 4 branches missed.">        if (name == null || name.trim().isEmpty()) {</span>
+<span class="fc" id="L22">            logger.error(&quot;Invalid {} name: Name is null or empty&quot;, type);</span>
+<span class="fc" id="L23">            return false;</span>
         }
 
 <span class="fc bfc" id="L26" title="All 2 branches covered.">        if (!name.matches(NAME_REGEX)) {</span>
-<span class="fc" id="L27">            logger.error(&quot;Invalid &quot; + type + &quot; name format: Name does not match the required pattern&quot;);</span>
+<span class="fc" id="L27">            logger.error(&quot;Invalid {} name format: Name does not match the required pattern&quot;, type);</span>
 <span class="fc" id="L28">            return false;</span>
         }
 
-<span class="pc bpc" id="L31" title="1 of 4 branches missed.">        if (type.equals(&quot;first&quot;) &amp;&amp; !Character.isUpperCase(name.charAt(0))) {</span>
-<span class="nc" id="L32">            logger.error(&quot;First name should start with an uppercase letter: &quot; + name);</span>
-<span class="nc" id="L33">            return false;</span>
+<span class="fc bfc" id="L31" title="All 4 branches covered.">        if (type.equals(&quot;first&quot;) &amp;&amp; !Character.isUpperCase(name.charAt(0))) {</span>
+<span class="fc" id="L32">            logger.error(&quot;First name should start with an uppercase letter: {}&quot;, name);</span>
+<span class="fc" id="L33">            return false;</span>
         }
 
 <span class="fc bfc" id="L36" title="All 4 branches covered.">        if (type.equals(&quot;last&quot;) &amp;&amp; !name.equals(name.toUpperCase())) {</span>
-<span class="fc" id="L37">            logger.error(&quot;Last name should be all uppercase letters: &quot; + name);</span>
+<span class="fc" id="L37">            logger.error(&quot;Last name should be all uppercase letters: {}&quot;, name);</span>
 <span class="fc" id="L38">            return false;</span>
         }
 
-<span class="fc" id="L41">        logger.info(&quot;Valid &quot; + type + &quot; name: &quot; + name);</span>
+<span class="fc" id="L41">        logger.info(&quot;Valid {} name: {}&quot;, type, name);</span>
 <span class="fc" id="L42">        return true;</span>
     }
 }

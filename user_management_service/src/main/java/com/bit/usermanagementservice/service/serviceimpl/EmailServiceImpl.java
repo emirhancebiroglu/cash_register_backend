@@ -17,7 +17,7 @@ import org.thymeleaf.context.Context;
 public class EmailServiceImpl implements EmailService {
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
-    private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
+    private static final Logger logger = LoggerFactory.getLogger(EmailServiceImpl.class);
 
     @Override
     public void sendEmail(String to, String subject, String templateName, String userCode, String userPassword,

@@ -1,8 +1,10 @@
 package com.bit.usermanagementservice.dto.kafka;
 
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
-@Data
+@Getter
+@AllArgsConstructor
 public class UserReactivateDTO {
     private Long id;
     private String password;

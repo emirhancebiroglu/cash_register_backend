@@ -1,16 +1,17 @@
 package com.bit.usermanagementservice.dto.kafka;
 
 import com.bit.usermanagementservice.entity.Role;
-import lombok.Data;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
-import java.util.HashSet;
 import java.util.Set;
 
-@Data
+@Getter
+@AllArgsConstructor
 public class UserCredentialsDTO {
-    private Long id;
-    private String userCode;
-    private String password;
-    private Set<Role> roles = new HashSet<>();
-    boolean isDeleted = false;
+    private final Long id;
+    private final String userCode;
+    private final String password;
+    private final Set<Role> roles;
+    boolean isDeleted;
 }

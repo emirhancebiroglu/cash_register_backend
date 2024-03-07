@@ -1,7 +1,7 @@
 package com.bit.usermanagementservice.controller;
 
-import com.bit.usermanagementservice.dto.AddUser.AddUserReq;
-import com.bit.usermanagementservice.dto.UpdateUser.UpdateUserReq;
+import com.bit.usermanagementservice.dto.adduser.AddUserReq;
+import com.bit.usermanagementservice.dto.updateuser.UpdateUserReq;
 import com.bit.usermanagementservice.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

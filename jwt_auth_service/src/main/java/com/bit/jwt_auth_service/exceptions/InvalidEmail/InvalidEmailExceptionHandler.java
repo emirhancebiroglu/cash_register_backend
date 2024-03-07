@@ -12,14 +12,13 @@ import java.time.LocalDateTime;
 public class InvalidEmailExceptionHandler {
     @ExceptionHandler(InvalidEmailException.class)
     public ResponseEntity<ErrorDetails> handleInvalidEmailException(InvalidEmailException ex) {
-        ErrorDetails errorDetails = ErrorDetails
-              .builder()
-              .errorMessage(ex.getMessage())
-              .status(HttpStatus.BAD_REQUEST.name())
-              .timeStamp(LocalDateTime.now())
-              .build();
+        ErrorDetails errorDetails = new ErrorDetails(
+                HttpStatus.BAD_REQUEST.value(),
+                LocalDateTime.now(),
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST.name()
+        );
+
         return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
     }
-
-
 }

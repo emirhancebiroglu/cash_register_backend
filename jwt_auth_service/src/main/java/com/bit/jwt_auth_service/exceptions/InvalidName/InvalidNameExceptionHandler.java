@@ -1,6 +1,6 @@
 package com.bit.jwt_auth_service.exceptions.InvalidName;
 
-import com.bit.jwt_auth_service.exceptions.ErrorDetails;
+import com.bit.usermanagementservice.exceptions.ErrorDetails;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -12,13 +12,13 @@ import java.time.LocalDateTime;
 public class InvalidNameExceptionHandler {
     @ExceptionHandler(InvalidNameException.class)
     public ResponseEntity<ErrorDetails> handleInvalidEmailException(InvalidNameException ex) {
-        ErrorDetails errorDetails = ErrorDetails
-              .builder()
-              .errorMessage(ex.getMessage())
-              .status(HttpStatus.BAD_REQUEST.name())
-              .statusCode(HttpStatus.BAD_REQUEST.value())
-              .timeStamp(LocalDateTime.now())
-              .build();
+        ErrorDetails errorDetails = new ErrorDetails(
+                HttpStatus.BAD_REQUEST.value(),
+                LocalDateTime.now(),
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST.name()
+        );
+
         return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
     }
 

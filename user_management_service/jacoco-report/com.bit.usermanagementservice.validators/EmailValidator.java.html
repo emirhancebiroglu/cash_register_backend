@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>EmailValidator.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">user_management_service</a> &gt; <a href="index.source.html" class="el_package">com.bit.usermanagementservice.validators</a> &gt; <span class="el_source">EmailValidator.java</span></div><h1>EmailValidator.java</h1><pre class="source lang-java linenums">package com.bit.usermanagementservice.validators;
 
-import com.bit.usermanagementservice.utils.PasswordGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -9,23 +8,23 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Component
-<span class="fc" id="L12">public class EmailValidator {</span>
-<span class="fc" id="L13">    private final static Logger logger = LoggerFactory.getLogger(PasswordGenerator.class);</span>
+<span class="fc" id="L11">public class EmailValidator {</span>
+<span class="fc" id="L12">    private static final Logger logger = LoggerFactory.getLogger(EmailValidator.class);</span>
     private static final String EMAIL_REGEX = &quot;^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$&quot;;
-<span class="fc" id="L15">    private static final Pattern pattern = Pattern.compile(EMAIL_REGEX);</span>
+<span class="fc" id="L14">    private static final Pattern pattern = Pattern.compile(EMAIL_REGEX);</span>
 
     public boolean isValidEmail(String email) {
-<span class="fc" id="L18">        Matcher matcher = pattern.matcher(email);</span>
-<span class="fc" id="L19">        boolean isValid = matcher.matches();</span>
+<span class="fc" id="L17">        Matcher matcher = pattern.matcher(email);</span>
+<span class="fc" id="L18">        boolean isValid = matcher.matches();</span>
 
-<span class="fc bfc" id="L21" title="All 2 branches covered.">        if (isValid){</span>
-<span class="fc" id="L22">            logger.info(&quot;Email '{}' is valid&quot;, email);</span>
+<span class="fc bfc" id="L20" title="All 2 branches covered.">        if (isValid){</span>
+<span class="fc" id="L21">            logger.info(&quot;Email '{}' is valid&quot;, email);</span>
         }
         else{
-<span class="fc" id="L25">            logger.error(&quot;Email '{}' is not valid&quot;, email);</span>
+<span class="fc" id="L24">            logger.error(&quot;Email '{}' is not valid&quot;, email);</span>
         }
 
-<span class="fc" id="L28">        return isValid;</span>
+<span class="fc" id="L27">        return isValid;</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

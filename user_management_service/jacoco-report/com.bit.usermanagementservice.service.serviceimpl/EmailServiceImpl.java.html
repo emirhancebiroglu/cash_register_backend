@@ -17,7 +17,7 @@ import org.thymeleaf.context.Context;
 public class EmailServiceImpl implements EmailService {
     private final JavaMailSender mailSender;
     private final TemplateEngine templateEngine;
-<span class="fc" id="L20">    private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);</span>
+<span class="fc" id="L20">    private static final Logger logger = LoggerFactory.getLogger(EmailServiceImpl.class);</span>
 
     @Override
     public void sendEmail(String to, String subject, String templateName, String userCode, String userPassword,
@@ -34,22 +34,22 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public void sendEmail(String to, String subject, String templateName,
                           String userCode, String firstName, String lastName) {
-<span class="nc" id="L37">        Context context = new Context();</span>
+<span class="fc" id="L37">        Context context = new Context();</span>
 
-<span class="nc" id="L39">        setContext(firstName, lastName, context);</span>
-<span class="nc" id="L40">        context.setVariable(&quot;userCode&quot;, userCode);</span>
+<span class="fc" id="L39">        setContext(firstName, lastName, context);</span>
+<span class="fc" id="L40">        context.setVariable(&quot;userCode&quot;, userCode);</span>
 
-<span class="nc" id="L42">        setHelper(to, subject, templateName, context);</span>
-<span class="nc" id="L43">    }</span>
+<span class="fc" id="L42">        setHelper(to, subject, templateName, context);</span>
+<span class="fc" id="L43">    }</span>
 
     @Override
     public void sendEmail(String to, String subject, String templateName, String firstName, String lastName) {
-<span class="nc" id="L47">        Context context = new Context();</span>
+<span class="fc" id="L47">        Context context = new Context();</span>
 
-<span class="nc" id="L49">        setContext(firstName, lastName, context);</span>
+<span class="fc" id="L49">        setContext(firstName, lastName, context);</span>
 
-<span class="nc" id="L51">        setHelper(to, subject, templateName, context);</span>
-<span class="nc" id="L52">    }</span>
+<span class="fc" id="L51">        setHelper(to, subject, templateName, context);</span>
+<span class="fc" id="L52">    }</span>
 
     private void setHelper (String to, String subject, String templateName, Context context) {
 <span class="fc" id="L55">        MimeMessage mimeMessage = mailSender.createMimeMessage();</span>

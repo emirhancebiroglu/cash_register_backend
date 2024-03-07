@@ -10,7 +10,7 @@ import java.util.TreeSet;
 
 @Component
 public class UserCodeGenerator {
-    private final static Logger logger = LoggerFactory.getLogger(PasswordGenerator.class);
+    private static final Logger logger = LoggerFactory.getLogger(UserCodeGenerator.class);
     private static final String ADMIN_ROLE_CODE = "A";
     private static final String CASHIER_ROLE_CODE = "C";
     private static final String STORE_MANAGER_ROLE_CODE = "S";
@@ -18,6 +18,8 @@ public class UserCodeGenerator {
     private static final String DIGITS = "0123456789";
 
     public String createUserCode(Set<String> roles, Long userId){
+        logger.info("Creating user code");
+
         StringBuilder userCode = new StringBuilder();
 
         Set<String> sortedRoles = new TreeSet<>(roles);
@@ -42,7 +44,7 @@ public class UserCodeGenerator {
 
         userCode.append(generateRandomDigits());
 
-        logger.info("User Code generated: " + userCode);
+        logger.info("User Code created");
         return userCode.toString();
     }
 

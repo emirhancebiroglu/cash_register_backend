@@ -2,6 +2,8 @@ package com.bit.usermanagementservice.config;
 
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -15,6 +17,7 @@ import java.util.Map;
 
 @Configuration
 public class KafkaProducerConfig {
+    private static final Logger logger = LoggerFactory.getLogger(KafkaProducerConfig.class);
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
     @Bean
@@ -27,10 +30,17 @@ public class KafkaProducerConfig {
                 "userSafeDeletion:com.bit.usermanagementservice.dto.kafka.UserSafeDeletionDTO, " +
                 "userUpdate:com.bit.usermanagementservice.dto.kafka.UserUpdateDTO, " +
                 "userReactivate:com.bit.usermanagementservice.dto.kafka.UserReactivateDTO");
+
+        logProducerConfiguration(configProps);
+
         return new DefaultKafkaProducerFactory<>(configProps);
     }
     @Bean
     public KafkaTemplate<String, Object> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
+    }
+
+    private void logProducerConfiguration(Map<String, Object> configProps) {
+        configProps.forEach((key, value) -> logger.info("Kafka Producer Config - {}: {}", key, value));
     }
 }

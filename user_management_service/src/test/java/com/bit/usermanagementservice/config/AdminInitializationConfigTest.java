@@ -2,6 +2,7 @@ package com.bit.usermanagementservice.config;
 
 import com.bit.usermanagementservice.entity.Role;
 import com.bit.usermanagementservice.entity.User;
+import com.bit.usermanagementservice.exceptions.rolenotfound.RoleNotFoundException;
 import com.bit.usermanagementservice.repository.RoleRepository;
 import com.bit.usermanagementservice.repository.UserRepository;
 import com.bit.usermanagementservice.utils.CredentialsProducer;
@@ -19,6 +20,7 @@ import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -56,14 +58,14 @@ class AdminInitializationConfigTest {
         roles = new HashSet<>();
         roles.add(adminRole);
 
-        adminUser = User.builder()
-                .firstName("admin")
-                .lastName("admin")
-                .email("admin@gmail.com")
-                .userCode("admin")
-                .password("password")
-                .roles(roles)
-                .build();
+        adminUser = new User(
+                "admin",
+                "admin",
+                "admin@gmail.com",
+                "admin",
+                "password",
+                roles
+        );
     }
 
     @Test
@@ -86,5 +88,24 @@ class AdminInitializationConfigTest {
         adminInitializationConfig.initializeAdmin();
 
         verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    void shouldReactivateTheInitialAdminIfDeletedBefore(){
+        adminUser.setDeleted(true);
+
+        when(roleRepository.findByName(ADMIN_ROLE_NAME)).thenReturn(Optional.of(adminRole));
+        when(userRepository.findByUserCode("admin")).thenReturn(Optional.of(adminUser));
+
+        adminInitializationConfig.initializeAdmin();
+
+        verify(userRepository, times(1)).save(any(User.class));
+    }
+
+    @Test
+    void throwsErrorWhenAdminRoleDoesntExist(){
+        when(roleRepository.findByName(ADMIN_ROLE_NAME)).thenReturn(Optional.empty());
+
+        assertThrows(RoleNotFoundException.class, () -> adminInitializationConfig.initializeAdmin());
     }
 }
