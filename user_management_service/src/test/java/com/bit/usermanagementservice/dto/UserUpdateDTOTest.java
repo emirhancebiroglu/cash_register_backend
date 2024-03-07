@@ -25,7 +25,7 @@ class UserUpdateDTOTest {
         roles.add(role1);
         roles.add(role2);
 
-        UserUpdateDTO userUpdateDTO = new UserUpdateDTO(1L, "user123", roles);
+        UserUpdateDTO userUpdateDTO = new UserUpdateDTO(1L, "testemail@gmail.com", "user123", roles);
 
         assertEquals(1L, userUpdateDTO.getId());
         assertEquals("user123", userUpdateDTO.getUserCode());

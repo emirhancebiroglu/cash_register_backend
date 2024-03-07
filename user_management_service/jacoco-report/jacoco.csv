@@ -14,7 +14,7 @@ user_management_service,com.bit.usermanagementservice.dto.kafka,UserReactivateDT
 user_management_service,com.bit.usermanagementservice.dto.kafka,UserSafeDeletionDTO,0,15,0,0,0,3,0,3,0,3
 user_management_service,com.bit.usermanagementservice.dto.kafka,UserCredentialsDTO,0,33,0,0,0,6,0,6,0,6
 user_management_service,com.bit.usermanagementservice.dto.kafka,UserUpdateDTO,0,21,0,0,0,4,0,4,0,4
-user_management_service,com.bit.usermanagementservice.service.serviceimpl,UserServiceImpl,7,652,7,21,1,157,7,41,0,34
+user_management_service,com.bit.usermanagementservice.service.serviceimpl,UserServiceImpl,7,670,7,21,1,163,7,41,0,34
 user_management_service,com.bit.usermanagementservice.service.serviceimpl,EmailServiceImpl,5,117,0,0,2,30,0,7,0,7
 user_management_service,com.bit.usermanagementservice.exceptions.usernotfound,UserNotFoundException,0,4,0,0,0,2,0,1,0,1
 user_management_service,com.bit.usermanagementservice.exceptions.useralreadyexists,UserAlreadyExistsException,0,4,0,0,0,2,0,1,0,1

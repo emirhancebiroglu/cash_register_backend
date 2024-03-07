@@ -1,6 +1,6 @@
 package com.bit.usermanagementservice.config;
 
-import com.bit.sharedFilter.filter.JwtAuthFilter;
+import com.bit.sharedfilter.filter.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

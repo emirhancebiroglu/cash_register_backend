@@ -85,6 +85,7 @@ public class AdminInitializationConfig implements CommandLineRunner {
     private void sendCredentialsToAuthService(User adminUser) {
         UserCredentialsDTO userCredentialsDTO = new UserCredentialsDTO(
                 adminUser.getId(),
+                adminUser.getEmail(),
                 adminUser.getUserCode(),
                 adminUser.getPassword(),
                 adminUser.getRoles(),

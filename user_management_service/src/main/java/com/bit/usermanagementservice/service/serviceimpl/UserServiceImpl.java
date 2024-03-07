@@ -251,7 +251,7 @@ public class UserServiceImpl implements UserService {
             updateUserCodeIfRolesAreChanged(existingUser, updateUserReq);
             existingUser.setRoles(roles);
 
-            sendUpdatedUserInfoToAuthService(existingUser.getId(), existingUser.getUserCode(), existingUser.getRoles());
+            sendUpdatedUserInfoToAuthService(existingUser.getId(), existingUser.getEmail(), existingUser.getUserCode(), existingUser.getRoles());
         }
 
         userRepository.save(existingUser);
@@ -317,6 +317,7 @@ public class UserServiceImpl implements UserService {
     private void sendUserCredentialsToAuthService(User newUser){
         UserCredentialsDTO userCredentialsDTO = new UserCredentialsDTO(
                 newUser.getId(),
+                newUser.getEmail(),
                 newUser.getUserCode(),
                 newUser.getPassword(),
                 newUser.getRoles(),
@@ -326,9 +327,10 @@ public class UserServiceImpl implements UserService {
         credentialsProducer.sendMessage("user-credentials", userCredentialsDTO);
     }
 
-    private void sendUpdatedUserInfoToAuthService(Long userId, String userCode, Set<Role> roles){
+    private void sendUpdatedUserInfoToAuthService(Long userId, String email,  String userCode, Set<Role> roles){
         UserUpdateDTO userUpdateDTO = new UserUpdateDTO(
                 userId,
+                email,
                 userCode,
                 roles
         );

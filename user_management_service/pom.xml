@@ -133,8 +133,6 @@
 						<exclude>com/bit/usermanagementservice/config/KafkaProducerConfig.class</exclude>
 						<exclude>com/bit/usermanagementservice/config/PasswordEncoderConfig.class</exclude>
 						<exclude>com/bit/usermanagementservice/config/SecurityConfig.class</exclude>
-
-
 					</excludes>
 				</configuration>
 				<executions>

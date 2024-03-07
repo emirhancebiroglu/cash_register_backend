@@ -26,6 +26,7 @@ class CredentialsProducerTest {
     void sendMessage_UserCredentialsDTO() {
         UserCredentialsDTO userCredentialsDTO = new UserCredentialsDTO(
                 1L,
+                "testemail@hotmail.com",
                 "testCode",
                 "testPassword",
                 new HashSet<>(),
@@ -59,6 +60,7 @@ class CredentialsProducerTest {
     void sendMessage_UserUpdateDTO() {
         UserUpdateDTO userUpdateDTO = new UserUpdateDTO(
                 1L,
+                "testemail@gmail.com",
                 "ACS3466321",
                 new HashSet<>()
         );

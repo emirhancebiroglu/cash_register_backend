@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SecurityConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">jwt_auth_service</a> &gt; <a href="index.source.html" class="el_package">com.bit.jwtauthservice.config</a> &gt; <span class="el_source">SecurityConfig.java</span></div><h1>SecurityConfig.java</h1><pre class="source lang-java linenums">package com.bit.jwtauthservice.config;
+
+import com.bit.jwtauthservice.service.CustomUserDetailsService;
+import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.web.SecurityFilterChain;
+
+@Configuration
+<span class="nc" id="L18">@RequiredArgsConstructor</span>
+public class SecurityConfig {
+  private final PasswordEncoderConfig passwordEncoderConfig;
+  private final CustomUserDetailsService customUserDetailsService;
+<span class="nc" id="L22">  private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);</span>
+
+  @Bean
+  SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+<span class="nc" id="L26">    logger.info(&quot;Configuring security filter chain...&quot;);</span>
+
+<span class="nc" id="L28">    SecurityFilterChain filterChain = http.csrf(AbstractHttpConfigurer::disable)</span>
+<span class="nc" id="L29">            .authorizeHttpRequests(</span>
+<span class="nc" id="L30">                    auth -&gt; auth.requestMatchers(&quot;api/auth/login&quot;).permitAll()</span>
+<span class="nc" id="L31">                            .anyRequest()</span>
+<span class="nc" id="L32">                            .authenticated())</span>
+<span class="nc" id="L33">            .build();</span>
+
+<span class="nc" id="L35">    logger.info(&quot;Security filter chain configured successfully.&quot;);</span>
+
+<span class="nc" id="L37">    return filterChain;</span>
+  }
+
+  @Bean
+  AuthenticationProvider authenticationProvider() {
+<span class="nc" id="L42">    logger.info(&quot;Creating authentication provider...&quot;);</span>
+
+<span class="nc" id="L44">    DaoAuthenticationProvider authenticationProvider =</span>
+        new DaoAuthenticationProvider();
+<span class="nc" id="L46">    authenticationProvider.setUserDetailsService(customUserDetailsService.userDetailsService());</span>
+<span class="nc" id="L47">    authenticationProvider.setPasswordEncoder(</span>
+<span class="nc" id="L48">        passwordEncoderConfig.passwordEncoder());</span>
+
+<span class="nc" id="L50">    logger.info(&quot;Authentication provider created successfully.&quot;);</span>
+
+<span class="nc" id="L52">    return authenticationProvider;</span>
+  }
+
+  @Bean
+  AuthenticationManager
+  authenticationManager(AuthenticationConfiguration authenticationConfiguration)
+      throws Exception {
+<span class="nc" id="L59">    logger.info(&quot;Getting authentication manager...&quot;);</span>
+
+<span class="nc" id="L61">    AuthenticationManager authenticationManager = authenticationConfiguration.getAuthenticationManager();</span>
+
+<span class="nc" id="L63">    logger.info(&quot;Authentication manager retrieved successfully.&quot;);</span>
+
+<span class="nc" id="L65">    return authenticationManager;</span>
+  }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

@@ -52,94 +52,102 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void addUser(AddUserReq addUserReq) {
-<span class="fc" id="L55">        checkIfUserExists(addUserReq);</span>
-<span class="fc" id="L56">        validateUserData(addUserReq);</span>
+<span class="fc" id="L55">        logger.info(&quot;Adding user...&quot;);</span>
 
-<span class="fc" id="L58">        Set&lt;Role&gt; roles = mapRolesForAddUser(addUserReq);</span>
-<span class="fc" id="L59">        handleInitialAdmin(roles);</span>
+<span class="fc" id="L57">        checkIfUserExists(addUserReq);</span>
+<span class="fc" id="L58">        validateUserData(addUserReq);</span>
 
-<span class="fc" id="L61">        String userCode = userCodeGenerator.createUserCode(addUserReq.getRoles(), findMaxId() + 1);</span>
+<span class="fc" id="L60">        Set&lt;Role&gt; roles = mapRolesForAddUser(addUserReq);</span>
+<span class="fc" id="L61">        handleInitialAdmin(roles);</span>
 
-<span class="fc" id="L63">        String password = generatePassword(addUserReq.getEmail(), findMaxId() + 1);</span>
-<span class="fc" id="L64">        String encodedPassword = passwordEncoderConfig.passwordEncoder().encode(password);</span>
+<span class="fc" id="L63">        String userCode = userCodeGenerator.createUserCode(addUserReq.getRoles(), findMaxId() + 1);</span>
 
-<span class="fc" id="L66">        User newUser = buildUser(addUserReq, userCode, encodedPassword, roles);</span>
+<span class="fc" id="L65">        String password = generatePassword(addUserReq.getEmail(), findMaxId() + 1);</span>
+<span class="fc" id="L66">        String encodedPassword = passwordEncoderConfig.passwordEncoder().encode(password);</span>
 
-<span class="fc" id="L68">        userRepository.save(newUser);</span>
-<span class="fc" id="L69">        logger.info(&quot;User added successfully: {}&quot;, newUser.getUserCode());</span>
+<span class="fc" id="L68">        User newUser = buildUser(addUserReq, userCode, encodedPassword, roles);</span>
 
-<span class="fc" id="L71">        sendUserCredentialsToAuthService(newUser);</span>
+<span class="fc" id="L70">        userRepository.save(newUser);</span>
+<span class="fc" id="L71">        logger.info(&quot;User added successfully: {}&quot;, newUser.getUserCode());</span>
 
-<span class="fc" id="L73">        sendUserCredentialsByEmail(newUser, password);</span>
-<span class="fc" id="L74">    }</span>
+<span class="fc" id="L73">        sendUserCredentialsToAuthService(newUser);</span>
+
+<span class="fc" id="L75">        sendUserCredentialsByEmail(newUser, password);</span>
+<span class="fc" id="L76">    }</span>
 
     @Override
     public void updateUser(Long userId, UpdateUserReq updateUserReq){
-<span class="fc" id="L78">        User existingUser = findUserByIdOrThrow(userId);</span>
+<span class="fc" id="L80">        logger.info(&quot;Updating user...&quot;);</span>
 
-<span class="pc bpc" id="L80" title="1 of 2 branches missed.">        if(existingUser.isDeleted()){</span>
-<span class="nc" id="L81">            throw new UserNotFoundException(&quot;This user no longer exists: &quot; + existingUser.getEmail());</span>
+<span class="fc" id="L82">        User existingUser = findUserByIdOrThrow(userId);</span>
+
+<span class="pc bpc" id="L84" title="1 of 2 branches missed.">        if(existingUser.isDeleted()){</span>
+<span class="nc" id="L85">            throw new UserNotFoundException(&quot;This user no longer exists: &quot; + existingUser.getEmail());</span>
         }
 
-<span class="fc" id="L84">        Set&lt;Role&gt; roles = mapRolesForUpdateUser(updateUserReq);</span>
+<span class="fc" id="L88">        Set&lt;Role&gt; roles = mapRolesForUpdateUser(updateUserReq);</span>
 
-<span class="fc" id="L86">        updateExistingUser(existingUser, updateUserReq, roles);</span>
-<span class="fc" id="L87">        adminInitializationConfig.initializeAdmin();</span>
-<span class="fc" id="L88">        handleInitialAdmin(roles);</span>
+<span class="fc" id="L90">        updateExistingUser(existingUser, updateUserReq, roles);</span>
+<span class="fc" id="L91">        adminInitializationConfig.initializeAdmin();</span>
+<span class="fc" id="L92">        handleInitialAdmin(roles);</span>
 
-<span class="fc" id="L90">        logger.info(&quot;User with ID {} updated successfully&quot;, userId);</span>
-<span class="fc" id="L91">    }</span>
+<span class="fc" id="L94">        logger.info(&quot;User with ID {} updated successfully&quot;, userId);</span>
+<span class="fc" id="L95">    }</span>
 
     @Override
     public void deleteUser(Long userId){
-<span class="fc" id="L95">        User existingUser = findUserByIdOrThrow(userId);</span>
+<span class="fc" id="L99">        logger.info(&quot;Deleting user...&quot;);</span>
 
-<span class="fc bfc" id="L97" title="All 2 branches covered.">        if (!existingUser.isDeleted()){</span>
-<span class="fc" id="L98">            existingUser.setDeleted(true);</span>
-<span class="fc" id="L99">            userRepository.save(existingUser);</span>
-<span class="fc" id="L100">            adminInitializationConfig.initializeAdmin();</span>
+<span class="fc" id="L101">        User existingUser = findUserByIdOrThrow(userId);</span>
 
-<span class="fc" id="L102">            sendDeletedUserInfoToAuthService(existingUser.getId(), existingUser.isDeleted());</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">        if (!existingUser.isDeleted()){</span>
+<span class="fc" id="L104">            existingUser.setDeleted(true);</span>
+<span class="fc" id="L105">            userRepository.save(existingUser);</span>
+<span class="fc" id="L106">            adminInitializationConfig.initializeAdmin();</span>
 
-<span class="fc" id="L104">            logger.info(&quot;User with ID {} deleted successfully&quot;, userId);</span>
+<span class="fc" id="L108">            sendDeletedUserInfoToAuthService(existingUser.getId(), existingUser.isDeleted());</span>
 
-<span class="fc" id="L106">            sendTerminationInfoByEmail(existingUser);</span>
+<span class="fc" id="L110">            logger.info(&quot;User with ID {} deleted successfully&quot;, userId);</span>
+
+<span class="fc" id="L112">            sendTerminationInfoByEmail(existingUser);</span>
         }
         else{
-<span class="fc" id="L109">            logger.error(&quot;User is already deleted&quot;);</span>
-<span class="fc" id="L110">            throw new UserAlreadyDeletedException(&quot;This user is already deleted&quot;);</span>
+<span class="fc" id="L115">            logger.error(&quot;User is already deleted&quot;);</span>
+<span class="fc" id="L116">            throw new UserAlreadyDeletedException(&quot;This user is already deleted&quot;);</span>
         }
-<span class="fc" id="L112">    }</span>
+<span class="fc" id="L118">    }</span>
 
     @Override
     public void reactivateUser(Long userId) {
-<span class="fc" id="L116">        User existingUser = findUserByIdOrThrow(userId);</span>
+<span class="fc" id="L122">        logger.info(&quot;Reactivating user...&quot;);</span>
 
-<span class="fc bfc" id="L118" title="All 2 branches covered.">        if (existingUser.isDeleted()){</span>
-<span class="fc" id="L119">            existingUser.setDeleted(false);</span>
+<span class="fc" id="L124">        User existingUser = findUserByIdOrThrow(userId);</span>
 
-<span class="fc" id="L121">            String newPassword = resetUserPassword(existingUser);</span>
+<span class="fc bfc" id="L126" title="All 2 branches covered.">        if (existingUser.isDeleted()){</span>
+<span class="fc" id="L127">            existingUser.setDeleted(false);</span>
 
-<span class="fc" id="L123">            userRepository.save(existingUser);</span>
+<span class="fc" id="L129">            String newPassword = resetUserPassword(existingUser);</span>
 
-<span class="fc" id="L125">            sendReactivatedUserInfoToAuthService(existingUser.getId(), existingUser.isDeleted(), existingUser.getPassword());</span>
+<span class="fc" id="L131">            userRepository.save(existingUser);</span>
 
-<span class="fc" id="L127">            handleInitialAdmin(existingUser.getRoles());</span>
-<span class="fc" id="L128">            logger.info(&quot;An existing user has been re-added to the system: {}&quot;, existingUser.getEmail());</span>
+<span class="fc" id="L133">            sendReactivatedUserInfoToAuthService(existingUser.getId(), existingUser.isDeleted(), existingUser.getPassword());</span>
 
-<span class="fc" id="L130">            sendWelcomeBackMessageByEmail(existingUser, newPassword);</span>
-<span class="fc" id="L131">        }</span>
+<span class="fc" id="L135">            handleInitialAdmin(existingUser.getRoles());</span>
+<span class="fc" id="L136">            logger.info(&quot;An existing user has been re-added to the system: {}&quot;, existingUser.getEmail());</span>
+
+<span class="fc" id="L138">            sendWelcomeBackMessageByEmail(existingUser, newPassword);</span>
+<span class="fc" id="L139">        }</span>
         else{
-<span class="fc" id="L133">            logger.error(&quot;This user is already active&quot;);</span>
-<span class="fc" id="L134">            throw new UserAlreadyActiveException(&quot;This user is already active&quot;);</span>
+<span class="fc" id="L141">            logger.error(&quot;This user is already active&quot;);</span>
+<span class="fc" id="L142">            throw new UserAlreadyActiveException(&quot;This user is already active&quot;);</span>
         }
-<span class="fc" id="L136">    }</span>
+<span class="fc" id="L144">    }</span>
 
     private User buildUser(AddUserReq addUserReq, String userCode, String password, Set&lt;Role&gt; roles){
-<span class="fc" id="L139">        return new User(</span>
-<span class="fc" id="L140">                addUserReq.getFirstName(),</span>
-<span class="fc" id="L141">                addUserReq.getLastName(),</span>
-<span class="fc" id="L142">                addUserReq.getEmail(),</span>
+<span class="fc" id="L147">        return new User(</span>
+<span class="fc" id="L148">                addUserReq.getFirstName(),</span>
+<span class="fc" id="L149">                addUserReq.getLastName(),</span>
+<span class="fc" id="L150">                addUserReq.getEmail(),</span>
                 userCode,
                 password,
                 roles
@@ -147,202 +155,204 @@ public class UserServiceImpl implements UserService {
     }
 
     public void checkIfUserExists(AddUserReq addUserReq){
-<span class="fc" id="L150">        Optional&lt;User&gt; existingUser = userRepository.findByEmail(addUserReq.getEmail());</span>
+<span class="fc" id="L158">        Optional&lt;User&gt; existingUser = userRepository.findByEmail(addUserReq.getEmail());</span>
 
-<span class="fc bfc" id="L152" title="All 2 branches covered.">        if (existingUser.isPresent()){</span>
-<span class="fc" id="L153">            String userEmail = existingUser.get().getEmail();</span>
-<span class="fc" id="L154">            throw new UserAlreadyExistsException(&quot;User already exists: &quot; + userEmail);</span>
+<span class="fc bfc" id="L160" title="All 2 branches covered.">        if (existingUser.isPresent()){</span>
+<span class="fc" id="L161">            String userEmail = existingUser.get().getEmail();</span>
+<span class="fc" id="L162">            throw new UserAlreadyExistsException(&quot;User already exists: &quot; + userEmail);</span>
         }
-<span class="fc" id="L156">    }</span>
+<span class="fc" id="L164">    }</span>
 
     private void validateUserData(AddUserReq addUserReq){
-<span class="fc" id="L159">        validateEmail(addUserReq.getEmail());</span>
-<span class="fc" id="L160">        validateFirstName(addUserReq.getFirstName());</span>
-<span class="fc" id="L161">        validateLastName(addUserReq.getLastName());</span>
-<span class="fc" id="L162">    }</span>
+<span class="fc" id="L167">        validateEmail(addUserReq.getEmail());</span>
+<span class="fc" id="L168">        validateFirstName(addUserReq.getFirstName());</span>
+<span class="fc" id="L169">        validateLastName(addUserReq.getLastName());</span>
+<span class="fc" id="L170">    }</span>
 
     private void validateEmail(String email) {
-<span class="fc bfc" id="L165" title="All 2 branches covered.">        if (!emailValidator.isValidEmail(email)){</span>
-<span class="fc" id="L166">            throw new InvalidEmailException(&quot;Invalid email: &quot; + email);</span>
+<span class="fc bfc" id="L173" title="All 2 branches covered.">        if (!emailValidator.isValidEmail(email)){</span>
+<span class="fc" id="L174">            throw new InvalidEmailException(&quot;Invalid email: &quot; + email);</span>
         }
-<span class="fc" id="L168">    }</span>
+<span class="fc" id="L176">    }</span>
 
     private void validateFirstName(String firstName){
-<span class="fc bfc" id="L171" title="All 2 branches covered.">        if (!nameValidator.validateFirstName(firstName)){</span>
-<span class="fc" id="L172">            throw new InvalidNameException(&quot;Invalid first name: &quot; + firstName);</span>
+<span class="fc bfc" id="L179" title="All 2 branches covered.">        if (!nameValidator.validateFirstName(firstName)){</span>
+<span class="fc" id="L180">            throw new InvalidNameException(&quot;Invalid first name: &quot; + firstName);</span>
         }
-<span class="fc" id="L174">    }</span>
+<span class="fc" id="L182">    }</span>
 
     private void validateLastName(String lastName){
-<span class="fc bfc" id="L177" title="All 2 branches covered.">        if (!nameValidator.validateLastName(lastName)){</span>
-<span class="fc" id="L178">            throw new InvalidNameException(&quot;Invalid last name: &quot; + lastName);</span>
+<span class="fc bfc" id="L185" title="All 2 branches covered.">        if (!nameValidator.validateLastName(lastName)){</span>
+<span class="fc" id="L186">            throw new InvalidNameException(&quot;Invalid last name: &quot; + lastName);</span>
         }
-<span class="fc" id="L180">    }</span>
+<span class="fc" id="L188">    }</span>
 
     private Set&lt;Role&gt; mapRolesForAddUser(AddUserReq addUserReq){
-<span class="fc" id="L183">        return addUserReq.getRoles().stream()</span>
-<span class="fc" id="L184">                .map(this::findRoleByNameOrThrow)</span>
-<span class="fc" id="L185">                .collect(Collectors.toSet());</span>
+<span class="fc" id="L191">        return addUserReq.getRoles().stream()</span>
+<span class="fc" id="L192">                .map(this::findRoleByNameOrThrow)</span>
+<span class="fc" id="L193">                .collect(Collectors.toSet());</span>
     }
 
     private Set&lt;Role&gt; mapRolesForUpdateUser(UpdateUserReq updateUserReq){
-<span class="fc" id="L189">        return updateUserReq.getRoles().stream()</span>
-<span class="fc" id="L190">                .map(this::findRoleByNameOrThrow)</span>
-<span class="fc" id="L191">                .collect(Collectors.toSet());</span>
+<span class="fc" id="L197">        return updateUserReq.getRoles().stream()</span>
+<span class="fc" id="L198">                .map(this::findRoleByNameOrThrow)</span>
+<span class="fc" id="L199">                .collect(Collectors.toSet());</span>
     }
 
     private Role findRoleByNameOrThrow(String roleName) {
-<span class="fc" id="L195">        return roleRepository.findByName(roleName)</span>
-<span class="fc" id="L196">                .orElseThrow(() -&gt; new RoleNotFoundException(&quot;Role not found: &quot; + roleName));</span>
+<span class="fc" id="L203">        return roleRepository.findByName(roleName)</span>
+<span class="fc" id="L204">                .orElseThrow(() -&gt; new RoleNotFoundException(&quot;Role not found: &quot; + roleName));</span>
     }
 
     private User findUserByIdOrThrow(Long userId) {
-<span class="fc" id="L200">        return userRepository.findById(userId)</span>
-<span class="fc" id="L201">                .orElseThrow(() -&gt; new UserNotFoundException(&quot;User not found&quot;));</span>
+<span class="fc" id="L208">        return userRepository.findById(userId)</span>
+<span class="fc" id="L209">                .orElseThrow(() -&gt; new UserNotFoundException(&quot;User not found&quot;));</span>
     }
 
     private String generatePassword(String email, Long id) {
-<span class="fc" id="L205">        return passwordGenerator.createPassword(email, id);</span>
+<span class="fc" id="L213">        return passwordGenerator.createPassword(email, id);</span>
     }
 
     private String resetUserPassword(User user) {
-<span class="fc" id="L209">        String newPassword = generatePassword(user.getEmail(), user.getId());</span>
-<span class="fc" id="L210">        String encodedPassword = passwordEncoderConfig.passwordEncoder().encode(newPassword);</span>
-<span class="fc" id="L211">        user.setPassword(encodedPassword);</span>
-<span class="fc" id="L212">        return newPassword;</span>
+<span class="fc" id="L217">        logger.info(&quot;Resetting password...&quot;);</span>
+<span class="fc" id="L218">        String newPassword = generatePassword(user.getEmail(), user.getId());</span>
+<span class="fc" id="L219">        String encodedPassword = passwordEncoderConfig.passwordEncoder().encode(newPassword);</span>
+<span class="fc" id="L220">        user.setPassword(encodedPassword);</span>
+<span class="fc" id="L221">        logger.info(&quot;Password reset!&quot;);</span>
+<span class="fc" id="L222">        return newPassword;</span>
     }
 
     private Long findMaxId(){
-<span class="fc" id="L216">        Long maxId = userRepository.findMaxId();</span>
-<span class="pc bpc" id="L217" title="1 of 2 branches missed.">        if (maxId == null) {</span>
-<span class="fc" id="L218">            logger.warn(&quot;User ID is null. Defaulting to ID 1.&quot;);</span>
-<span class="fc" id="L219">            maxId = 1L;</span>
+<span class="fc" id="L226">        Long maxId = userRepository.findMaxId();</span>
+<span class="pc bpc" id="L227" title="1 of 2 branches missed.">        if (maxId == null) {</span>
+<span class="fc" id="L228">            logger.warn(&quot;User ID is null. Defaulting to ID 1.&quot;);</span>
+<span class="fc" id="L229">            maxId = 1L;</span>
         }
-<span class="fc" id="L221">        return maxId;</span>
+<span class="fc" id="L231">        return maxId;</span>
     }
 
     private void updateExistingUser(User existingUser, UpdateUserReq updateUserReq, Set&lt;Role&gt; roles) {
-<span class="pc bpc" id="L225" title="1 of 2 branches missed.">        if (!updateUserReq.getFirstName().isEmpty()){</span>
-<span class="fc" id="L226">            validateFirstName(updateUserReq.getFirstName());</span>
-<span class="fc" id="L227">            existingUser.setFirstName(updateUserReq.getFirstName());</span>
+<span class="pc bpc" id="L235" title="1 of 2 branches missed.">        if (!updateUserReq.getFirstName().isEmpty()){</span>
+<span class="fc" id="L236">            validateFirstName(updateUserReq.getFirstName());</span>
+<span class="fc" id="L237">            existingUser.setFirstName(updateUserReq.getFirstName());</span>
         }
 
-<span class="pc bpc" id="L230" title="1 of 2 branches missed.">        if (!updateUserReq.getLastName().isEmpty()){</span>
-<span class="fc" id="L231">            validateLastName(updateUserReq.getLastName());</span>
-<span class="fc" id="L232">            existingUser.setLastName(updateUserReq.getLastName());</span>
+<span class="pc bpc" id="L240" title="1 of 2 branches missed.">        if (!updateUserReq.getLastName().isEmpty()){</span>
+<span class="fc" id="L241">            validateLastName(updateUserReq.getLastName());</span>
+<span class="fc" id="L242">            existingUser.setLastName(updateUserReq.getLastName());</span>
         }
 
-<span class="pc bpc" id="L235" title="1 of 2 branches missed.">        if (!updateUserReq.getEmail().isEmpty()){</span>
-<span class="fc" id="L236">            validateEmail(updateUserReq.getEmail());</span>
-<span class="fc" id="L237">            existingUser.setEmail(updateUserReq.getEmail());</span>
+<span class="pc bpc" id="L245" title="1 of 2 branches missed.">        if (!updateUserReq.getEmail().isEmpty()){</span>
+<span class="fc" id="L246">            validateEmail(updateUserReq.getEmail());</span>
+<span class="fc" id="L247">            existingUser.setEmail(updateUserReq.getEmail());</span>
         }
 
-<span class="pc bpc" id="L240" title="1 of 2 branches missed.">        if (!updateUserReq.getRoles().isEmpty()){</span>
-<span class="fc" id="L241">            updateUserCodeIfRolesAreChanged(existingUser, updateUserReq);</span>
-<span class="fc" id="L242">            existingUser.setRoles(roles);</span>
+<span class="pc bpc" id="L250" title="1 of 2 branches missed.">        if (!updateUserReq.getRoles().isEmpty()){</span>
+<span class="fc" id="L251">            updateUserCodeIfRolesAreChanged(existingUser, updateUserReq);</span>
+<span class="fc" id="L252">            existingUser.setRoles(roles);</span>
 
-<span class="fc" id="L244">            sendUpdatedUserInfoToAuthService(existingUser.getId(), existingUser.getUserCode(), existingUser.getRoles());</span>
+<span class="fc" id="L254">            sendUpdatedUserInfoToAuthService(existingUser.getId(), existingUser.getUserCode(), existingUser.getRoles());</span>
         }
 
-<span class="fc" id="L247">        userRepository.save(existingUser);</span>
-<span class="fc" id="L248">    }</span>
+<span class="fc" id="L257">        userRepository.save(existingUser);</span>
+<span class="fc" id="L258">    }</span>
 
     private void updateUserCodeIfRolesAreChanged(User existingUser, UpdateUserReq updateUserReq){
-<span class="fc" id="L251">        Set&lt;String&gt; existingRoleNames = existingUser.getRoles().stream()</span>
-<span class="fc" id="L252">                .map(Role::getName).collect(Collectors.toSet());</span>
+<span class="fc" id="L261">        Set&lt;String&gt; existingRoleNames = existingUser.getRoles().stream()</span>
+<span class="fc" id="L262">                .map(Role::getName).collect(Collectors.toSet());</span>
 
-<span class="fc bfc" id="L254" title="All 2 branches covered.">        if (!existingRoleNames.equals(updateUserReq.getRoles())){</span>
-<span class="fc" id="L255">            String updatedUserCode = userCodeGenerator.createUserCode(updateUserReq.getRoles(), existingUser.getId());</span>
-<span class="fc" id="L256">            existingUser.setUserCode(updatedUserCode);</span>
+<span class="fc bfc" id="L264" title="All 2 branches covered.">        if (!existingRoleNames.equals(updateUserReq.getRoles())){</span>
+<span class="fc" id="L265">            String updatedUserCode = userCodeGenerator.createUserCode(updateUserReq.getRoles(), existingUser.getId());</span>
+<span class="fc" id="L266">            existingUser.setUserCode(updatedUserCode);</span>
 
-<span class="fc" id="L258">            sendUpdatedUserCodeByEmail(existingUser, updatedUserCode);</span>
+<span class="fc" id="L268">            sendUpdatedUserCodeByEmail(existingUser, updatedUserCode);</span>
         }
-<span class="fc" id="L260">    }</span>
+<span class="fc" id="L270">    }</span>
 
     private void sendUpdatedUserCodeByEmail(User user, String updatedUserCode) {
-<span class="fc" id="L263">        emailService.sendEmail(user.getEmail(), &quot;User Code Updated&quot;,</span>
-<span class="fc" id="L264">                &quot;updatedUserCode-mail-template&quot;, updatedUserCode, user.getFirstName(),</span>
-<span class="fc" id="L265">                user.getLastName());</span>
-<span class="fc" id="L266">        logger.info(&quot;A new user code has been created and sent to the user's email.&quot;);</span>
+<span class="fc" id="L273">        emailService.sendEmail(user.getEmail(), &quot;User Code Updated&quot;,</span>
+<span class="fc" id="L274">                &quot;updatedUserCode-mail-template&quot;, updatedUserCode, user.getFirstName(),</span>
+<span class="fc" id="L275">                user.getLastName());</span>
+<span class="fc" id="L276">        logger.info(&quot;A new user code has been created and sent to the user's email.&quot;);</span>
 
-<span class="fc" id="L268">    }</span>
+<span class="fc" id="L278">    }</span>
 
     private void sendUserCredentialsByEmail(User newUser, String password) {
-<span class="fc" id="L271">        emailService.sendEmail(newUser.getEmail(), &quot;Welcome!&quot;, &quot;userCredentials-mail-template&quot;,</span>
-<span class="fc" id="L272">                newUser.getUserCode(), password, newUser.getFirstName(), newUser.getLastName());</span>
-<span class="fc" id="L273">        logger.info(&quot;The user credentials have been sent to the user via email.&quot;);</span>
-<span class="fc" id="L274">    }</span>
+<span class="fc" id="L281">        emailService.sendEmail(newUser.getEmail(), &quot;Welcome!&quot;, &quot;userCredentials-mail-template&quot;,</span>
+<span class="fc" id="L282">                newUser.getUserCode(), password, newUser.getFirstName(), newUser.getLastName());</span>
+<span class="fc" id="L283">        logger.info(&quot;The user credentials have been sent to the user via email.&quot;);</span>
+<span class="fc" id="L284">    }</span>
 
     private void sendTerminationInfoByEmail(User user) {
-<span class="fc" id="L277">        emailService.sendEmail(user.getEmail(), &quot;Thanks for your efforts&quot;,</span>
-<span class="fc" id="L278">                &quot;terminationOfRelationship-mail-template&quot;, user.getFirstName(), user.getLastName());</span>
-<span class="fc" id="L279">        logger.info(&quot;The user has been informed via email about the termination of their relationship.&quot;);</span>
-<span class="fc" id="L280">    }</span>
+<span class="fc" id="L287">        emailService.sendEmail(user.getEmail(), &quot;Thanks for your efforts&quot;,</span>
+<span class="fc" id="L288">                &quot;terminationOfRelationship-mail-template&quot;, user.getFirstName(), user.getLastName());</span>
+<span class="fc" id="L289">        logger.info(&quot;The user has been informed via email about the termination of their relationship.&quot;);</span>
+<span class="fc" id="L290">    }</span>
 
     private void sendWelcomeBackMessageByEmail(User user, String newPassword) {
-<span class="fc" id="L283">        emailService.sendEmail(user.getEmail(), &quot;Welcome Back!&quot;, &quot;reHired-mail-template&quot;,</span>
-<span class="fc" id="L284">                user.getUserCode(), newPassword, user.getFirstName(), user.getLastName());</span>
-<span class="fc" id="L285">        logger.info(&quot;A welcome-back email has been sent to the user: {}&quot;, user.getEmail());</span>
-<span class="fc" id="L286">    }</span>
+<span class="fc" id="L293">        emailService.sendEmail(user.getEmail(), &quot;Welcome Back!&quot;, &quot;reHired-mail-template&quot;,</span>
+<span class="fc" id="L294">                user.getUserCode(), newPassword, user.getFirstName(), user.getLastName());</span>
+<span class="fc" id="L295">        logger.info(&quot;A welcome-back email has been sent to the user: {}&quot;, user.getEmail());</span>
+<span class="fc" id="L296">    }</span>
 
     private void handleInitialAdmin(Set&lt;Role&gt; roles){
-<span class="pc bpc" id="L289" title="1 of 2 branches missed.">        if (roles.stream().anyMatch(role -&gt; role.getName().equals(&quot;ROLE_ADMIN&quot;))) {</span>
-<span class="fc" id="L290">            userRepository.findByUserCode(&quot;admin&quot;)</span>
-<span class="fc" id="L291">                    .ifPresent(admin -&gt; {</span>
-<span class="fc" id="L292">                        admin.setDeleted(true);</span>
+<span class="pc bpc" id="L299" title="1 of 2 branches missed.">        if (roles.stream().anyMatch(role -&gt; role.getName().equals(&quot;ROLE_ADMIN&quot;))) {</span>
+<span class="fc" id="L300">            userRepository.findByUserCode(&quot;admin&quot;)</span>
+<span class="fc" id="L301">                    .ifPresent(admin -&gt; {</span>
+<span class="fc" id="L302">                        admin.setDeleted(true);</span>
 
-<span class="fc" id="L294">                        userRepository.save(admin);</span>
+<span class="fc" id="L304">                        userRepository.save(admin);</span>
 
-<span class="fc" id="L296">                        UserSafeDeletionDTO userSafeDeletionDTO = new UserSafeDeletionDTO(</span>
-<span class="fc" id="L297">                                admin.getId(),</span>
-<span class="fc" id="L298">                                admin.isDeleted()</span>
+<span class="fc" id="L306">                        UserSafeDeletionDTO userSafeDeletionDTO = new UserSafeDeletionDTO(</span>
+<span class="fc" id="L307">                                admin.getId(),</span>
+<span class="fc" id="L308">                                admin.isDeleted()</span>
                         );
 
-<span class="fc" id="L301">                        credentialsProducer.sendMessage(&quot;user-deletion&quot;, userSafeDeletionDTO);</span>
-<span class="fc" id="L302">                        logger.info(&quot;The initial admin has been deleted.&quot;);</span>
-<span class="fc" id="L303">                    });</span>
+<span class="fc" id="L311">                        credentialsProducer.sendMessage(&quot;user-deletion&quot;, userSafeDeletionDTO);</span>
+<span class="fc" id="L312">                        logger.info(&quot;The initial admin has been deleted.&quot;);</span>
+<span class="fc" id="L313">                    });</span>
         }
-<span class="fc" id="L305">    }</span>
+<span class="fc" id="L315">    }</span>
 
     private void sendUserCredentialsToAuthService(User newUser){
-<span class="fc" id="L308">        UserCredentialsDTO userCredentialsDTO = new UserCredentialsDTO(</span>
-<span class="fc" id="L309">                newUser.getId(),</span>
-<span class="fc" id="L310">                newUser.getUserCode(),</span>
-<span class="fc" id="L311">                newUser.getPassword(),</span>
-<span class="fc" id="L312">                newUser.getRoles(),</span>
-<span class="fc" id="L313">                newUser.isDeleted()</span>
+<span class="fc" id="L318">        UserCredentialsDTO userCredentialsDTO = new UserCredentialsDTO(</span>
+<span class="fc" id="L319">                newUser.getId(),</span>
+<span class="fc" id="L320">                newUser.getUserCode(),</span>
+<span class="fc" id="L321">                newUser.getPassword(),</span>
+<span class="fc" id="L322">                newUser.getRoles(),</span>
+<span class="fc" id="L323">                newUser.isDeleted()</span>
         );
 
-<span class="fc" id="L316">        credentialsProducer.sendMessage(&quot;user-credentials&quot;, userCredentialsDTO);</span>
-<span class="fc" id="L317">    }</span>
+<span class="fc" id="L326">        credentialsProducer.sendMessage(&quot;user-credentials&quot;, userCredentialsDTO);</span>
+<span class="fc" id="L327">    }</span>
 
     private void sendUpdatedUserInfoToAuthService(Long userId, String userCode, Set&lt;Role&gt; roles){
-<span class="fc" id="L320">        UserUpdateDTO userUpdateDTO = new UserUpdateDTO(</span>
+<span class="fc" id="L330">        UserUpdateDTO userUpdateDTO = new UserUpdateDTO(</span>
                 userId,
                 userCode,
                 roles
         );
 
-<span class="fc" id="L326">        credentialsProducer.sendMessage(&quot;user-update&quot;, userUpdateDTO);</span>
-<span class="fc" id="L327">    }</span>
+<span class="fc" id="L336">        credentialsProducer.sendMessage(&quot;user-update&quot;, userUpdateDTO);</span>
+<span class="fc" id="L337">    }</span>
 
     private void sendDeletedUserInfoToAuthService(Long userId, boolean isDeleted){
-<span class="fc" id="L330">        UserSafeDeletionDTO userSafeDeletionDTO = new UserSafeDeletionDTO(</span>
+<span class="fc" id="L340">        UserSafeDeletionDTO userSafeDeletionDTO = new UserSafeDeletionDTO(</span>
                 userId,
                 isDeleted
         );
 
-<span class="fc" id="L335">        credentialsProducer.sendMessage(&quot;user-deletion&quot;, userSafeDeletionDTO);</span>
-<span class="fc" id="L336">    }</span>
+<span class="fc" id="L345">        credentialsProducer.sendMessage(&quot;user-deletion&quot;, userSafeDeletionDTO);</span>
+<span class="fc" id="L346">    }</span>
 
     private void sendReactivatedUserInfoToAuthService(Long userId, boolean isDeleted, String password){
-<span class="fc" id="L339">        UserReactivateDTO userReactivateDTO = new UserReactivateDTO(</span>
+<span class="fc" id="L349">        UserReactivateDTO userReactivateDTO = new UserReactivateDTO(</span>
                 userId,
                 password,
                 isDeleted
         );
 
-<span class="fc" id="L345">        credentialsProducer.sendMessage(&quot;user-reactivate&quot;, userReactivateDTO);</span>
-<span class="fc" id="L346">    }</span>
+<span class="fc" id="L355">        credentialsProducer.sendMessage(&quot;user-reactivate&quot;, userReactivateDTO);</span>
+<span class="fc" id="L356">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

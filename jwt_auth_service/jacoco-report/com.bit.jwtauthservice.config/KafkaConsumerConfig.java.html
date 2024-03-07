@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>KafkaConsumerConfig.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">jwt_auth_service</a> &gt; <a href="index.source.html" class="el_package">com.bit.jwtauthservice.config</a> &gt; <span class="el_source">KafkaConsumerConfig.java</span></div><h1>KafkaConsumerConfig.java</h1><pre class="source lang-java linenums">package com.bit.jwtauthservice.config;
+
+import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.common.serialization.StringDeserializer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
+import org.springframework.kafka.core.ConsumerFactory;
+import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.kafka.support.serializer.JsonDeserializer;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@Configuration
+<span class="nc" id="L19">public class KafkaConsumerConfig {</span>
+<span class="nc" id="L20">    private static final Logger logger = LoggerFactory.getLogger(KafkaConsumerConfig.class);</span>
+
+    @Value(&quot;${spring.kafka.bootstrap-servers}&quot;)
+    private String bootstrapServers;
+
+    @Bean
+    public ConsumerFactory&lt;String, Object&gt; consumerFactory() {
+<span class="nc" id="L27">        logger.info(&quot;Creating Kafka consumer factory...&quot;);</span>
+
+<span class="nc" id="L29">        Map&lt;String, Object&gt; configProps = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L30">        configProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);</span>
+<span class="nc" id="L31">        configProps.put(ConsumerConfig.GROUP_ID_CONFIG, &quot;users&quot;);</span>
+<span class="nc" id="L32">        configProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);</span>
+<span class="nc" id="L33">        configProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);</span>
+<span class="nc" id="L34">        configProps.put(JsonDeserializer.TRUSTED_PACKAGES, &quot;*&quot;);</span>
+<span class="nc" id="L35">        configProps.put(JsonDeserializer.TYPE_MAPPINGS, &quot;userCredentials:com.bit.jwtauthservice.dto.kafka.UserCredentialsDTO, &quot; +</span>
+                &quot;userSafeDeletion:com.bit.jwtauthservice.dto.kafka.UserSafeDeletionDTO, &quot; +
+                &quot;userUpdate:com.bit.jwtauthservice.dto.kafka.UserUpdateDTO, &quot; +
+                &quot;userReactivate:com.bit.jwtauthservice.dto.kafka.UserReactivateDTO&quot;);
+
+<span class="nc" id="L40">        logger.info(&quot;Kafka consumer factory created successfully.&quot;);</span>
+<span class="nc" id="L41">        return new DefaultKafkaConsumerFactory&lt;&gt;(configProps);</span>
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory&lt;String, Object&gt; kafkaListenerContainerFactory() {
+<span class="nc" id="L46">        logger.info(&quot;Creating Kafka listener container factory...&quot;);</span>
+<span class="nc" id="L47">        ConcurrentKafkaListenerContainerFactory&lt;String, Object&gt; factory = new ConcurrentKafkaListenerContainerFactory&lt;&gt;();</span>
+<span class="nc" id="L48">        factory.setConsumerFactory(consumerFactory());</span>
+
+<span class="nc" id="L50">        logger.info(&quot;Kafka listener container factory created successfully.&quot;);</span>
+
+<span class="nc" id="L52">        return factory;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

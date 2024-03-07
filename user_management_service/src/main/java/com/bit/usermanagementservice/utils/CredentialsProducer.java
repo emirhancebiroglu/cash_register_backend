@@ -23,7 +23,7 @@ public class CredentialsProducer {
     }
 
     public void sendMessage(String topic, UserSafeDeletionDTO userSafeDeletionDTO) {
-        kafkaTemplate.send(topic,userSafeDeletionDTO);
+        kafkaTemplate.send(topic, userSafeDeletionDTO);
         logger.info("Sent message for UserSafeDeletionDTO to topic: {}", topic);
     }
 

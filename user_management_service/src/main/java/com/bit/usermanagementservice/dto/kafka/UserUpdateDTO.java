@@ -10,6 +10,7 @@ import java.util.Set;
 @AllArgsConstructor
 public class UserUpdateDTO {
     private Long id;
+    private String email;
     private String userCode;
     private Set<Role> roles;
 }
