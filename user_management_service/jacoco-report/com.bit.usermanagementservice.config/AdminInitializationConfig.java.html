@@ -85,26 +85,27 @@ public class AdminInitializationConfig implements CommandLineRunner {
     private void sendCredentialsToAuthService(User adminUser) {
 <span class="fc" id="L86">        UserCredentialsDTO userCredentialsDTO = new UserCredentialsDTO(</span>
 <span class="fc" id="L87">                adminUser.getId(),</span>
-<span class="fc" id="L88">                adminUser.getUserCode(),</span>
-<span class="fc" id="L89">                adminUser.getPassword(),</span>
-<span class="fc" id="L90">                adminUser.getRoles(),</span>
-<span class="fc" id="L91">                adminUser.isDeleted()</span>
+<span class="fc" id="L88">                adminUser.getEmail(),</span>
+<span class="fc" id="L89">                adminUser.getUserCode(),</span>
+<span class="fc" id="L90">                adminUser.getPassword(),</span>
+<span class="fc" id="L91">                adminUser.getRoles(),</span>
+<span class="fc" id="L92">                adminUser.isDeleted()</span>
         );
 
-<span class="fc" id="L94">        credentialsProducer.sendMessage(&quot;user-credentials&quot; ,userCredentialsDTO);</span>
-<span class="fc" id="L95">        logger.info(&quot;User credentials sent to the authentication service.&quot;);</span>
-<span class="fc" id="L96">    }</span>
+<span class="fc" id="L95">        credentialsProducer.sendMessage(&quot;user-credentials&quot; ,userCredentialsDTO);</span>
+<span class="fc" id="L96">        logger.info(&quot;User credentials sent to the authentication service.&quot;);</span>
+<span class="fc" id="L97">    }</span>
     private void sendDeletionInfoToAuthService(Optional&lt;User&gt; initialAdmin){
-<span class="pc bpc" id="L98" title="1 of 2 branches missed.">        if (initialAdmin.isEmpty())</span>
-<span class="nc" id="L99">            return;</span>
+<span class="pc bpc" id="L99" title="1 of 2 branches missed.">        if (initialAdmin.isEmpty())</span>
+<span class="nc" id="L100">            return;</span>
 
-<span class="fc" id="L101">        UserSafeDeletionDTO userSafeDeletionDTO = new UserSafeDeletionDTO(</span>
-<span class="fc" id="L102">                initialAdmin.get().getId(),</span>
-<span class="fc" id="L103">                initialAdmin.get().isDeleted()</span>
+<span class="fc" id="L102">        UserSafeDeletionDTO userSafeDeletionDTO = new UserSafeDeletionDTO(</span>
+<span class="fc" id="L103">                initialAdmin.get().getId(),</span>
+<span class="fc" id="L104">                initialAdmin.get().isDeleted()</span>
         );
 
-<span class="fc" id="L106">        credentialsProducer.sendMessage(&quot;user-deletion&quot;, userSafeDeletionDTO);</span>
-<span class="fc" id="L107">        logger.info(&quot;User deletion information sent to the authentication service.&quot;);</span>
-<span class="fc" id="L108">    }</span>
+<span class="fc" id="L107">        credentialsProducer.sendMessage(&quot;user-deletion&quot;, userSafeDeletionDTO);</span>
+<span class="fc" id="L108">        logger.info(&quot;User deletion information sent to the authentication service.&quot;);</span>
+<span class="fc" id="L109">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

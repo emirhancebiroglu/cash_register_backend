@@ -1,6 +1,6 @@
 package com.bit.sharedfilter.filter;
 
-import com.bit.sharedfilter.service.JwtService;
+import com.bit.sharedfilter.service.JwtServiceForFiltering;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,7 +21,7 @@ import java.util.Collection;
 @Component
 @RequiredArgsConstructor
 public class JwtAuthFilter extends OncePerRequestFilter {
-    private final JwtService jwtService;
+    private final JwtServiceForFiltering jwtServiceForFiltering;
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
         final String authHeader = request.getHeader("Authorization");
@@ -36,8 +36,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         jwt = authHeader.substring(7);
 
-        userCode = jwtService.extractUserName(jwt);
-        authorities = jwtService.extractAuthorities(jwt);
+        userCode = jwtServiceForFiltering.extractUserName(jwt);
+        authorities = jwtServiceForFiltering.extractAuthorities(jwt);
 
         if(StringUtils.isNotEmpty(userCode) && SecurityContextHolder.getContext().getAuthentication() == null){
                 UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(

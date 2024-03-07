@@ -8,7 +8,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.function.Function;
 
-public interface JwtService {
+public interface JwtServiceForFiltering {
     String extractUserName(String token);
     boolean isTokenValid(String token);
     boolean isTokenExpired(String token);

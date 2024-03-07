@@ -1,5 +1,6 @@
 package com.bit.jwtauthservice.repository;
 
+import com.bit.jwtauthservice.entity.ResetPasswordToken;
 import com.bit.jwtauthservice.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -10,4 +11,5 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
     Optional<User> findByUserCode(String userCode);
+    Optional<User> findByResetPasswordToken(ResetPasswordToken resetPasswordToken);
 }

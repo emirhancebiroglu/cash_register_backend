@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class UserUpdateDTOTest {
     @Test
@@ -28,10 +29,12 @@ class UserUpdateDTOTest {
         UserUpdateDTO userUpdateDTO = new UserUpdateDTO(1L, "testemail@gmail.com", "user123", roles);
 
         assertEquals(1L, userUpdateDTO.getId());
+        assertEquals("testemail@gmail.com", userUpdateDTO.getEmail());
         assertEquals("user123", userUpdateDTO.getUserCode());
         assertEquals(2, userUpdateDTO.getRoles().size());
 
         assertEquals(1L, userUpdateDTO.getId());
+        assertEquals("testemail@gmail.com", userUpdateDTO.getEmail());
         assertEquals("user123", userUpdateDTO.getUserCode());
         assertEquals(roles, userUpdateDTO.getRoles());
     }

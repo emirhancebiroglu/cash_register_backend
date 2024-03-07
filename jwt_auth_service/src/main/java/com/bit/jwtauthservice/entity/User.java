@@ -45,6 +45,20 @@ public class User implements UserDetails {
     @Column(name = "is_deleted")
     private boolean isDeleted;
 
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "reset_password_token_id", referencedColumnName = "id")
+    private ResetPasswordToken resetPasswordToken;
+
+    public User(Long id, @NonNull String email, @NonNull String userCode, @NonNull String password,
+                @NonNull Set<Role> roles, boolean isDeleted){
+        this.id = id;
+        this.email = email;
+        this.userCode = userCode;
+        this.password = password;
+        this.roles = roles;
+        this.isDeleted = isDeleted;
+    }
+
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return roles.stream()

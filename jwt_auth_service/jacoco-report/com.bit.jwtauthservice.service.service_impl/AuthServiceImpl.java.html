@@ -1,53 +1,145 @@
 <?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">jwt_auth_service</a> &gt; <a href="index.source.html" class="el_package">com.bit.jwtauthservice.service.service_impl</a> &gt; <span class="el_source">AuthServiceImpl.java</span></div><h1>AuthServiceImpl.java</h1><pre class="source lang-java linenums">package com.bit.jwtauthservice.service.service_impl;
 
+import com.bit.jwtauthservice.config.PasswordEncoderConfig;
+import com.bit.jwtauthservice.dto.password.ChangePasswordReq;
+import com.bit.jwtauthservice.dto.password.ForgotPasswordReq;
+import com.bit.jwtauthservice.dto.password.ResetPasswordReq;
 import com.bit.jwtauthservice.dto.login.LoginReq;
 import com.bit.jwtauthservice.dto.login.LoginRes;
+import com.bit.jwtauthservice.dto.usercode.ForgotUserCodeReq;
+import com.bit.jwtauthservice.entity.ResetPasswordToken;
 import com.bit.jwtauthservice.entity.User;
+import com.bit.jwtauthservice.exceptions.badcredentials.BadCredentialsException;
 import com.bit.jwtauthservice.exceptions.usernotfound.UserNotFoundException;
+import com.bit.jwtauthservice.repository.ResetPasswordTokenRepository;
 import com.bit.jwtauthservice.repository.UserRepository;
 import com.bit.jwtauthservice.service.AuthService;
+import com.bit.jwtauthservice.service.EmailService;
 import com.bit.jwtauthservice.service.JwtService;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
+
+import java.time.LocalDate;
+import java.util.UUID;
 
 @Service
-<span class="nc bnc" id="L22" title="All 38 branches missed.">@Data</span>
-<span class="nc" id="L23">@RequiredArgsConstructor</span>
+<span class="nc bnc" id="L32" title="All 62 branches missed.">@Data</span>
+<span class="nc" id="L33">@RequiredArgsConstructor</span>
 public class AuthServiceImpl implements AuthService {
-<span class="nc" id="L25">    private final AuthenticationManager authenticationManager;</span>
-<span class="nc" id="L26">    private final UserRepository userRepository;</span>
-<span class="nc" id="L27">    private final JwtService jwtService;</span>
+<span class="nc" id="L35">    private final AuthenticationManager authenticationManager;</span>
+<span class="nc" id="L36">    private final UserRepository userRepository;</span>
+<span class="nc" id="L37">    private final ResetPasswordTokenRepository resetPasswordTokenRepository;</span>
+<span class="nc" id="L38">    private final JwtService jwtService;</span>
+<span class="nc" id="L39">    private final EmailService emailService;</span>
+<span class="nc" id="L40">    private final PasswordEncoderConfig passwordEncoderConfig;</span>
+    private static final String USER_NOT_FOUND = &quot;User not found&quot;;
 
-<span class="nc" id="L29">    Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);</span>
+<span class="nc" id="L43">    Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);</span>
 
     @Override
     public LoginRes login(LoginReq loginReq) {
-        try {
-<span class="nc" id="L34">            logger.info(&quot;Attempting to authenticate user: {}&quot;, loginReq.getUserCode());</span>
+<span class="nc" id="L47">        logger.info(&quot;Attempting to authenticate user: {}&quot;, loginReq.getUserCode());</span>
 
-<span class="nc" id="L36">            authenticationManager.authenticate(</span>
-<span class="nc" id="L37">                    new UsernamePasswordAuthenticationToken(loginReq.getUserCode(),</span>
-<span class="nc" id="L38">                            loginReq.getPassword()));</span>
-<span class="nc" id="L39">            User user = userRepository.findByUserCode(loginReq.getUserCode())</span>
-<span class="nc" id="L40">                    .orElseThrow(() -&gt; new UserNotFoundException(&quot;User not found&quot;));</span>
+<span class="nc" id="L49">        User user = userRepository.findByUserCode(loginReq.getUserCode())</span>
+<span class="nc" id="L50">                .orElseThrow(() -&gt; new UserNotFoundException(USER_NOT_FOUND));</span>
 
-<span class="nc" id="L42">            var jwt = jwtService.generateToken(user);</span>
-
-<span class="nc" id="L44">            logger.info(&quot;User '{}' authenticated successfully.&quot;, loginReq.getUserCode());</span>
-
-<span class="nc" id="L46">            return LoginRes.builder().token(jwt).build();</span>
+<span class="nc bnc" id="L52" title="All 2 branches missed.">        if (user.isDeleted()){</span>
+<span class="nc" id="L53">            throw new UserNotFoundException(USER_NOT_FOUND);</span>
         }
-<span class="nc" id="L48">        catch (BadCredentialsException ex){</span>
-<span class="nc" id="L49">            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, &quot;Bad credentials&quot;, ex);</span>
+
+<span class="nc bnc" id="L56" title="All 2 branches missed.">        if (!isPasswordValid(user, loginReq.getPassword())) {</span>
+<span class="nc" id="L57">            throw new BadCredentialsException(&quot;Invalid password&quot;);</span>
         }
+
+<span class="nc" id="L60">        var jwt = jwtService.generateToken(user);</span>
+
+<span class="nc" id="L62">        logger.info(&quot;User '{}' authenticated successfully.&quot;, loginReq.getUserCode());</span>
+
+<span class="nc" id="L64">        return LoginRes.builder().token(jwt).build();</span>
+    }
+
+    @Override
+    public void forgotUserCode(ForgotUserCodeReq forgotUserCodeReq) {
+<span class="nc" id="L69">        User user = userRepository.findByEmail(forgotUserCodeReq.getEmail())</span>
+<span class="nc" id="L70">                .orElseThrow(() -&gt; new UserNotFoundException(USER_NOT_FOUND));</span>
+
+<span class="nc" id="L72">        emailService.sendUserCode(user.getEmail(), &quot;Your user code.&quot;, &quot;sendUserCode-mail-template&quot;, user.getUserCode());</span>
+<span class="nc" id="L73">    }</span>
+
+    @Override
+    public void forgotPassword(ForgotPasswordReq forgotPasswordReq) {
+<span class="nc" id="L77">        User user = userRepository.findByEmail(forgotPasswordReq.getEmail())</span>
+<span class="nc" id="L78">                .orElseThrow(() -&gt; new UserNotFoundException(USER_NOT_FOUND));</span>
+
+<span class="nc" id="L80">        ResetPasswordToken resetPasswordToken = new ResetPasswordToken();</span>
+<span class="nc" id="L81">        resetPasswordToken.setToken(UUID.randomUUID().toString());</span>
+<span class="nc" id="L82">        resetPasswordToken.setExpirationDate(LocalDate.now().plusDays(1));</span>
+
+<span class="nc" id="L84">        user.setResetPasswordToken(resetPasswordToken);</span>
+
+<span class="nc" id="L86">        resetPasswordTokenRepository.save(resetPasswordToken);</span>
+<span class="nc" id="L87">        userRepository.save(user);</span>
+
+<span class="nc" id="L89">        String resetLink = &quot;http://localhost:8881/api/auth/reset-password?token=&quot; + resetPasswordToken.getToken();</span>
+
+<span class="nc" id="L91">        emailService.sendPasswordResetEmail(forgotPasswordReq.getEmail(), &quot;Reset Password&quot;, &quot;resetPassword-mail-template&quot;, resetLink);</span>
+<span class="nc" id="L92">    }</span>
+
+    @Override
+    public void resetPassword(String token, ResetPasswordReq resetPasswordReq) {
+<span class="nc" id="L96">        ResetPasswordToken resetPasswordToken = resetPasswordTokenRepository.findByToken(token)</span>
+<span class="nc" id="L97">                .orElseThrow(() -&gt; new RuntimeException(&quot;Invalid or expired token&quot;));</span>
+
+<span class="nc bnc" id="L99" title="All 2 branches missed.">        if (resetPasswordToken.getExpirationDate().isBefore(LocalDate.now())) {</span>
+<span class="nc" id="L100">            throw new IllegalArgumentException(&quot;Token has expired&quot;);</span>
+        }
+
+<span class="nc" id="L103">        User user = userRepository.findByResetPasswordToken(resetPasswordToken)</span>
+<span class="nc" id="L104">                .orElseThrow(() -&gt; new UserNotFoundException(USER_NOT_FOUND));</span>
+
+<span class="nc bnc" id="L106" title="All 2 branches missed.">        if (!resetPasswordReq.getNewPassword().equals(resetPasswordReq.getConfirmPassword())){</span>
+<span class="nc" id="L107">            throw new IllegalArgumentException(&quot;Passwords do not match&quot;);</span>
+        }
+
+<span class="nc bnc" id="L110" title="All 2 branches missed.">        if (passwordEncoderConfig.passwordEncoder().matches(resetPasswordReq.getNewPassword(), user.getPassword())){</span>
+<span class="nc" id="L111">            throw new IllegalArgumentException(&quot;New password cannot be same as old password&quot;);</span>
+        }
+
+<span class="nc" id="L114">        user.setPassword(passwordEncoderConfig.passwordEncoder().encode(resetPasswordReq.getNewPassword()));</span>
+<span class="nc" id="L115">        user.setResetPasswordToken(null);</span>
+<span class="nc" id="L116">        userRepository.save(user);</span>
+
+<span class="nc" id="L118">        resetPasswordTokenRepository.delete(resetPasswordToken);</span>
+<span class="nc" id="L119">    }</span>
+
+    @Override
+    public void changePassword(ChangePasswordReq changePasswordReq) {
+<span class="nc" id="L123">        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();</span>
+<span class="nc" id="L124">        String userCode = authentication.getName();</span>
+
+<span class="nc" id="L126">        User user = userRepository.findByUserCode(userCode)</span>
+<span class="nc" id="L127">                .orElseThrow(() -&gt; new UserNotFoundException(USER_NOT_FOUND));</span>
+
+<span class="nc bnc" id="L129" title="All 2 branches missed.">        if (!passwordEncoderConfig.passwordEncoder().matches(changePasswordReq.getOldPassword(), user.getPassword())){</span>
+<span class="nc" id="L130">            throw new BadCredentialsException(&quot;Incorrect old password&quot;);</span>
+        }
+
+<span class="nc bnc" id="L133" title="All 2 branches missed.">        if (!changePasswordReq.getNewPassword().equals(changePasswordReq.getConfirmPassword())) {</span>
+<span class="nc" id="L134">            throw new IllegalArgumentException(&quot;New password and confirm password do not match&quot;);</span>
+        }
+
+<span class="nc" id="L137">        user.setPassword(passwordEncoderConfig.passwordEncoder().encode(changePasswordReq.getNewPassword()));</span>
+<span class="nc" id="L138">        userRepository.save(user);</span>
+<span class="nc" id="L139">    }</span>
+
+    private boolean isPasswordValid(User user, String password) {
+<span class="nc" id="L142">        return passwordEncoderConfig.passwordEncoder().matches(password, user.getPassword());</span>
     }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

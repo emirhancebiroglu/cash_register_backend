@@ -251,7 +251,7 @@ public class UserServiceImpl implements UserService {
 <span class="fc" id="L251">            updateUserCodeIfRolesAreChanged(existingUser, updateUserReq);</span>
 <span class="fc" id="L252">            existingUser.setRoles(roles);</span>
 
-<span class="fc" id="L254">            sendUpdatedUserInfoToAuthService(existingUser.getId(), existingUser.getUserCode(), existingUser.getRoles());</span>
+<span class="fc" id="L254">            sendUpdatedUserInfoToAuthService(existingUser.getId(), existingUser.getEmail(), existingUser.getUserCode(), existingUser.getRoles());</span>
         }
 
 <span class="fc" id="L257">        userRepository.save(existingUser);</span>
@@ -317,42 +317,44 @@ public class UserServiceImpl implements UserService {
     private void sendUserCredentialsToAuthService(User newUser){
 <span class="fc" id="L318">        UserCredentialsDTO userCredentialsDTO = new UserCredentialsDTO(</span>
 <span class="fc" id="L319">                newUser.getId(),</span>
-<span class="fc" id="L320">                newUser.getUserCode(),</span>
-<span class="fc" id="L321">                newUser.getPassword(),</span>
-<span class="fc" id="L322">                newUser.getRoles(),</span>
-<span class="fc" id="L323">                newUser.isDeleted()</span>
+<span class="fc" id="L320">                newUser.getEmail(),</span>
+<span class="fc" id="L321">                newUser.getUserCode(),</span>
+<span class="fc" id="L322">                newUser.getPassword(),</span>
+<span class="fc" id="L323">                newUser.getRoles(),</span>
+<span class="fc" id="L324">                newUser.isDeleted()</span>
         );
 
-<span class="fc" id="L326">        credentialsProducer.sendMessage(&quot;user-credentials&quot;, userCredentialsDTO);</span>
-<span class="fc" id="L327">    }</span>
+<span class="fc" id="L327">        credentialsProducer.sendMessage(&quot;user-credentials&quot;, userCredentialsDTO);</span>
+<span class="fc" id="L328">    }</span>
 
-    private void sendUpdatedUserInfoToAuthService(Long userId, String userCode, Set&lt;Role&gt; roles){
-<span class="fc" id="L330">        UserUpdateDTO userUpdateDTO = new UserUpdateDTO(</span>
+    private void sendUpdatedUserInfoToAuthService(Long userId, String email,  String userCode, Set&lt;Role&gt; roles){
+<span class="fc" id="L331">        UserUpdateDTO userUpdateDTO = new UserUpdateDTO(</span>
                 userId,
+                email,
                 userCode,
                 roles
         );
 
-<span class="fc" id="L336">        credentialsProducer.sendMessage(&quot;user-update&quot;, userUpdateDTO);</span>
-<span class="fc" id="L337">    }</span>
+<span class="fc" id="L338">        credentialsProducer.sendMessage(&quot;user-update&quot;, userUpdateDTO);</span>
+<span class="fc" id="L339">    }</span>
 
     private void sendDeletedUserInfoToAuthService(Long userId, boolean isDeleted){
-<span class="fc" id="L340">        UserSafeDeletionDTO userSafeDeletionDTO = new UserSafeDeletionDTO(</span>
+<span class="fc" id="L342">        UserSafeDeletionDTO userSafeDeletionDTO = new UserSafeDeletionDTO(</span>
                 userId,
                 isDeleted
         );
 
-<span class="fc" id="L345">        credentialsProducer.sendMessage(&quot;user-deletion&quot;, userSafeDeletionDTO);</span>
-<span class="fc" id="L346">    }</span>
+<span class="fc" id="L347">        credentialsProducer.sendMessage(&quot;user-deletion&quot;, userSafeDeletionDTO);</span>
+<span class="fc" id="L348">    }</span>
 
     private void sendReactivatedUserInfoToAuthService(Long userId, boolean isDeleted, String password){
-<span class="fc" id="L349">        UserReactivateDTO userReactivateDTO = new UserReactivateDTO(</span>
+<span class="fc" id="L351">        UserReactivateDTO userReactivateDTO = new UserReactivateDTO(</span>
                 userId,
                 password,
                 isDeleted
         );
 
-<span class="fc" id="L355">        credentialsProducer.sendMessage(&quot;user-reactivate&quot;, userReactivateDTO);</span>
-<span class="fc" id="L356">    }</span>
+<span class="fc" id="L357">        credentialsProducer.sendMessage(&quot;user-reactivate&quot;, userReactivateDTO);</span>
+<span class="fc" id="L358">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

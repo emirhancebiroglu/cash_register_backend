@@ -1,6 +1,7 @@
 package com.bit.jwtauthservice.config;
 
 import com.bit.jwtauthservice.service.CustomUserDetailsService;
+import com.bit.sharedfilter.filter.JwtAuthFilter;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,12 +14,14 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @RequiredArgsConstructor
 public class SecurityConfig {
   private final PasswordEncoderConfig passwordEncoderConfig;
   private final CustomUserDetailsService customUserDetailsService;
+  private final JwtAuthFilter authFilter;
   private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
 
   @Bean
@@ -29,8 +32,12 @@ public class SecurityConfig {
             .authorizeHttpRequests(
                     auth -> auth.requestMatchers("api/auth/login").permitAll()
                             .requestMatchers("api/auth/forgot-user-code").permitAll()
+                            .requestMatchers("api/auth/forgot-password").permitAll()
+                            .requestMatchers("api/auth/reset-password").permitAll()
+                            .requestMatchers("api/auth/change-password").hasAnyAuthority("ROLE_ADMIN", "ROLE_CASHIER", "ROLE_STORE_MANAGER")
                             .anyRequest()
                             .authenticated())
+            .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
             .build();
 
     logger.info("Security filter chain configured successfully.");

@@ -1,6 +1,6 @@
 package com.bit.sharedfilter.service.serviceimpl;
 
-import com.bit.sharedfilter.service.JwtService;
+import com.bit.sharedfilter.service.JwtServiceForFiltering;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
@@ -18,7 +18,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
-public class JwtServiceImpl implements JwtService {
+public class JwtServiceForFilteringImpl implements JwtServiceForFiltering {
     @Value("${jwt.secret-key}")
     String jwtSecretKey;
 

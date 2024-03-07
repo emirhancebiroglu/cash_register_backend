@@ -26,15 +26,17 @@ class UserCredentialsDTOTest {
         roles.add(role1);
         roles.add(role2);
 
-        UserCredentialsDTO userCredentialsDTO = new UserCredentialsDTO(1L, "user123", "password123", roles, true);
+        UserCredentialsDTO userCredentialsDTO = new UserCredentialsDTO(1L, "test@example.com", "user123", "password123", roles, true);
 
         assertEquals(1L, userCredentialsDTO.getId());
+        assertEquals("test@example.com", userCredentialsDTO.getEmail());
         assertEquals("user123", userCredentialsDTO.getUserCode());
         assertEquals("password123", userCredentialsDTO.getPassword());
         assertEquals(2, userCredentialsDTO.getRoles().size());
         assertTrue(userCredentialsDTO.isDeleted());
 
         assertEquals(1L, userCredentialsDTO.getId());
+        assertEquals("test@example.com", userCredentialsDTO.getEmail());
         assertEquals("user123", userCredentialsDTO.getUserCode());
         assertEquals("password123", userCredentialsDTO.getPassword());
         assertEquals(roles, userCredentialsDTO.getRoles());
