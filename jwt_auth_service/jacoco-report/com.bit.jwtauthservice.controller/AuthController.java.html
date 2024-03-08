@@ -7,6 +7,7 @@
   import com.bit.jwtauthservice.dto.password.ResetPasswordReq;
   import com.bit.jwtauthservice.dto.usercode.ForgotUserCodeReq;
   import com.bit.jwtauthservice.service.AuthService;
+  import jakarta.validation.Valid;
   import lombok.RequiredArgsConstructor;
   import org.springframework.http.HttpStatus;
   import org.springframework.http.ResponseEntity;
@@ -14,37 +15,37 @@
 
   @RestController
   @RequestMapping(&quot;api/auth&quot;)
-<span class="fc" id="L17">  @RequiredArgsConstructor</span>
+<span class="fc" id="L18">  @RequiredArgsConstructor</span>
   public class AuthController {
     private final AuthService authService;
 
     @PostMapping(&quot;/login&quot;)
     public LoginRes login(@RequestBody LoginReq loginReq){
-<span class="fc" id="L23">      return authService.login(loginReq);</span>
+<span class="fc" id="L24">      return authService.login(loginReq);</span>
     }
 
     @PostMapping(&quot;/forgot-user-code&quot;)
     public ResponseEntity&lt;String&gt; forgotUserCode(@RequestBody ForgotUserCodeReq forgotUserCodeReq){
-<span class="fc" id="L28">      authService.forgotUserCode(forgotUserCodeReq);</span>
-<span class="fc" id="L29">      return ResponseEntity.status(HttpStatus.OK).body(&quot;User code sent successfully!&quot;);</span>
+<span class="fc" id="L29">      authService.forgotUserCode(forgotUserCodeReq);</span>
+<span class="fc" id="L30">      return ResponseEntity.status(HttpStatus.OK).body(&quot;User code sent successfully!&quot;);</span>
     }
 
     @PostMapping(&quot;/forgot-password&quot;)
     public ResponseEntity&lt;String&gt; forgotPassword(@RequestBody ForgotPasswordReq forgotPasswordReq){
-<span class="fc" id="L34">      authService.forgotPassword(forgotPasswordReq);</span>
-<span class="fc" id="L35">      return ResponseEntity.status(HttpStatus.OK).body(&quot;Password reset email sent successfully!&quot;);</span>
+<span class="fc" id="L35">      authService.forgotPassword(forgotPasswordReq);</span>
+<span class="fc" id="L36">      return ResponseEntity.status(HttpStatus.OK).body(&quot;Password reset email sent successfully!&quot;);</span>
     }
 
     @PostMapping(&quot;/reset-password&quot;)
-    public ResponseEntity&lt;String&gt; resetPassword(@RequestParam String token, @RequestBody ResetPasswordReq resetPasswordReq){
-<span class="fc" id="L40">      authService.resetPassword(token, resetPasswordReq);</span>
-<span class="fc" id="L41">      return ResponseEntity.status(HttpStatus.OK).body(&quot;Password reset successfully!&quot;);</span>
+    public ResponseEntity&lt;String&gt; resetPassword(@RequestParam String token,@Valid @RequestBody ResetPasswordReq resetPasswordReq){
+<span class="fc" id="L41">      authService.resetPassword(token, resetPasswordReq);</span>
+<span class="fc" id="L42">      return ResponseEntity.status(HttpStatus.OK).body(&quot;Password reset successfully!&quot;);</span>
     }
 
     @PostMapping(&quot;/change-password&quot;)
-    public ResponseEntity&lt;String&gt; changePassword(@RequestBody ChangePasswordReq changePasswordReq){
-<span class="fc" id="L46">      authService.changePassword(changePasswordReq);</span>
-<span class="fc" id="L47">      return ResponseEntity.status(HttpStatus.OK).body(&quot;Password changed successfully!&quot;);</span>
+    public ResponseEntity&lt;String&gt; changePassword(@Valid @RequestBody ChangePasswordReq changePasswordReq){
+<span class="fc" id="L47">      authService.changePassword(changePasswordReq);</span>
+<span class="fc" id="L48">      return ResponseEntity.status(HttpStatus.OK).body(&quot;Password changed successfully!&quot;);</span>
     }
   }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
