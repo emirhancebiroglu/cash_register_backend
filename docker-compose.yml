@@ -19,6 +19,17 @@ services:
       - jwt-auth-service
       - eureka-server
 
+  eureka-server:
+    image: eureka_server:latest
+    build:
+      context: ./eureka-server
+      dockerfile: Dockerfile
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    networks:
+      - spring-network
+
   user-management-db:
     image: postgres:latest
     container_name: user-management-db
@@ -34,6 +45,21 @@ services:
     networks:
       - spring-network
 
+  jwt-auth-db:
+    image: postgres:latest
+    container_name: jwt-auth-db
+    restart: always
+    environment:
+      - POSTGRES_DB=jwt-auth-db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=2165
+      - POSTGRES_SCHEMA=user-credentials
+    ports:
+      - "5432:5432"
+    command: [ "postgres", "-c", "search_path=user-credentials" ]
+    networks:
+      - spring-network
+
   jwt-auth-service:
     image: jwt_auth_service:latest
     container_name: jwt-auth-service
@@ -41,23 +67,12 @@ services:
       context: ./jwt_auth_service
       dockerfile: Dockerfile
     ports:
-      - "8080:8080"
+      - "8082:8082"
     networks:
       - spring-network
     depends_on:
       - eureka-server
-      - user-management-db
-
-  eureka-server:
-    image: eureka_server:latest
-    build:
-      context: ./eureka-server
-      dockerfile: Dockerfile
-    container_name: eureka-server
-    ports:
-      - "8761:8761"
-    networks:
-      - spring-network
+      - jwt-auth-db
 
   user-management-service:
     image: user_management_service:latest
