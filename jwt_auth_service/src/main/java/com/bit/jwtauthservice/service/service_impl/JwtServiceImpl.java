@@ -5,6 +5,8 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -24,6 +26,7 @@ public class JwtServiceImpl implements JwtService {
   @Value("${jwt.expiration}")
   Long jwtExpirationMs;
 
+  private static final Logger logger = LoggerFactory.getLogger(JwtServiceImpl.class);
 
   @Override
   public Key getSigningKey() {
@@ -33,12 +36,18 @@ public class JwtServiceImpl implements JwtService {
 
   @Override
   public String generateToken(UserDetails userDetails) {
+    logger.info("Generating token for user: {}", userDetails.getUsername());
+
     Map<String, Object> claims = Map.ofEntries(
             entry("authorities", userDetails.getAuthorities().stream()
                     .map(GrantedAuthority::getAuthority)
                     .toList())
     );
-    return generateToken(claims, userDetails);
+    String token = generateToken(claims, userDetails);
+
+    logger.info("Token generated successfully for user: {}", userDetails.getUsername());
+
+    return token;
   }
 
   @Override

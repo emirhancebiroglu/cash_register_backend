@@ -5,6 +5,8 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,40 +19,47 @@ import java.util.Map;
 import static java.util.Map.entry;
 
 @Service
-<span class="fc" id="L20">public class JwtServiceImpl implements JwtService {</span>
+<span class="fc" id="L22">public class JwtServiceImpl implements JwtService {</span>
   @Value(&quot;${jwt.secret-key}&quot;)
   String jwtSecretKey;
 
   @Value(&quot;${jwt.expiration}&quot;)
   Long jwtExpirationMs;
 
+<span class="fc" id="L29">  private static final Logger logger = LoggerFactory.getLogger(JwtServiceImpl.class);</span>
 
   @Override
   public Key getSigningKey() {
-<span class="fc" id="L30">    byte[] keyBytes = Decoders.BASE64.decode(jwtSecretKey);</span>
-<span class="fc" id="L31">    return Keys.hmacShaKeyFor(keyBytes);</span>
+<span class="fc" id="L33">    byte[] keyBytes = Decoders.BASE64.decode(jwtSecretKey);</span>
+<span class="fc" id="L34">    return Keys.hmacShaKeyFor(keyBytes);</span>
   }
 
   @Override
   public String generateToken(UserDetails userDetails) {
-<span class="fc" id="L36">    Map&lt;String, Object&gt; claims = Map.ofEntries(</span>
-<span class="fc" id="L37">            entry(&quot;authorities&quot;, userDetails.getAuthorities().stream()</span>
-<span class="fc" id="L38">                    .map(GrantedAuthority::getAuthority)</span>
-<span class="fc" id="L39">                    .toList())</span>
+<span class="fc" id="L39">    logger.info(&quot;Generating token for user: {}&quot;, userDetails.getUsername());</span>
+
+<span class="fc" id="L41">    Map&lt;String, Object&gt; claims = Map.ofEntries(</span>
+<span class="fc" id="L42">            entry(&quot;authorities&quot;, userDetails.getAuthorities().stream()</span>
+<span class="fc" id="L43">                    .map(GrantedAuthority::getAuthority)</span>
+<span class="fc" id="L44">                    .toList())</span>
     );
-<span class="fc" id="L41">    return generateToken(claims, userDetails);</span>
+<span class="fc" id="L46">    String token = generateToken(claims, userDetails);</span>
+
+<span class="fc" id="L48">    logger.info(&quot;Token generated successfully for user: {}&quot;, userDetails.getUsername());</span>
+
+<span class="fc" id="L50">    return token;</span>
   }
 
   @Override
   public String generateToken(Map&lt;String, Object&gt; extraClaims, UserDetails userDetails) {
-<span class="fc" id="L46">    return Jwts</span>
-<span class="fc" id="L47">            .builder()</span>
-<span class="fc" id="L48">            .setClaims(extraClaims)</span>
-<span class="fc" id="L49">            .setSubject(userDetails.getUsername())</span>
-<span class="fc" id="L50">            .setIssuedAt(new Date(System.currentTimeMillis()))</span>
-<span class="fc" id="L51">            .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))</span>
-<span class="fc" id="L52">            .signWith(getSigningKey(), SignatureAlgorithm.HS256)</span>
-<span class="fc" id="L53">            .compact();</span>
+<span class="fc" id="L55">    return Jwts</span>
+<span class="fc" id="L56">            .builder()</span>
+<span class="fc" id="L57">            .setClaims(extraClaims)</span>
+<span class="fc" id="L58">            .setSubject(userDetails.getUsername())</span>
+<span class="fc" id="L59">            .setIssuedAt(new Date(System.currentTimeMillis()))</span>
+<span class="fc" id="L60">            .setExpiration(new Date(System.currentTimeMillis() + jwtExpirationMs))</span>
+<span class="fc" id="L61">            .signWith(getSigningKey(), SignatureAlgorithm.HS256)</span>
+<span class="fc" id="L62">            .compact();</span>
   }
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

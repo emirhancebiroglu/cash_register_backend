@@ -10,20 +10,20 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
 @Service
-<span class="nc" id="L13">@RequiredArgsConstructor</span>
+<span class="fc" id="L13">@RequiredArgsConstructor</span>
 public class CustomUserDetailsServiceImpl implements CustomUserDetailsService {
     private final UserRepository userRepository;
-<span class="nc" id="L16">    private static final Logger logger = LoggerFactory.getLogger(CustomUserDetailsServiceImpl.class);</span>
+<span class="fc" id="L16">    private static final Logger logger = LoggerFactory.getLogger(CustomUserDetailsServiceImpl.class);</span>
 
     @Override
     public UserDetailsService userDetailsService() {
-<span class="nc" id="L20">        return userCode -&gt; {</span>
-<span class="nc" id="L21">            logger.info(&quot;Loading user details for user code: {}&quot;, userCode);</span>
+<span class="fc" id="L20">        return userCode -&gt; {</span>
+<span class="fc" id="L21">            logger.info(&quot;Loading user details for user code: {}&quot;, userCode);</span>
 
-<span class="nc" id="L23">            return userRepository.findByUserCode(userCode)</span>
-<span class="nc" id="L24">                    .orElseThrow(() -&gt; {</span>
-<span class="nc" id="L25">                        logger.error(&quot;User not found for user code: {}&quot;, userCode);</span>
-<span class="nc" id="L26">                        return new UserNotFoundException(&quot;User not found&quot;);</span>
+<span class="fc" id="L23">            return userRepository.findByUserCode(userCode)</span>
+<span class="fc" id="L24">                    .orElseThrow(() -&gt; {</span>
+<span class="fc" id="L25">                        logger.error(&quot;User not found for user code: {}&quot;, userCode);</span>
+<span class="fc" id="L26">                        return new UserNotFoundException(&quot;User not found&quot;);</span>
                     });
         };
     }

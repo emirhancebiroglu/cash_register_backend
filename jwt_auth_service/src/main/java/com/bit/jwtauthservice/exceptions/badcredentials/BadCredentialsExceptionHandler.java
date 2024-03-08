@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @ControllerAdvice
 public class BadCredentialsExceptionHandler {
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ErrorDetails> badCredentialsException(BadCredentialsException ex) {
+    public ResponseEntity<ErrorDetails> badCredentialsExceptionHandler(BadCredentialsException ex) {
         ErrorDetails errorDetails = new ErrorDetails(
                 HttpStatus.UNAUTHORIZED.value(),
                 LocalDateTime.now(),

@@ -1,5 +1,6 @@
 package com.bit.jwtauthservice.config;
 
+import com.bit.jwtauthservice.exceptions.mailconfig.MailConfigException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -27,7 +28,7 @@ public class EmailConfig {
     private String password;
 
     @Bean
-    public JavaMailSender javaMailSender() {
+    public JavaMailSender javaMailSender() throws MailConfigException {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
         mailSender.setHost(host);
         mailSender.setPort(port);
@@ -47,6 +48,14 @@ public class EmailConfig {
 
         if (logger.isDebugEnabled()) {
             logger.debug("Setting up email password...");
+        }
+
+        try {
+            mailSender.testConnection();
+        }
+        catch (Exception e){
+            logger.error("Failed to establish connection with the mail server: {}", e.getMessage());
+            throw new MailConfigException("Failed to configure mail sender");
         }
 
         return mailSender;

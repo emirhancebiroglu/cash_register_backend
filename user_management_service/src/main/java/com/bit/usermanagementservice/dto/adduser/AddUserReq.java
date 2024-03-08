@@ -1,9 +1,9 @@
 package com.bit.usermanagementservice.dto.adduser;
 
-import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.NonNull;
 
 import java.util.Set;
 
@@ -11,12 +11,12 @@ import java.util.Set;
 @AllArgsConstructor
 @Getter
 public class AddUserReq {
-    @NotEmpty
+    @NonNull
     private String firstName;
-    @NotEmpty
+    @NonNull
     private String lastName;
-    @NotEmpty
+    @NonNull
     private String email;
-    @NotEmpty
+    @NonNull
     private Set<String> roles;
 }

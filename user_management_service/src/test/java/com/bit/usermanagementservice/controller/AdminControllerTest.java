@@ -17,7 +17,6 @@ import static org.mockito.Mockito.verify;
 
 
 class AdminControllerTest {
-
     @Mock
     private UserService userService;
 

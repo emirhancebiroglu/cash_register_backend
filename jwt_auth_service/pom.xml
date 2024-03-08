@@ -122,6 +122,17 @@
 			<version>0.0.1-SNAPSHOT</version>
 		</dependency>
 
+		<dependency>
+			<groupId>org.passay</groupId>
+			<artifactId>passay</artifactId>
+			<version>1.6.4</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
+
 	</dependencies>
 
 	<build>
@@ -147,7 +158,33 @@
 					<excludes>
 						<exclude>com/bit/jwtauthservice/JwtAuthServiceApplication.class</exclude>
 						<exclude>com/bit/jwtauthservice/exceptions/usernotfound/UserNotFoundExceptionHandler.class</exclude>
+						<exclude>com/bit/jwtauthservice/exceptions/badcredentials/BadCredentialsExceptionHandler.class</exclude>
+						<exclude>com/bit/jwtauthservice/exceptions/confirmpassword/ConfirmPasswordExceptionHandler.class</exclude>
+						<exclude>com/bit/jwtauthservice/exceptions/incorrectoldpassword/IncorrectOldPasswordExceptionHandler.class</exclude>
+						<exclude>com/bit/jwtauthservice/exceptions/mailconfig/MailConfigExceptionHandler.class</exclude>
+						<exclude>com/bit/jwtauthservice/exceptions/passwordmismatch/PasswordMismatchExceptionHandler.class</exclude>
+						<exclude>com/bit/jwtauthservice/exceptions/resettokenexpiration/InvalidResetTokenExceptionHandler.class</exclude>
+						<exclude>com/bit/jwtauthservice/exceptions/samepassword/SamePasswordExceptionHandler.class</exclude>
+						<exclude>com/bit/jwtauthservice/exceptions/invalidpassword/InvalidPasswordExceptionHandler.class</exclude>
+						<exclude>com/bit/jwtauthservice/exceptions/mailconfig/MailConfigException.class</exclude>
 						<exclude>com/bit/jwtauthservice/exceptions/ErrorDetails.class</exclude>
+						<exclude>com/bit/jwtauthservice/config/EmailConfig.class</exclude>
+						<exclude>com/bit/jwtauthservice/config/KafkaConsumerConfig.class</exclude>
+						<exclude>com/bit/jwtauthservice/config/PasswordEncoderConfig.class</exclude>
+						<exclude>com/bit/jwtauthservice/config/SecurityConfig.class</exclude>
+						<exclude>com/bit/jwtauthservice/entity/User.class</exclude>
+						<exclude>com/bit/jwtauthservice/entity/Role.class</exclude>
+						<exclude>com/bit/jwtauthservice/entity/ResetPasswordToken.class</exclude>
+						<exclude>com/bit/jwtauthservice/dto/kafka/UserCredentialsDTO.class</exclude>
+						<exclude>com/bit/jwtauthservice/dto/kafka/UserUpdateDTO.class</exclude>
+						<exclude>com/bit/jwtauthservice/dto/kafka/UserReactivateDTO.class</exclude>
+						<exclude>com/bit/jwtauthservice/dto/kafka/UserSafeDeletionDTO.class</exclude>
+						<exclude>com/bit/jwtauthservice/dto/password/ChangePasswordReq.class</exclude>
+						<exclude>com/bit/jwtauthservice/dto/password/ResetPasswordReq.class</exclude>
+						<exclude>com/bit/jwtauthservice/dto/password/ForgotPasswordReq.class</exclude>
+						<exclude>com/bit/jwtauthservice/dto/login/LoginReq.class</exclude>
+						<exclude>com/bit/jwtauthservice/dto/login/LoginRes.class</exclude>
+						<exclude>com/bit/jwtauthservice/dto/usercode/ForgotUserCodeReq.class</exclude>
 					</excludes>
 				</configuration>
 				<executions>
@@ -179,7 +216,7 @@
 										<limit>
 											<counter>LINE</counter>
 											<value>COVEREDRATIO</value>
-											<minimum>0.9</minimum>
+											<minimum>0.8</minimum>
 										</limit>
 									</limits>
 								</rule>

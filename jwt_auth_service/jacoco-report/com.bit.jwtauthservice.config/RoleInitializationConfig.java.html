@@ -14,13 +14,13 @@ import java.util.Arrays;
 import java.util.List;
 
 @Configuration
-<span class="nc" id="L17">@AllArgsConstructor</span>
+<span class="fc" id="L17">@AllArgsConstructor</span>
 @Transactional
 @Order(1)
 public class RoleInitializationConfig implements CommandLineRunner {
     private final RoleRepository roleRepository;
-<span class="nc" id="L22">    private static final Logger logger = LoggerFactory.getLogger(RoleInitializationConfig.class);</span>
-<span class="nc" id="L23">    private static final List&lt;String&gt; ROLE_NAMES = Arrays.asList(&quot;ROLE_ADMIN&quot;, &quot;ROLE_CASHIER&quot;, &quot;ROLE_STORE_MANAGER&quot;);</span>
+<span class="fc" id="L22">    private static final Logger logger = LoggerFactory.getLogger(RoleInitializationConfig.class);</span>
+<span class="fc" id="L23">    private static final List&lt;String&gt; ROLE_NAMES = Arrays.asList(&quot;ROLE_ADMIN&quot;, &quot;ROLE_CASHIER&quot;, &quot;ROLE_STORE_MANAGER&quot;);</span>
 
     @Override
     public void run(String... args){
@@ -28,16 +28,16 @@ public class RoleInitializationConfig implements CommandLineRunner {
 <span class="nc" id="L28">    }</span>
 
     protected void initializeRoles() {
-<span class="nc bnc" id="L31" title="All 2 branches missed.">        for(String roleName : ROLE_NAMES){</span>
-<span class="nc bnc" id="L32" title="All 2 branches missed.">            if(roleRepository.findByName(roleName).isEmpty()){</span>
-<span class="nc" id="L33">                Role role = new Role(roleName);</span>
-<span class="nc" id="L34">                roleRepository.save(role);</span>
-<span class="nc" id="L35">                logger.info(&quot;Role '{}' initialized successfully.&quot;, roleName);</span>
-<span class="nc" id="L36">            }</span>
+<span class="fc bfc" id="L31" title="All 2 branches covered.">        for(String roleName : ROLE_NAMES){</span>
+<span class="fc bfc" id="L32" title="All 2 branches covered.">            if(roleRepository.findByName(roleName).isEmpty()){</span>
+<span class="fc" id="L33">                Role role = new Role(roleName);</span>
+<span class="fc" id="L34">                roleRepository.save(role);</span>
+<span class="fc" id="L35">                logger.info(&quot;Role '{}' initialized successfully.&quot;, roleName);</span>
+<span class="fc" id="L36">            }</span>
             else{
-<span class="nc" id="L38">                logger.info(&quot;Role '{}' already exists. Skipping initialization.&quot;, roleName);</span>
+<span class="fc" id="L38">                logger.info(&quot;Role '{}' already exists. Skipping initialization.&quot;, roleName);</span>
             }
-<span class="nc" id="L40">        }</span>
-<span class="nc" id="L41">    }</span>
+<span class="fc" id="L40">        }</span>
+<span class="fc" id="L41">    }</span>
 }
 </pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>
