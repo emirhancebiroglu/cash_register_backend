@@ -6,13 +6,13 @@ user_management_service,com.bit.usermanagementservice.exceptions.useralreadyacti
 user_management_service,com.bit.usermanagementservice.utils,PasswordGenerator,0,79,0,2,0,18,0,6,0,5
 user_management_service,com.bit.usermanagementservice.utils,UserCodeGenerator,0,95,1,7,0,23,1,8,0,4
 user_management_service,com.bit.usermanagementservice.utils,CredentialsProducer,0,54,0,0,0,14,0,6,0,6
-user_management_service,com.bit.usermanagementservice.service.serviceimpl,UserServiceImpl,7,675,7,21,1,164,7,41,0,34
+user_management_service,com.bit.usermanagementservice.service.serviceimpl,UserServiceImpl,7,838,7,23,1,200,7,46,0,38
 user_management_service,com.bit.usermanagementservice.service.serviceimpl,EmailServiceImpl,5,117,0,0,2,30,0,7,0,7
 user_management_service,com.bit.usermanagementservice.exceptions.usernotfound,UserNotFoundException,0,4,0,0,0,2,0,1,0,1
 user_management_service,com.bit.usermanagementservice.exceptions.useralreadyexists,UserAlreadyExistsException,0,4,0,0,0,2,0,1,0,1
 user_management_service,com.bit.usermanagementservice.exceptions.invalidname,InvalidNameException,0,4,0,0,0,2,0,1,0,1
 user_management_service,com.bit.usermanagementservice.validators,EmailValidator,0,30,0,2,0,9,0,4,0,3
 user_management_service,com.bit.usermanagementservice.validators,NameValidator,0,76,1,13,0,18,1,11,0,5
-user_management_service,com.bit.usermanagementservice.controller,AdminController,0,43,0,0,0,9,0,5,0,5
+user_management_service,com.bit.usermanagementservice.controller,AdminController,0,62,0,0,0,12,0,8,0,8
 user_management_service,com.bit.usermanagementservice.exceptions.rolenotfound,RoleNotFoundException,0,4,0,0,0,2,0,1,0,1
 user_management_service,com.bit.usermanagementservice.exceptions.invalidemail,InvalidEmailException,0,4,0,0,0,2,0,1,0,1

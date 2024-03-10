@@ -3,6 +3,7 @@ package com.bit.usermanagementservice.service;
 import com.bit.usermanagementservice.config.AdminInitializationConfig;
 import com.bit.usermanagementservice.config.PasswordEncoderConfig;
 import com.bit.usermanagementservice.dto.adduser.AddUserReq;
+import com.bit.usermanagementservice.dto.getuser.UserDTO;
 import com.bit.usermanagementservice.dto.updateuser.UpdateUserReq;
 import com.bit.usermanagementservice.entity.Role;
 import com.bit.usermanagementservice.entity.User;
@@ -28,12 +29,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -83,6 +85,7 @@ class UserServiceTest {
     private Set<Role> existingRoles = new HashSet<>();
     private User existingUser;
     private Long userId;
+    private List<User> userList;
 
     @BeforeEach
     void setup(){
@@ -112,6 +115,24 @@ class UserServiceTest {
                 "NEW1345.",
                 existingRoles
         );
+
+        userList = new ArrayList<>();
+        userList.add(new User(
+                "John",
+                "Doe",
+                "<EMAIL>",
+                "C1456754",
+                "encoded_password",
+                Collections.singleton(new Role("ROLE_ADMIN"))
+        ));
+        userList.add(new User(
+                "Alice",
+                "Smith",
+                "<EMAIL>",
+                "C1456754",
+                "encoded_password",
+                Collections.singleton(new Role("ROLE_ADMIN"))
+        ));
     }
 
     @Test
@@ -277,4 +298,75 @@ class UserServiceTest {
 
         assertThrows(UserAlreadyActiveException.class, () -> userService.reactivateUser(userId));
     }
+
+    @Test
+    void testGetUsers() {
+        Page<User> userPage = new PageImpl<>(userList);
+
+        when(userRepository.findByisDeletedFalse(any(PageRequest.class))).thenReturn(userPage);
+
+        List<UserDTO> userDTOList = userService.getUsers(0, 10);
+
+        verify(userRepository, times(1)).findByisDeletedFalse(any(PageRequest.class));
+        assertEquals(2, userDTOList.size());
+        assertEquals("John", userDTOList.get(0).getFirstName());
+        assertEquals("Doe", userDTOList.get(0).getLastName());
+        assertEquals("Alice", userDTOList.get(1).getFirstName());
+        assertEquals("Smith", userDTOList.get(1).getLastName());
+    }
+
+    @Test
+    void testGetDeletedUsers() {
+        Page<User> userPage = new PageImpl<>(userList);
+
+        when(userRepository.findByisDeletedTrue(any(PageRequest.class))).thenReturn(userPage);
+
+        List<UserDTO> userDTOList = userService.getDeletedUsers(0, 10);
+
+        verify(userRepository, times(1)).findByisDeletedTrue(any(PageRequest.class));
+        assertEquals(2, userDTOList.size());
+        assertEquals("John", userDTOList.get(0).getFirstName());
+        assertEquals("Doe", userDTOList.get(0).getLastName());
+        assertEquals("Alice", userDTOList.get(1).getFirstName());
+        assertEquals("Smith", userDTOList.get(1).getLastName());
+    }
+
+    @Test
+    void testSearchUserByName() {
+        String nameWithSpace = "John Doe";
+        String firstNamePrefix = "John";
+        String lastNamePrefix = "Doe";
+
+        Page<User> userPageWithNameSpace = new PageImpl<>(userList);
+
+        when(userRepository.findByFirstNameStartingWithIgnoreCaseAndLastNameStartingWithIgnoreCase(
+                eq(firstNamePrefix),
+                eq(lastNamePrefix),
+                any(Pageable.class))
+        ).thenReturn(userPageWithNameSpace);
+
+        List<UserDTO> userDTOListWithNameSpace = userService.searchUserByName(nameWithSpace, 0, 10);
+
+        assertEquals(userList.size(), userDTOListWithNameSpace.size());
+    }
+
+    @Test
+    void testSearchUserByName_OnlyFirstNameOrLastName() {
+        String name = "John";
+        int pageNo = 0;
+        int pageSize = 10;
+
+        Page<User> userPage = new PageImpl<>(userList);
+
+        when(userRepository.findByFirstNameStartingWithIgnoreCaseOrLastNameStartingWithIgnoreCase(
+                eq(name),
+                eq(name),
+                any(Pageable.class))
+        ).thenReturn(userPage);
+
+        List<UserDTO> userDTOList = userService.searchUserByName(name, pageNo, pageSize);
+
+        assertEquals(userList.size(), userDTOList.size());
+    }
+
 }

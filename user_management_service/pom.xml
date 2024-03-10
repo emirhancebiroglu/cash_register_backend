@@ -136,6 +136,8 @@
 						<exclude>com/bit/usermanagementservice/dto/kafka/UserSafeDeletionDTO.class</exclude>
 						<exclude>com/bit/usermanagementservice/dto/updateuser/UpdateUserReq.class</exclude>
 						<exclude>com/bit/usermanagementservice/dto/adduser/AddUserReq.class</exclude>
+						<exclude>com/bit/usermanagementservice/dto/getuser/UserDTO.class</exclude>
+
 					</excludes>
 				</configuration>
 				<executions>
@@ -151,7 +153,7 @@
 							<goal>report</goal>
 						</goals>
 						<configuration>
-							<outputDirectory>./jacoco-report</outputDirectory>
+							<outputDirectory>./target/jacoco-report</outputDirectory>
 						</configuration>
 					</execution>
 					<execution>

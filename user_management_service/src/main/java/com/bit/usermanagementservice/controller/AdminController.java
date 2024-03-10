@@ -1,12 +1,15 @@
 package com.bit.usermanagementservice.controller;
 
 import com.bit.usermanagementservice.dto.adduser.AddUserReq;
+import com.bit.usermanagementservice.dto.getuser.UserDTO;
 import com.bit.usermanagementservice.dto.updateuser.UpdateUserReq;
 import com.bit.usermanagementservice.service.UserService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/users/admin")
@@ -37,5 +40,24 @@ public class AdminController {
     public ResponseEntity<String> reactivateUser(@PathVariable Long userId){
         userService.reactivateUser(userId);
         return ResponseEntity.status(HttpStatus.OK).body("User reactivated successfully");
+    }
+
+    @GetMapping("/get-users")
+    public List<UserDTO> getUsers(@RequestParam(defaultValue = "0") int pageNo,
+                                  @RequestParam(defaultValue = "15") int pageSize){
+        return userService.getUsers(pageNo, pageSize);
+    }
+
+    @GetMapping("/get-deleted-users")
+    public List<UserDTO> getDeletedUsers(@RequestParam(defaultValue = "0") int pageNo,
+                                         @RequestParam(defaultValue = "15") int pageSize){
+        return userService.getDeletedUsers(pageNo, pageSize);
+    }
+
+    @GetMapping("/search-user-by-name")
+    public List<UserDTO> searchUserByName(@RequestParam String name,
+                                          @RequestParam(defaultValue = "0") int pageNo,
+                                          @RequestParam(defaultValue = "15") int pageSize){
+        return userService.searchUserByName(name, pageNo, pageSize);
     }
 }

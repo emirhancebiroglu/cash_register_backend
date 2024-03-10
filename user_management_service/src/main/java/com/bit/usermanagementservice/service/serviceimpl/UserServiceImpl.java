@@ -3,11 +3,12 @@ package com.bit.usermanagementservice.service.serviceimpl;
 import com.bit.usermanagementservice.config.AdminInitializationConfig;
 import com.bit.usermanagementservice.config.PasswordEncoderConfig;
 import com.bit.usermanagementservice.dto.adduser.AddUserReq;
-import com.bit.usermanagementservice.dto.updateuser.UpdateUserReq;
+import com.bit.usermanagementservice.dto.getuser.UserDTO;
 import com.bit.usermanagementservice.dto.kafka.UserCredentialsDTO;
 import com.bit.usermanagementservice.dto.kafka.UserReactivateDTO;
 import com.bit.usermanagementservice.dto.kafka.UserSafeDeletionDTO;
 import com.bit.usermanagementservice.dto.kafka.UserUpdateDTO;
+import com.bit.usermanagementservice.dto.updateuser.UpdateUserReq;
 import com.bit.usermanagementservice.entity.Role;
 import com.bit.usermanagementservice.entity.User;
 import com.bit.usermanagementservice.exceptions.invalidemail.InvalidEmailException;
@@ -29,8 +30,12 @@ import com.bit.usermanagementservice.validators.NameValidator;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -49,6 +54,8 @@ public class UserServiceImpl implements UserService {
     private final AdminInitializationConfig adminInitializationConfig;
     private final CredentialsProducer credentialsProducer;
     private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
+
+    private static final String FIRST_NAME = "firstName";
 
     @Override
     public void addUser(AddUserReq addUserReq) {
@@ -141,6 +148,64 @@ public class UserServiceImpl implements UserService {
             logger.error("This user is already active");
             throw new UserAlreadyActiveException("This user is already active");
         }
+    }
+
+    @Override
+    public List<UserDTO> getUsers(int pageNo, int pageSize) {
+        logger.info("Getting users...");
+
+        Page<User> userPage = userRepository.findByisDeletedFalse(PageRequest.of(pageNo, pageSize, Sort.by(FIRST_NAME).ascending()));
+        List<User> users = userPage.getContent();
+
+        logger.info("Users fetched successfully");
+
+        return users.stream()
+                .map(this::mapUserToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<UserDTO> getDeletedUsers(int pageNo, int pageSize) {
+        logger.info("Getting users...");
+
+        Page<User> userPage = userRepository.findByisDeletedTrue(PageRequest.of(pageNo, pageSize, Sort.by(FIRST_NAME).ascending()));
+        List<User> users = userPage.getContent();
+
+        logger.info("Users fetched successfully");
+
+        return users.stream()
+                .map(this::mapUserToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<UserDTO> searchUserByName(String name, int pageNo, int pageSize) {
+        logger.info("Searching for users ...");
+
+        var idx = name.indexOf(' ');
+
+        if (idx > -1){
+            String firstNamePrefix = name.substring(0, idx);
+            String lastNamePrefix = name.substring(idx + 1);
+
+            Page<User> userPage = userRepository.findByFirstNameStartingWithIgnoreCaseAndLastNameStartingWithIgnoreCase(firstNamePrefix, lastNamePrefix, PageRequest.of(pageNo, pageSize, Sort.by(FIRST_NAME).ascending()));
+            List<User> users = userPage.getContent();
+
+            logger.info("Users found successfully");
+
+            return users.stream()
+                    .map(this::mapUserToDTO)
+                    .collect(Collectors.toList());
+        }
+
+        Page<User> userPage = userRepository.findByFirstNameStartingWithIgnoreCaseOrLastNameStartingWithIgnoreCase(name, name, PageRequest.of(pageNo, pageSize, Sort.by(FIRST_NAME).ascending()));
+        List<User> users = userPage.getContent();
+
+        logger.info("Users found successfully");
+
+        return users.stream()
+                .map(this::mapUserToDTO)
+                .collect(Collectors.toList());
     }
 
     private User buildUser(AddUserReq addUserReq, String userCode, String password, Set<Role> roles){
@@ -355,5 +420,14 @@ public class UserServiceImpl implements UserService {
         );
 
         credentialsProducer.sendMessage("user-reactivate", userReactivateDTO);
+    }
+
+    private UserDTO mapUserToDTO(User user) {
+        return new UserDTO(
+                user.getFirstName(),
+                user.getLastName(),
+                user.getEmail(),
+                user.getRoles()
+        );
     }
 }

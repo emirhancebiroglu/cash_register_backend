@@ -200,7 +200,7 @@
 							<goal>report</goal>
 						</goals>
 						<configuration>
-							<outputDirectory>./jacoco-report</outputDirectory>
+							<outputDirectory>./target/jacoco-report</outputDirectory>
 						</configuration>
 					</execution>
 					<execution>
