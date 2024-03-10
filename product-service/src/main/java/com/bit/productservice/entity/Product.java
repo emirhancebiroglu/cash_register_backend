@@ -1,11 +1,9 @@
 package com.bit.productservice.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
+import lombok.*;
 
+import java.time.LocalDate;
 import java.util.Date;
 
 @Entity
@@ -19,8 +17,11 @@ public class Product {
     @Column(unique = true, name = "id")
     private Long id;
 
-    @Column(name = "barcode", nullable = false)
-    private Long barcode;
+    @Column(name = "barcode")
+    private String barcode;
+
+    @Column(name = "product_code")
+    private String productCode;
 
     @Column(name = "name", nullable = false)
     @NonNull
@@ -45,7 +46,7 @@ public class Product {
 
     @Column(name = "creationDate", nullable = false)
     @NonNull
-    private Date creationDate;
+    private LocalDate creationDate = LocalDate.now();
 
     @Column(name = "lastUpdateDate")
     private Date lastUpdateDate;

@@ -10,47 +10,44 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
-
     private final ProductRepository productRepository;
 
     @Override
-    public List<ProductDTO> getProductsByPagination(int pageNo, int pageSize) {
-        PageRequest pageRequest = PageRequest.of(pageNo, pageSize);
-        Page<Product> pagingProduct = productRepository.findAll(pageRequest);
-        return pagingProduct.getContent().stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
-    }
-
-    @Override
     public List<ProductDTO> getProducts() {
-        List<Product> products = productRepository.findAll();
+        Sort sortByNameAsc = Sort.by("name").ascending();
+        List<Product> products = productRepository.findAll(sortByNameAsc);
         return products.stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<ProductDTO> getProductsBySortingAndPagination(int pageNo, int pageSize, String sortDirection) {
-        Sort priceSort = Sort.by("price");
-        if ("desc".equalsIgnoreCase(sortDirection)) {
-            priceSort = priceSort.descending();
-        }
-        PageRequest pageRequest = PageRequest.of(pageNo, pageSize, priceSort);
-        Page<Product> pagingProduct = productRepository.findAll(pageRequest);
+    public List<ProductDTO> searchProductByProductCode(String productCode ,Integer pageNo, Integer pageSize) {
+        PageRequest pageRequest = PageRequest.of(pageNo, pageSize, Sort.by("name").ascending());
+        Page<Product> pagingProduct = productRepository.findByProductCodeStartingWith(productCode, pageRequest);
+        return pagingProduct.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ProductDTO> searchProductByBarcode(String barcode, Integer pageNo, Integer pageSize) {
+        PageRequest pageRequest = PageRequest.of(pageNo, pageSize, Sort.by("name").ascending());
+        Page<Product> pagingProduct = productRepository.findByBarcodeStartingWith(barcode, pageRequest);
         return pagingProduct.getContent().stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public List<ProductDTO> getProductsByFilterAndPagination(String letter, Integer pageNo, Integer pageSize) {
+    public List<ProductDTO> getProductsByNullBarcodeWithFilter(String letter, Integer pageNo, Integer pageSize) {
         Specification<Product> specification = (root, query, criteriaBuilder) -> {
             switch (letter) {
                 case "A" -> {
@@ -113,8 +110,8 @@ public class ProductServiceImpl implements ProductService {
             }
         };
 
-        PageRequest pageRequest = PageRequest.of(pageNo, pageSize);
-        Page<Product> pagingProduct = productRepository.findAll(specification, pageRequest);
+        PageRequest pageRequest = PageRequest.of(pageNo, pageSize, Sort.by("name").ascending());
+        Page<Product> pagingProduct = productRepository.findByBarcodeIsNull(specification, pageRequest);
         return pagingProduct.getContent().stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
@@ -123,6 +120,7 @@ public class ProductServiceImpl implements ProductService {
     private ProductDTO convertToDTO(Product product) {
         return new ProductDTO(
                 product.getBarcode(),
+                product.getProductCode(),
                 product.getName(),
                 product.getImageUrl(),
                 product.getPrice(),

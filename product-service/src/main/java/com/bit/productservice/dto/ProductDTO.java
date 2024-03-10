@@ -6,7 +6,8 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class ProductDTO {
-    private Long barcode;
+    private String barcode;
+    private String productCode;
     private String name;
     private String imageUrl;
     private double price;

@@ -18,26 +18,26 @@ public class ProductController {
         return productService.getProducts();
     }
 
-    @GetMapping("/get-products-with-pagination")
-    public List<ProductDTO> getProductsByPagination(
-            @RequestParam(defaultValue = "0") Integer pageNo,
-            @RequestParam(defaultValue = "30") Integer pageSize) {
-        return productService.getProductsByPagination(pageNo, pageSize);
-    }
-
-    @GetMapping("/get-products-with-sorting-and-pagination")
-    public List<ProductDTO> getProductsBySortingAndPagination(
-            @RequestParam(defaultValue = "0") Integer pageNo,
-            @RequestParam(defaultValue = "30") Integer pageSize,
-            @RequestParam String sortDirection) {
-        return productService.getProductsBySortingAndPagination(pageNo, pageSize, sortDirection);
+    @GetMapping("/get-products-with-null-barcode")
+    public List<ProductDTO> searchProductByProductCode(@RequestParam String productCode,
+                                                       @RequestParam(defaultValue = "0") Integer pageNo,
+                                                       @RequestParam(defaultValue = "15") Integer pageSize) {
+        return productService.searchProductByProductCode(productCode, pageNo, pageSize);
     }
 
     @GetMapping("/get-products-with-filter-and-pagination")
     public List<ProductDTO> getProductsByFilterAndPagination(
             @RequestParam String letter,
             @RequestParam(defaultValue = "0") Integer pageNo,
-            @RequestParam(defaultValue = "30") Integer pageSize) {
-        return productService.getProductsByFilterAndPagination(letter, pageNo, pageSize);
+            @RequestParam(defaultValue = "15") Integer pageSize) {
+        return productService.getProductsByNullBarcodeWithFilter(letter, pageNo, pageSize);
+    }
+
+    @GetMapping("/search-products-by-barcode")
+    public List<ProductDTO> searchProductByBarcode(
+            @RequestParam String barcode,
+            @RequestParam(defaultValue = "0") Integer pageNo,
+            @RequestParam(defaultValue = "15") Integer pageSize) {
+        return productService.searchProductByBarcode(barcode, pageNo, pageSize);
     }
 }
