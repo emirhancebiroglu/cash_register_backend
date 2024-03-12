@@ -1,6 +1,8 @@
 package com.bit.productservice.service.serviceimpl;
 
 import com.bit.productservice.dto.ProductDTO;
+import com.bit.productservice.dto.addproduct.AddProductReq;
+import com.bit.productservice.dto.updateproduct.UpdateProductReq;
 import com.bit.productservice.entity.Product;
 import com.bit.productservice.repository.ProductRepository;
 import com.bit.productservice.service.ProductService;
@@ -12,7 +14,6 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +26,7 @@ public class ProductServiceImpl implements ProductService {
         List<Product> products = productRepository.findAll(sortByNameAsc);
         return products.stream()
                 .map(this::convertToDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -34,7 +35,7 @@ public class ProductServiceImpl implements ProductService {
         Page<Product> pagingProduct = productRepository.findByProductCodeStartingWith(productCode, pageRequest);
         return pagingProduct.stream()
                 .map(this::convertToDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -43,7 +44,7 @@ public class ProductServiceImpl implements ProductService {
         Page<Product> pagingProduct = productRepository.findByBarcodeStartingWith(barcode, pageRequest);
         return pagingProduct.getContent().stream()
                 .map(this::convertToDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -114,7 +115,22 @@ public class ProductServiceImpl implements ProductService {
         Page<Product> pagingProduct = productRepository.findByBarcodeIsNull(specification, pageRequest);
         return pagingProduct.getContent().stream()
                 .map(this::convertToDTO)
-                .collect(Collectors.toList());
+                .toList();
+    }
+
+    @Override
+    public void addProduct(AddProductReq addProductReq) {
+
+    }
+
+    @Override
+    public void updateProduct(Long productId, UpdateProductReq updateProductReq) {
+
+    }
+
+    @Override
+    public void deleteProduct(Long productId) {
+
     }
 
     private ProductDTO convertToDTO(Product product) {

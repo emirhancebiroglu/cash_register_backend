@@ -1,8 +1,12 @@
 package com.bit.productservice.controller;
 
 import com.bit.productservice.dto.ProductDTO;
+import com.bit.productservice.dto.addproduct.AddProductReq;
+import com.bit.productservice.dto.updateproduct.UpdateProductReq;
 import com.bit.productservice.service.ProductService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -39,5 +43,26 @@ public class ProductController {
             @RequestParam(defaultValue = "0") Integer pageNo,
             @RequestParam(defaultValue = "15") Integer pageSize) {
         return productService.searchProductByBarcode(barcode, pageNo, pageSize);
+    }
+
+    @PostMapping("/add-product")
+    public ResponseEntity<String> addProduct(AddProductReq addProductReq){
+        productService.addProduct(addProductReq);
+        return ResponseEntity.status(HttpStatus.OK).body("Product added successfully");
+    }
+
+    @PutMapping("/update-product/{productId}")
+    public ResponseEntity<String> updateProduct(@PathVariable Long productId,
+                                                UpdateProductReq updateProductReq){
+        productService.updateProduct(productId, updateProductReq);
+        return ResponseEntity.status(HttpStatus.OK).body("Product updated successfully");
+
+    }
+
+    @DeleteMapping("/delete-product/{productId}")
+    public ResponseEntity<String> updateProduct(@PathVariable Long productId){
+        productService.deleteProduct(productId);
+        return ResponseEntity.status(HttpStatus.OK).body("Product deleted successfully");
+
     }
 }

@@ -24,11 +24,9 @@ public class Product {
     private String productCode;
 
     @Column(name = "name", nullable = false)
-    @NonNull
     private String name;
 
     @Column(name = "imageUrl", nullable = false)
-    @NonNull
     private String imageUrl;
 
     @Column(name = "price", nullable = false)
