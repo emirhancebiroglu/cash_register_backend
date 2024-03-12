@@ -25,18 +25,14 @@ public class User implements UserDetails {
     Long id;
 
     @Column(name = "email", nullable = false, unique = true)
-    @NonNull
     private String email;
 
     @Column(name = "user_code", unique = true, nullable = false)
-    @NonNull
     private String userCode;
 
     @Column(name = "password", nullable = false)
-    @NonNull
     private String password;
 
-    @NonNull
     @ManyToMany(cascade = CascadeType.MERGE, fetch = FetchType.EAGER)
     @JoinTable(name = "user_roles", joinColumns = @JoinColumn(name = "user_id"),
             inverseJoinColumns = @JoinColumn(name = "role_id"))
