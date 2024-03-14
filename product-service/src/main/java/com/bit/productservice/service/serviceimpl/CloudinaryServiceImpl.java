@@ -29,7 +29,7 @@ public class CloudinaryServiceImpl implements CloudinaryService {
     @Override
     public Map upload(MultipartFile multipartFile) throws IOException {
         File file = convert(multipartFile);
-        Map result = cloudinary.uploader().upload(file, ObjectUtils.emptyMap());
+        var result = cloudinary.uploader().upload(file, ObjectUtils.emptyMap());
         if (!Files.deleteIfExists(file.toPath())) {
             throw new IOException("Failed to delete temporary file: " + file.getAbsolutePath());
         }
@@ -43,9 +43,9 @@ public class CloudinaryServiceImpl implements CloudinaryService {
 
     private File convert(MultipartFile multipartFile) throws IOException {
         File file = new File(Objects.requireNonNull(multipartFile.getOriginalFilename()));
-        FileOutputStream fo = new FileOutputStream(file);
-        fo.write(multipartFile.getBytes());
-        fo.close();
+        try (FileOutputStream fo = new FileOutputStream(file)) {
+            fo.write(multipartFile.getBytes());
+        }
         return file;
     }
 }

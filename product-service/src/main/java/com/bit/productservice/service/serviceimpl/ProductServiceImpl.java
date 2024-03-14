@@ -5,10 +5,13 @@ import com.bit.productservice.dto.addproduct.AddProductReq;
 import com.bit.productservice.dto.updateproduct.UpdateProductReq;
 import com.bit.productservice.entity.Image;
 import com.bit.productservice.entity.Product;
+import com.bit.productservice.exceptions.negativefield.NegativeFieldException;
+import com.bit.productservice.exceptions.nulloremptyfield.NullOrEmptyFieldException;
 import com.bit.productservice.repository.ImageRepository;
 import com.bit.productservice.repository.ProductRepository;
 import com.bit.productservice.service.CloudinaryService;
 import com.bit.productservice.service.ProductService;
+import com.bit.productservice.validators.ProductValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -20,9 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -30,29 +31,33 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final CloudinaryService cloudinaryService;
     private final ImageRepository imageRepository;
+    private final ProductValidator productValidator;
 
     @Override
     public List<ProductDTO> getProducts() {
         List<Product> products = productRepository.findAll(Sort.by("name").ascending());
         return products.stream()
+                .filter(product -> !product.isDeleted())
                 .map(this::convertToDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
     public List<ProductDTO> searchProductByProductCode(String productCode ,Integer pageNo, Integer pageSize) {
         Page<Product> pagingProduct = productRepository.findByProductCodeStartingWith(productCode, PageRequest.of(pageNo, pageSize, Sort.by("name").ascending()));
         return pagingProduct.stream()
+                .filter(product -> !product.isDeleted())
                 .map(this::convertToDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
     public List<ProductDTO> searchProductByBarcode(String barcode, Integer pageNo, Integer pageSize) {
         Page<Product> pagingProduct = productRepository.findByBarcodeStartingWith(barcode, PageRequest.of(pageNo, pageSize, Sort.by("name").ascending()));
         return pagingProduct.stream()
+                .filter(product -> !product.isDeleted())
                 .map(this::convertToDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -121,13 +126,29 @@ public class ProductServiceImpl implements ProductService {
 
         Page<Product> pagingProduct = productRepository.findAll(specification, PageRequest.of(pageNo, pageSize, Sort.by("name").ascending()));
         return pagingProduct.getContent().stream()
+                .filter(product -> !product.isDeleted())
                 .map(this::convertToDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
     public void addProduct(AddProductReq addProductReq, MultipartFile file) throws IOException {
-        validateFieldsWhileAddingProduct(addProductReq);
+        List<String> errors = productValidator.validateAddProductReq(addProductReq, file);
+
+        List<String> negativeFieldErrors = errors.stream()
+                .filter(error -> error.contains("cannot be negative"))
+                .toList();
+
+        if (!negativeFieldErrors.isEmpty()) {
+            throw new NegativeFieldException(String.join(", ", negativeFieldErrors));
+        }
+
+        errors.removeAll(negativeFieldErrors);
+        if (!errors.isEmpty()) {
+            throw new NullOrEmptyFieldException(String.join(", ", errors));
+        }
+
+        productValidator.validateProduct(addProductReq, null);
 
         String id = UUID.randomUUID().toString();
 
@@ -140,23 +161,21 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public void updateProduct(String productId, UpdateProductReq updateProductReq, MultipartFile multipartFile) throws IOException{
-        Product product = productRepository.findById(productId).orElseThrow(() -> new IllegalStateException("Product not found"));
-        Image image = product.getImage();
+        Product product = getProductById(productId);
+        productValidator.validateProduct(null, updateProductReq);
 
-        if (image == null){
-            throw new IllegalArgumentException("Image not found to be updated");
-        }
+        Image image = product.getImage();
 
         if (multipartFile != null){
             product.setImage(null);
             productRepository.save(product);
 
             cloudinaryService.delete(image.getImageId());
-            Map result = cloudinaryService.upload(multipartFile);
+            var result = cloudinaryService.upload(multipartFile);
 
-            image.setName((String) result.get("original_filename"));
-            image.setImageUrl((String) result.get("url"));
-            image.setImageId((String) result.get("public_id"));
+            image.setName(result.get("original_filename"));
+            image.setImageUrl(result.get("url"));
+            image.setImageId(result.get("public_id"));
             imageRepository.save(image);
 
             product.setImage(image);
@@ -167,17 +186,26 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public void deleteProduct(String productId){
-        Product product = productRepository.findById(productId).orElseThrow(() -> new IllegalStateException("Product not found"));
+        Product product = getProductById(productId);
         product.setDeleted(true);
         product.setLastUpdateDate(LocalDate.now());
 
         productRepository.save(product);
     }
 
+    @Override
+    public void reAddProduct(String productId) {
+        Product product = getProductById(productId);
+        product.setDeleted(false);
+        product.setLastUpdateDate(LocalDate.now());
+
+        productRepository.save(product);
+    }
+
     private ProductDTO convertToDTO(Product product) {
+        String code = product.getProductCode() != null ? product.getProductCode() : product.getBarcode();
         return new ProductDTO(
-                product.getBarcode(),
-                product.getProductCode(),
+                code,
                 product.getName(),
                 product.getImage().getImageUrl(),
                 product.getPrice(),
@@ -186,11 +214,11 @@ public class ProductServiceImpl implements ProductService {
     }
 
     private Image uploadImage(MultipartFile file, String id) throws IOException {
-        Map result = cloudinaryService.upload(file);
+        var result = cloudinaryService.upload(file);
         Image image = new Image(id,
-                (String) result.get("original_filename"),
-                (String) result.get("url"),
-                (String) result.get("public_id"));
+                (result.get("original_filename")),
+                (result.get("url")),
+                (result.get("public_id")));
         return imageRepository.save(image);
     }
 
@@ -220,12 +248,18 @@ public class ProductServiceImpl implements ProductService {
             product.setName(updateProductReq.getName());
         }
         if (updateProductReq.getPrice() != null){
+            if (updateProductReq.getPrice() < 0) {
+                throw new NegativeFieldException("Price cannot be negative");
+            }
             product.setPrice(updateProductReq.getPrice());
         }
         if (updateProductReq.getCategory() != null){
             product.setCategory(updateProductReq.getCategory());
         }
         if (updateProductReq.getStockAmount() != null){
+            if (updateProductReq.getStockAmount() < 0) {
+                throw new NegativeFieldException("Stock amount cannot be negative");
+            }
             product.setStockAmount(updateProductReq.getStockAmount());
             product.setInStock(updateProductReq.getStockAmount() > 0);
         }
@@ -234,28 +268,8 @@ public class ProductServiceImpl implements ProductService {
         productRepository.save(product);
     }
 
-    private void validateFieldsWhileAddingProduct(AddProductReq addProductReq){
-        if(addProductReq.getName() == null || addProductReq.getName().isEmpty()){
-            throw new IllegalArgumentException("name cannot be null or empty");
-        }
-        if(addProductReq.getPrice() == null){
-            throw new IllegalArgumentException("price cannot be null");
-        }
-        else{
-            if(addProductReq.getPrice() < 0){
-                throw new IllegalArgumentException("price cannot be negative");
-            }
-        }
-        if(addProductReq.getCategory() == null || addProductReq.getCategory().isEmpty()){
-            throw new IllegalArgumentException("category cannot be null or empty");
-        }
-        if(addProductReq.getStockAmount() == null){
-            throw new IllegalArgumentException("stockAmount cannot be null");
-        }
-        else{
-            if(addProductReq.getStockAmount() < 0){
-                throw new IllegalArgumentException("stockAmount cannot be negative");
-            }
-        }
+    private Product getProductById(String productId) {
+        return productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalStateException("Product not found"));
     }
 }

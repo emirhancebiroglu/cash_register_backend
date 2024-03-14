@@ -25,7 +25,7 @@ public class Product {
     @Column(name = "product_code")
     private String productCode;
 
-    @Column(name = "name", nullable = false)
+    @Column(name = "name", nullable = false, unique = true)
     private String name;
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)

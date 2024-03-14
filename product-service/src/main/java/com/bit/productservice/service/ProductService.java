@@ -16,4 +16,5 @@ public interface ProductService {
     void addProduct(AddProductReq addProductReq, MultipartFile file) throws IOException;
     void updateProduct(String productId, UpdateProductReq updateProductReq, MultipartFile file) throws IOException;
     void deleteProduct(String productId);
+    void reAddProduct(String productId);
 }

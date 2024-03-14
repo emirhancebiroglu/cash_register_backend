@@ -6,6 +6,7 @@ import com.bit.productservice.entity.Product;
 import com.bit.productservice.repository.FavoriteProductRepository;
 import com.bit.productservice.repository.ProductRepository;
 import com.bit.productservice.service.FavoriteProductService;
+import com.bit.productservice.validators.FavoriteProductValidator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -14,21 +15,19 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class FavoriteProductServiceImpl implements FavoriteProductService {
     private final ProductRepository productRepository;
     private final FavoriteProductRepository favoriteProductRepository;
+    private final FavoriteProductValidator favoriteProductValidator;
 
     @Override
     public void addProductToFavorites(String productId) {
         String userCode = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        if (favoriteProductRepository.existsByUserCodeAndProductId(userCode, productId)) {
-            throw new IllegalStateException("Product is already a favorite.");
-        }
+        favoriteProductValidator.validateFavoriteProduct(productRepository, productId, userCode, favoriteProductRepository);
 
         favoriteProductRepository.save(new FavoriteProduct(userCode, productId));
     }
@@ -37,9 +36,7 @@ public class FavoriteProductServiceImpl implements FavoriteProductService {
     public void removeProductFromFavorites(String productId) {
         String userCode = SecurityContextHolder.getContext().getAuthentication().getName();
 
-        if (!favoriteProductRepository.existsByUserCodeAndProductId(userCode, productId)) {
-            throw new IllegalStateException("Product is not favorite.");
-        }
+        favoriteProductValidator.validateFavoriteProduct(productRepository, productId, userCode, favoriteProductRepository);
 
         favoriteProductRepository.deleteByUserCodeAndProductId(userCode, productId);
     }
@@ -51,17 +48,19 @@ public class FavoriteProductServiceImpl implements FavoriteProductService {
         Page<FavoriteProduct> favoriteProductsPage = favoriteProductRepository.findByUserCode(userCode, pageable);
         List<Product> favoriteProducts = favoriteProductsPage.getContent().stream()
                 .map(favoriteProduct -> productRepository.getProductById(favoriteProduct.getProductId()))
+                .filter(product -> !product.isDeleted())
                 .toList();
 
         return favoriteProducts.stream()
                 .map(this::convertProductToDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private ProductDTO convertProductToDTO(Product product) {
+        String code = product.getProductCode() != null ? product.getProductCode() : product.getBarcode();
+
         return new ProductDTO(
-                product.getBarcode(),
-                product.getProductCode(),
+                code,
                 product.getName(),
                 product.getImage().getImageUrl(),
                 product.getPrice(),

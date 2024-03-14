@@ -15,4 +15,7 @@ public interface ProductRepository extends JpaRepository<Product, String>, JpaSp
     Page<Product> findByBarcodeStartingWith(String barcode, Pageable pageable);
     Page<Product> findByProductCodeStartingWith(String productCode ,Pageable pageable);
     Product getProductById(String id);
+    boolean existsByName(String name);
+    boolean existsByProductCode(String productCode);
+    boolean existsByBarcode(String barcode);
 }

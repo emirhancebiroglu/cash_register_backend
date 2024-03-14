@@ -48,13 +48,13 @@ public class ProductController {
     }
 
     @PostMapping("/add-product")
-    public ResponseEntity<String> addProduct(@RequestParam("image") MultipartFile file, AddProductReq addProductReq) throws IOException {
+    public ResponseEntity<String> addProduct(@RequestParam(value = "image", required = false) MultipartFile file, AddProductReq addProductReq) throws IOException {
         productService.addProduct(addProductReq, file);
         return ResponseEntity.status(HttpStatus.OK).body("Product added successfully");
     }
 
     @PutMapping("/update-product/{productId}")
-    public ResponseEntity<String> updateProduct(@RequestParam("image") MultipartFile file,
+    public ResponseEntity<String> updateProduct(@RequestParam(value = "image", required = false) MultipartFile file,
                                                 @PathVariable String productId,
                                                 UpdateProductReq updateProductReq) throws IOException {
         productService.updateProduct(productId, updateProductReq, file);
@@ -66,6 +66,13 @@ public class ProductController {
     public ResponseEntity<String> updateProduct(@PathVariable String productId){
         productService.deleteProduct(productId);
         return ResponseEntity.status(HttpStatus.OK).body("Product deleted successfully");
+
+    }
+
+    @PostMapping("/re-add-product/{productId}")
+    public ResponseEntity<String> reAddProduct(@PathVariable String productId){
+        productService.reAddProduct(productId);
+        return ResponseEntity.status(HttpStatus.OK).body("Product re-added successfully");
 
     }
 }
