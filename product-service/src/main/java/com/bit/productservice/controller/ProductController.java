@@ -8,7 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -22,7 +24,7 @@ public class ProductController {
         return productService.getProducts();
     }
 
-    @GetMapping("/get-products-with-null-barcode")
+    @GetMapping("/search-products-by-product-code")
     public List<ProductDTO> searchProductByProductCode(@RequestParam String productCode,
                                                        @RequestParam(defaultValue = "0") Integer pageNo,
                                                        @RequestParam(defaultValue = "15") Integer pageSize) {
@@ -46,21 +48,22 @@ public class ProductController {
     }
 
     @PostMapping("/add-product")
-    public ResponseEntity<String> addProduct(AddProductReq addProductReq){
-        productService.addProduct(addProductReq);
+    public ResponseEntity<String> addProduct(@RequestParam("image") MultipartFile file, AddProductReq addProductReq) throws IOException {
+        productService.addProduct(addProductReq, file);
         return ResponseEntity.status(HttpStatus.OK).body("Product added successfully");
     }
 
     @PutMapping("/update-product/{productId}")
-    public ResponseEntity<String> updateProduct(@PathVariable Long productId,
-                                                UpdateProductReq updateProductReq){
-        productService.updateProduct(productId, updateProductReq);
+    public ResponseEntity<String> updateProduct(@RequestParam("image") MultipartFile file,
+                                                @PathVariable String productId,
+                                                UpdateProductReq updateProductReq) throws IOException {
+        productService.updateProduct(productId, updateProductReq, file);
         return ResponseEntity.status(HttpStatus.OK).body("Product updated successfully");
 
     }
 
     @DeleteMapping("/delete-product/{productId}")
-    public ResponseEntity<String> updateProduct(@PathVariable Long productId){
+    public ResponseEntity<String> updateProduct(@PathVariable String productId){
         productService.deleteProduct(productId);
         return ResponseEntity.status(HttpStatus.OK).body("Product deleted successfully");
 

@@ -3,8 +3,11 @@ package com.bit.productservice.service.serviceimpl;
 import com.bit.productservice.dto.ProductDTO;
 import com.bit.productservice.dto.addproduct.AddProductReq;
 import com.bit.productservice.dto.updateproduct.UpdateProductReq;
+import com.bit.productservice.entity.Image;
 import com.bit.productservice.entity.Product;
+import com.bit.productservice.repository.ImageRepository;
 import com.bit.productservice.repository.ProductRepository;
+import com.bit.productservice.service.CloudinaryService;
 import com.bit.productservice.service.ProductService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -12,39 +15,44 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
+    private final CloudinaryService cloudinaryService;
+    private final ImageRepository imageRepository;
 
     @Override
     public List<ProductDTO> getProducts() {
-        Sort sortByNameAsc = Sort.by("name").ascending();
-        List<Product> products = productRepository.findAll(sortByNameAsc);
+        List<Product> products = productRepository.findAll(Sort.by("name").ascending());
         return products.stream()
                 .map(this::convertToDTO)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<ProductDTO> searchProductByProductCode(String productCode ,Integer pageNo, Integer pageSize) {
-        PageRequest pageRequest = PageRequest.of(pageNo, pageSize, Sort.by("name").ascending());
-        Page<Product> pagingProduct = productRepository.findByProductCodeStartingWith(productCode, pageRequest);
+        Page<Product> pagingProduct = productRepository.findByProductCodeStartingWith(productCode, PageRequest.of(pageNo, pageSize, Sort.by("name").ascending()));
         return pagingProduct.stream()
                 .map(this::convertToDTO)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     @Override
     public List<ProductDTO> searchProductByBarcode(String barcode, Integer pageNo, Integer pageSize) {
-        PageRequest pageRequest = PageRequest.of(pageNo, pageSize, Sort.by("name").ascending());
-        Page<Product> pagingProduct = productRepository.findByBarcodeStartingWith(barcode, pageRequest);
-        return pagingProduct.getContent().stream()
+        Page<Product> pagingProduct = productRepository.findByBarcodeStartingWith(barcode, PageRequest.of(pageNo, pageSize, Sort.by("name").ascending()));
+        return pagingProduct.stream()
                 .map(this::convertToDTO)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -111,26 +119,59 @@ public class ProductServiceImpl implements ProductService {
             }
         };
 
-        PageRequest pageRequest = PageRequest.of(pageNo, pageSize, Sort.by("name").ascending());
-        Page<Product> pagingProduct = productRepository.findByBarcodeIsNull(specification, pageRequest);
+        Page<Product> pagingProduct = productRepository.findAll(specification, PageRequest.of(pageNo, pageSize, Sort.by("name").ascending()));
         return pagingProduct.getContent().stream()
                 .map(this::convertToDTO)
-                .toList();
+                .collect(Collectors.toList());
     }
 
     @Override
-    public void addProduct(AddProductReq addProductReq) {
+    public void addProduct(AddProductReq addProductReq, MultipartFile file) throws IOException {
+        validateFieldsWhileAddingProduct(addProductReq);
 
+        String id = UUID.randomUUID().toString();
+
+        Image image = uploadImage(file, id);
+
+        Product product = buildProduct(id, addProductReq, image);
+
+        productRepository.save(product);
     }
 
     @Override
-    public void updateProduct(Long productId, UpdateProductReq updateProductReq) {
+    public void updateProduct(String productId, UpdateProductReq updateProductReq, MultipartFile multipartFile) throws IOException{
+        Product product = productRepository.findById(productId).orElseThrow(() -> new IllegalStateException("Product not found"));
+        Image image = product.getImage();
 
+        if (image == null){
+            throw new IllegalArgumentException("Image not found to be updated");
+        }
+
+        if (multipartFile != null){
+            product.setImage(null);
+            productRepository.save(product);
+
+            cloudinaryService.delete(image.getImageId());
+            Map result = cloudinaryService.upload(multipartFile);
+
+            image.setName((String) result.get("original_filename"));
+            image.setImageUrl((String) result.get("url"));
+            image.setImageId((String) result.get("public_id"));
+            imageRepository.save(image);
+
+            product.setImage(image);
+        }
+
+        updateProductDetails(product, updateProductReq);
     }
 
     @Override
-    public void deleteProduct(Long productId) {
+    public void deleteProduct(String productId){
+        Product product = productRepository.findById(productId).orElseThrow(() -> new IllegalStateException("Product not found"));
+        product.setDeleted(true);
+        product.setLastUpdateDate(LocalDate.now());
 
+        productRepository.save(product);
     }
 
     private ProductDTO convertToDTO(Product product) {
@@ -138,9 +179,83 @@ public class ProductServiceImpl implements ProductService {
                 product.getBarcode(),
                 product.getProductCode(),
                 product.getName(),
-                product.getImageUrl(),
+                product.getImage().getImageUrl(),
                 product.getPrice(),
                 product.getCategory()
         );
+    }
+
+    private Image uploadImage(MultipartFile file, String id) throws IOException {
+        Map result = cloudinaryService.upload(file);
+        Image image = new Image(id,
+                (String) result.get("original_filename"),
+                (String) result.get("url"),
+                (String) result.get("public_id"));
+        return imageRepository.save(image);
+    }
+
+    private Product buildProduct(String id, AddProductReq addProductReq, Image image) {
+        return Product.builder()
+                .id(id)
+                .barcode(addProductReq.getBarcode())
+                .productCode(addProductReq.getProductCode())
+                .name(addProductReq.getName())
+                .price(addProductReq.getPrice())
+                .image(image)
+                .category(addProductReq.getCategory())
+                .stockAmount(addProductReq.getStockAmount())
+                .creationDate(LocalDate.now())
+                .inStock(addProductReq.getStockAmount() > 0)
+                .build();
+    }
+
+    private void updateProductDetails(Product product, UpdateProductReq updateProductReq){
+        if (updateProductReq.getBarcode() != null){
+            product.setBarcode(updateProductReq.getBarcode());
+        }
+        if (updateProductReq.getProductCode() != null){
+            product.setProductCode(updateProductReq.getProductCode());
+        }
+        if (updateProductReq.getName() != null){
+            product.setName(updateProductReq.getName());
+        }
+        if (updateProductReq.getPrice() != null){
+            product.setPrice(updateProductReq.getPrice());
+        }
+        if (updateProductReq.getCategory() != null){
+            product.setCategory(updateProductReq.getCategory());
+        }
+        if (updateProductReq.getStockAmount() != null){
+            product.setStockAmount(updateProductReq.getStockAmount());
+            product.setInStock(updateProductReq.getStockAmount() > 0);
+        }
+        product.setLastUpdateDate(LocalDate.now());
+
+        productRepository.save(product);
+    }
+
+    private void validateFieldsWhileAddingProduct(AddProductReq addProductReq){
+        if(addProductReq.getName() == null || addProductReq.getName().isEmpty()){
+            throw new IllegalArgumentException("name cannot be null or empty");
+        }
+        if(addProductReq.getPrice() == null){
+            throw new IllegalArgumentException("price cannot be null");
+        }
+        else{
+            if(addProductReq.getPrice() < 0){
+                throw new IllegalArgumentException("price cannot be negative");
+            }
+        }
+        if(addProductReq.getCategory() == null || addProductReq.getCategory().isEmpty()){
+            throw new IllegalArgumentException("category cannot be null or empty");
+        }
+        if(addProductReq.getStockAmount() == null){
+            throw new IllegalArgumentException("stockAmount cannot be null");
+        }
+        else{
+            if(addProductReq.getStockAmount() < 0){
+                throw new IllegalArgumentException("stockAmount cannot be negative");
+            }
+        }
     }
 }

@@ -7,16 +7,14 @@ import com.bit.productservice.repository.FavoriteProductRepository;
 import com.bit.productservice.repository.ProductRepository;
 import com.bit.productservice.service.FavoriteProductService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -25,33 +23,19 @@ public class FavoriteProductServiceImpl implements FavoriteProductService {
     private final FavoriteProductRepository favoriteProductRepository;
 
     @Override
-    public void addProductToFavorites(Long productId) {
+    public void addProductToFavorites(String productId) {
         String userCode = SecurityContextHolder.getContext().getAuthentication().getName();
-        Product product = productRepository.getProductById(productId);
-
-        if (product == null) {
-            throw new IllegalStateException("Product not found");
-        }
 
         if (favoriteProductRepository.existsByUserCodeAndProductId(userCode, productId)) {
             throw new IllegalStateException("Product is already a favorite.");
         }
 
-        FavoriteProduct favoriteProduct = new FavoriteProduct();
-        favoriteProduct.setUserCode(userCode);
-        favoriteProduct.setProductId(productId);
-
-        favoriteProductRepository.save(favoriteProduct);
+        favoriteProductRepository.save(new FavoriteProduct(userCode, productId));
     }
 
     @Override
-    public void removeProductFromFavorites(Long productId) {
+    public void removeProductFromFavorites(String productId) {
         String userCode = SecurityContextHolder.getContext().getAuthentication().getName();
-        Product product = productRepository.getProductById(productId);
-
-        if (product == null) {
-            throw new IllegalStateException("Product not found");
-        }
 
         if (!favoriteProductRepository.existsByUserCodeAndProductId(userCode, productId)) {
             throw new IllegalStateException("Product is not favorite.");
@@ -63,32 +47,15 @@ public class FavoriteProductServiceImpl implements FavoriteProductService {
     @Override
     public List<ProductDTO> listFavoriteProductsForCurrentUser(Integer pageNo, Integer pageSize) {
         String userCode = SecurityContextHolder.getContext().getAuthentication().getName();
-        List<FavoriteProduct> favoriteProducts = favoriteProductRepository.findByUserCode(userCode);
-        List<Product> products = new ArrayList<>();
-
-        for (FavoriteProduct favoriteProduct : favoriteProducts) {
-            Product product = productRepository.getProductById(favoriteProduct.getProductId());
-            products.add(product);
-        }
-
-        if (products.isEmpty()) {
-            throw new IllegalStateException("empty");
-        }
-
-        products.sort(Comparator.comparing(Product::getName));
-
         Pageable pageable = PageRequest.of(pageNo, pageSize);
+        Page<FavoriteProduct> favoriteProductsPage = favoriteProductRepository.findByUserCode(userCode, pageable);
+        List<Product> favoriteProducts = favoriteProductsPage.getContent().stream()
+                .map(favoriteProduct -> productRepository.getProductById(favoriteProduct.getProductId()))
+                .toList();
 
-        int start = (int) pageable.getOffset();
-        int end = Math.min(start + pageable.getPageSize(), favoriteProducts.size());
-
-        if (start > favoriteProducts.size()) {
-            return Collections.emptyList();
-        }
-
-        return new PageImpl<>(products.subList(start, end), pageable, favoriteProducts.size())
+        return favoriteProducts.stream()
                 .map(this::convertProductToDTO)
-                .getContent();
+                .collect(Collectors.toList());
     }
 
     private ProductDTO convertProductToDTO(Product product) {
@@ -96,7 +63,7 @@ public class FavoriteProductServiceImpl implements FavoriteProductService {
                 product.getBarcode(),
                 product.getProductCode(),
                 product.getName(),
-                product.getImageUrl(),
+                product.getImage().getImageUrl(),
                 product.getPrice(),
                 product.getCategory()
         );

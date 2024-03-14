@@ -22,5 +22,10 @@ public class FavoriteProduct {
     private String userCode;
 
     @Column(name = "product-id", nullable = false)
-    private Long productId;
+    private String productId;
+
+    public FavoriteProduct(String userCode, String productId) {
+        this.userCode = userCode;
+        this.productId = productId;
+    }
 }

@@ -16,14 +16,14 @@ public class FavoriteProductController {
     private final FavoriteProductService favoriteProductService;
 
     @PostMapping("/add/{productId}")
-    public ResponseEntity<String> addProductToFavorites(@PathVariable Long productId) {
+    public ResponseEntity<String> addProductToFavorites(@PathVariable String productId) {
         favoriteProductService.addProductToFavorites(productId);
         return ResponseEntity.ok("Product added to favorites successfully!");
     }
 
     @DeleteMapping("/remove/{productId}")
     @Transactional
-    public ResponseEntity<String> removeProductFromFavorites(@PathVariable Long productId) {
+    public ResponseEntity<String> removeProductFromFavorites(@PathVariable String productId) {
         favoriteProductService.removeProductFromFavorites(productId);
         return ResponseEntity.ok("Product removed from favorites successfully!");
     }

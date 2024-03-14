@@ -1,16 +1,17 @@
     package com.bit.productservice.repository;
 
     import com.bit.productservice.entity.FavoriteProduct;
+    import org.springframework.data.domain.Page;
+    import org.springframework.data.domain.Pageable;
     import org.springframework.data.jpa.repository.JpaRepository;
     import org.springframework.stereotype.Repository;
 
-    import java.util.List;
 
     @Repository
-    public interface FavoriteProductRepository extends JpaRepository<FavoriteProduct, Long> {
-        List<FavoriteProduct> findByUserCode(String userCode);
+    public interface FavoriteProductRepository extends JpaRepository<FavoriteProduct, String> {
+        Page<FavoriteProduct> findByUserCode(String userCode, Pageable pageable);
 
-        boolean existsByUserCodeAndProductId(String userCode, Long productId);
+        boolean existsByUserCodeAndProductId(String userCode, String productId);
 
-        void deleteByUserCodeAndProductId(String userCode, Long productId);
+        void deleteByUserCodeAndProductId(String userCode, String productId);
     }

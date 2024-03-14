@@ -1,21 +1,23 @@
 package com.bit.productservice.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
-import java.util.Date;
 
 @Entity
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(schema = "products", name = "_products")
+@Builder
 public class Product {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(unique = true, name = "id")
-    private Long id;
+    private String id;
 
     @Column(name = "barcode")
     private String barcode;
@@ -26,8 +28,9 @@ public class Product {
     @Column(name = "name", nullable = false)
     private String name;
 
-    @Column(name = "imageUrl", nullable = false)
-    private String imageUrl;
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @JoinColumn(name = "image_id", referencedColumnName = "id")
+    private Image image;
 
     @Column(name = "price", nullable = false)
     private double price;
@@ -38,14 +41,15 @@ public class Product {
     @Column(name = "inStock", nullable = false)
     private boolean inStock;
 
+    @Column(name = "isDeleted", nullable = false, columnDefinition = "boolean default false")
+    private boolean isDeleted;
+
     @Column(name = "category", nullable = false)
-    @NonNull
     private String category;
 
     @Column(name = "creationDate", nullable = false)
-    @NonNull
     private LocalDate creationDate = LocalDate.now();
 
     @Column(name = "lastUpdateDate")
-    private Date lastUpdateDate;
+    private LocalDate lastUpdateDate;
 }
