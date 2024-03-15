@@ -50,13 +50,28 @@ services:
     container_name: jwt-auth-db
     restart: always
     environment:
-      - POSTGRES_DB=jwt-auth-db
+      - POSTGRES_DB=jwt_auth_db
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=2165
       - POSTGRES_SCHEMA=user-credentials
     ports:
       - "5432:5432"
     command: [ "postgres", "-c", "search_path=user-credentials" ]
+    networks:
+      - spring-network
+
+  product-db:
+    image: postgres:latest
+    container_name: product-db
+    restart: always
+    environment:
+      - POSTGRES_DB=product_db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=2165
+      - POSTGRES_SCHEMA=products
+    ports:
+      - "5432:5432"
+    command: [ "postgres", "-c", "search_path=products" ]
     networks:
       - spring-network
 
@@ -87,6 +102,20 @@ services:
     depends_on:
       - eureka-server
       - user-management-db
+
+  product-service:
+    image: product-service:latest
+    build:
+      context: ./product-service
+      dockerfile: Dockerfile
+    container_name: product-service
+    ports:
+      - "8083:8083"
+    networks:
+      - spring-network
+    depends_on:
+      - eureka-server
+      - product-db
 
 networks:
   spring-network:
