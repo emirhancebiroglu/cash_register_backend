@@ -2,7 +2,6 @@ package com.bit.productservice.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -13,7 +12,6 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @Table(schema = "products", name = "_products")
-@Builder
 public class Product {
     @Id
     @Column(unique = true, name = "id")
@@ -52,4 +50,18 @@ public class Product {
 
     @Column(name = "lastUpdateDate")
     private LocalDate lastUpdateDate;
+
+    public Product(String id, String barcode, String productCode, String name, Double price,
+                   Image image, String category, Integer stockAmount, LocalDate creationDate, boolean inStock) {
+        this.id = id;
+        this.barcode = barcode;
+        this.productCode = productCode;
+        this.name = name;
+        this.price = price;
+        this.image = image;
+        this.category = category;
+        this.stockAmount = stockAmount;
+        this.creationDate = creationDate;
+        this.inStock = inStock;
+    }
 }

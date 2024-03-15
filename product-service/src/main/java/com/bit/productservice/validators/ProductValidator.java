@@ -3,6 +3,7 @@ package com.bit.productservice.validators;
 import com.bit.productservice.dto.addproduct.AddProductReq;
 import com.bit.productservice.dto.updateproduct.UpdateProductReq;
 import com.bit.productservice.exceptions.bothcodetypeprovided.BothCodeTypeProvidedException;
+import com.bit.productservice.exceptions.nocodeprovided.NoCodeProvidedException;
 import com.bit.productservice.exceptions.productwithsamebarcode.ProductWithSameBarcodeException;
 import com.bit.productservice.exceptions.productwithsamename.ProductWithSameNameException;
 import com.bit.productservice.exceptions.productwithsameproductcode.ProductWithSameProductCodeException;
@@ -64,19 +65,48 @@ public class ProductValidator {
     }
 
     private void validateProductCodeAndBarcode(AddProductReq addProductReq, UpdateProductReq updateProductReq) {
-        if ((updateProductReq != null && updateProductReq.getProductCode() != null && updateProductReq.getBarcode() != null) ||
-                (addProductReq != null && addProductReq.getProductCode() != null && addProductReq.getBarcode() != null)) {
+        if (bothCodeAndBarcodeProvided(updateProductReq, addProductReq)) {
             throw new BothCodeTypeProvidedException("Either barcode or product code should be provided, not both");
         }
 
-        if ((updateProductReq != null && updateProductReq.getProductCode() != null && productRepository.existsByProductCode(updateProductReq.getProductCode())) ||
-                (addProductReq != null && addProductReq.getProductCode() != null && productRepository.existsByProductCode(addProductReq.getProductCode()))) {
+        if (neitherCodeNorBarcodeProvided(updateProductReq, addProductReq)) {
+            throw new NoCodeProvidedException("Either barcode or product code should be provided");
+        }
+
+        if (duplicateProductCodeExists(updateProductReq, addProductReq)) {
             throw new ProductWithSameProductCodeException("A product with the same product code already exists");
         }
 
-        if ((updateProductReq != null && updateProductReq.getBarcode() != null && productRepository.existsByBarcode(updateProductReq.getBarcode())) ||
-                (addProductReq != null && addProductReq.getBarcode() != null && productRepository.existsByBarcode(addProductReq.getBarcode()))) {
+        if (duplicateBarcodeExists(updateProductReq, addProductReq)) {
             throw new ProductWithSameBarcodeException("A product with the same barcode already exists");
         }
+    }
+
+    private boolean bothCodeAndBarcodeProvided(UpdateProductReq updateProductReq, AddProductReq addProductReq) {
+        return (updateProductReq != null && isNotBlank(updateProductReq.getProductCode()) && isNotBlank(updateProductReq.getBarcode())) ||
+                (addProductReq != null && isNotBlank(addProductReq.getProductCode()) && isNotBlank(addProductReq.getBarcode()));
+    }
+
+    private boolean neitherCodeNorBarcodeProvided(UpdateProductReq updateProductReq, AddProductReq addProductReq) {
+        return (updateProductReq == null || (isBlank(updateProductReq.getProductCode()) && isBlank(updateProductReq.getBarcode()))) &&
+                (addProductReq == null || (isBlank(addProductReq.getProductCode()) && isBlank(addProductReq.getBarcode())));
+    }
+
+    private boolean duplicateProductCodeExists(UpdateProductReq updateProductReq, AddProductReq addProductReq) {
+        return (updateProductReq != null && isNotBlank(updateProductReq.getProductCode()) && productRepository.existsByProductCode(updateProductReq.getProductCode())) ||
+                (addProductReq != null && isNotBlank(addProductReq.getProductCode()) && productRepository.existsByProductCode(addProductReq.getProductCode()));
+    }
+
+    private boolean duplicateBarcodeExists(UpdateProductReq updateProductReq, AddProductReq addProductReq) {
+        return (updateProductReq != null && isNotBlank(updateProductReq.getBarcode()) && productRepository.existsByBarcode(updateProductReq.getBarcode())) ||
+                (addProductReq != null && isNotBlank(addProductReq.getBarcode()) && productRepository.existsByBarcode(addProductReq.getBarcode()));
+    }
+
+    private boolean isNotBlank(String str) {
+        return str != null && !str.isEmpty();
+    }
+
+    private boolean isBlank(String str) {
+        return str == null || str.isEmpty();
     }
 }

@@ -2,9 +2,11 @@ package com.bit.productservice.dto.updateproduct;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class UpdateProductReq {
     private String barcode;
     private String productCode;

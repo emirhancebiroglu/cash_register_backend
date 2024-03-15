@@ -3,6 +3,8 @@ package com.bit.productservice.service.serviceimpl;
 import com.bit.productservice.service.CloudinaryService;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -16,6 +18,7 @@ import java.util.Objects;
 
 @Service
 public class CloudinaryServiceImpl implements CloudinaryService {
+    private static final Logger logger = LoggerFactory.getLogger(CloudinaryServiceImpl.class);
     Cloudinary cloudinary;
 
     public CloudinaryServiceImpl() {
@@ -29,16 +32,20 @@ public class CloudinaryServiceImpl implements CloudinaryService {
     @Override
     public Map upload(MultipartFile multipartFile) throws IOException {
         File file = convert(multipartFile);
+        logger.info("Uploading file: {}", file.getName());
         var result = cloudinary.uploader().upload(file, ObjectUtils.emptyMap());
         if (!Files.deleteIfExists(file.toPath())) {
             throw new IOException("Failed to delete temporary file: " + file.getAbsolutePath());
         }
+        logger.info("File uploaded successfully with result: {}", result);
         return result;
     }
 
     @Override
     public void delete(String id) throws IOException {
+        logger.info("Deleting image with ID: {}", id);
         cloudinary.uploader().destroy(id, ObjectUtils.emptyMap());
+        logger.info("Image deleted successfully with ID: {}", id);
     }
 
     private File convert(MultipartFile multipartFile) throws IOException {

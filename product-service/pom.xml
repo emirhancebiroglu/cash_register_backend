@@ -99,7 +99,24 @@
                 <version>${jacoco.version}</version>
                 <configuration>
                     <excludes>
-
+                        <exclude>com/bit/productservice/config/SecurityConfig.class</exclude>
+                        <exclude>com/bit/productservice/dto/addproduct/AddProductReq.class</exclude>
+                        <exclude>com/bit/productservice/dto/updateproduct/UpdateProductReq.class</exclude>
+                        <exclude>com/bit/productservice/dto/ProductDTO.class</exclude>
+                        <exclude>com/bit/productservice/entity/FavoriteProduct.class</exclude>
+                        <exclude>com/bit/productservice/entity/Image.class</exclude>
+                        <exclude>com/bit/productservice/entity/Product.class</exclude>
+                        <exclude>com/bit/productservice/exceptions/bothcodetypeprovided/BothCodeTypeProvidedExceptionHandler.class</exclude>
+                        <exclude>com/bit/productservice/exceptions/nocodeprovided/NoCodeProvidedExceptionHandler.class</exclude>
+                        <exclude>com/bit/productservice/exceptions/negativefield/NegativeFieldExceptionHandler.class</exclude>
+                        <exclude>com/bit/productservice/exceptions/nulloremptyfield/NullOrEmptyFieldExceptionHandler.class</exclude>
+                        <exclude>com/bit/productservice/exceptions/productisnotfavorite/ProductIsNotFavoriteExceptionHandler.class</exclude>
+                        <exclude>com/bit/productservice/exceptions/productnotfound/ProductNotFoundExceptionHandler.class</exclude>
+                        <exclude>com/bit/productservice/exceptions/productwithsamebarcode/ProductWithSameBarcodeExceptionHandler.class</exclude>
+                        <exclude>com/bit/productservice/exceptions/productwithsamename/ProductWithSameNameExceptionHandler.class</exclude>
+                        <exclude>com/bit/productservice/exceptions/productwithsameproductcode/ProductWithSameProductCodeExceptionHandler.class</exclude>
+                        <exclude>com/bit/productservice/exceptions/ErrorDetails.class</exclude>
+                        <exclude>com/bit/productservice/ProductServiceApplication.class</exclude>
                     </excludes>
                 </configuration>
                 <executions>

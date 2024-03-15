@@ -63,7 +63,7 @@ public class ProductController {
     }
 
     @DeleteMapping("/delete-product/{productId}")
-    public ResponseEntity<String> updateProduct(@PathVariable String productId){
+    public ResponseEntity<String> deleteProduct(@PathVariable String productId){
         productService.deleteProduct(productId);
         return ResponseEntity.status(HttpStatus.OK).body("Product deleted successfully");
 

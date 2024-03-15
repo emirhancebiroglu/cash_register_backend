@@ -7,12 +7,15 @@ import com.bit.productservice.entity.Image;
 import com.bit.productservice.entity.Product;
 import com.bit.productservice.exceptions.negativefield.NegativeFieldException;
 import com.bit.productservice.exceptions.nulloremptyfield.NullOrEmptyFieldException;
+import com.bit.productservice.exceptions.productnotfound.ProductNotFoundException;
 import com.bit.productservice.repository.ImageRepository;
 import com.bit.productservice.repository.ProductRepository;
 import com.bit.productservice.service.CloudinaryService;
 import com.bit.productservice.service.ProductService;
 import com.bit.productservice.validators.ProductValidator;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -32,10 +35,16 @@ public class ProductServiceImpl implements ProductService {
     private final CloudinaryService cloudinaryService;
     private final ImageRepository imageRepository;
     private final ProductValidator productValidator;
+    private static final Logger logger = LoggerFactory.getLogger(ProductServiceImpl.class);
 
     @Override
     public List<ProductDTO> getProducts() {
+        logger.info("Fetching all products");
+
         List<Product> products = productRepository.findAll(Sort.by("name").ascending());
+
+        logger.info("Products fetched successfully");
+
         return products.stream()
                 .filter(product -> !product.isDeleted())
                 .map(this::convertToDTO)
@@ -44,7 +53,12 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<ProductDTO> searchProductByProductCode(String productCode ,Integer pageNo, Integer pageSize) {
+        logger.info("Fetching product with code {} ", productCode);
+
         Page<Product> pagingProduct = productRepository.findByProductCodeStartingWith(productCode, PageRequest.of(pageNo, pageSize, Sort.by("name").ascending()));
+
+        logger.info("Product fetched successfully");
+
         return pagingProduct.stream()
                 .filter(product -> !product.isDeleted())
                 .map(this::convertToDTO)
@@ -53,7 +67,12 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<ProductDTO> searchProductByBarcode(String barcode, Integer pageNo, Integer pageSize) {
+        logger.info("Fetching product with code {} ", barcode);
+
         Page<Product> pagingProduct = productRepository.findByBarcodeStartingWith(barcode, PageRequest.of(pageNo, pageSize, Sort.by("name").ascending()));
+
+        logger.info("Product fetched successfully");
+
         return pagingProduct.stream()
                 .filter(product -> !product.isDeleted())
                 .map(this::convertToDTO)
@@ -124,7 +143,12 @@ public class ProductServiceImpl implements ProductService {
             }
         };
 
+        logger.info("Products filtering by criteria");
+
         Page<Product> pagingProduct = productRepository.findAll(specification, PageRequest.of(pageNo, pageSize, Sort.by("name").ascending()));
+
+        logger.info("Products filtered successfully");
+
         return pagingProduct.getContent().stream()
                 .filter(product -> !product.isDeleted())
                 .map(this::convertToDTO)
@@ -133,6 +157,8 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public void addProduct(AddProductReq addProductReq, MultipartFile file) throws IOException {
+        logger.info("Adding product...");
+
         List<String> errors = productValidator.validateAddProductReq(addProductReq, file);
 
         List<String> negativeFieldErrors = errors.stream()
@@ -157,10 +183,14 @@ public class ProductServiceImpl implements ProductService {
         Product product = buildProduct(id, addProductReq, image);
 
         productRepository.save(product);
+
+        logger.info("Product added successfully");
     }
 
     @Override
     public void updateProduct(String productId, UpdateProductReq updateProductReq, MultipartFile multipartFile) throws IOException{
+        logger.info("Updating product...");
+
         Product product = getProductById(productId);
         productValidator.validateProduct(null, updateProductReq);
 
@@ -186,20 +216,29 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public void deleteProduct(String productId){
+        logger.info("Deleting product...");
+
         Product product = getProductById(productId);
+
         product.setDeleted(true);
         product.setLastUpdateDate(LocalDate.now());
 
         productRepository.save(product);
+
+        logger.info("Product deleted successfully");
     }
 
     @Override
     public void reAddProduct(String productId) {
+        logger.info("Re-adding product...");
+
         Product product = getProductById(productId);
         product.setDeleted(false);
         product.setLastUpdateDate(LocalDate.now());
 
         productRepository.save(product);
+
+        logger.info("Product re-added successfully");
     }
 
     private ProductDTO convertToDTO(Product product) {
@@ -215,26 +254,40 @@ public class ProductServiceImpl implements ProductService {
 
     private Image uploadImage(MultipartFile file, String id) throws IOException {
         var result = cloudinaryService.upload(file);
+
+        logger.info(("Saving image to repository..."));
+
         Image image = new Image(id,
                 (result.get("original_filename")),
                 (result.get("url")),
                 (result.get("public_id")));
-        return imageRepository.save(image);
+
+        imageRepository.save(image);
+
+        logger.info(("Image saved to repository"));
+
+        return image;
     }
 
     private Product buildProduct(String id, AddProductReq addProductReq, Image image) {
-        return Product.builder()
-                .id(id)
-                .barcode(addProductReq.getBarcode())
-                .productCode(addProductReq.getProductCode())
-                .name(addProductReq.getName())
-                .price(addProductReq.getPrice())
-                .image(image)
-                .category(addProductReq.getCategory())
-                .stockAmount(addProductReq.getStockAmount())
-                .creationDate(LocalDate.now())
-                .inStock(addProductReq.getStockAmount() > 0)
-                .build();
+        logger.info("Building product with ID {}", id);
+
+        Product product = new Product(
+                id,
+                addProductReq.getBarcode(),
+                addProductReq.getProductCode(),
+                addProductReq.getName(),
+                addProductReq.getPrice(),
+                image,
+                addProductReq.getCategory(),
+                addProductReq.getStockAmount(),
+                LocalDate.now(),
+                addProductReq.getStockAmount() > 0
+        );
+
+        logger.info("Product built successfully with ID {}", id);
+
+        return product;
     }
 
     private void updateProductDetails(Product product, UpdateProductReq updateProductReq){
@@ -266,10 +319,18 @@ public class ProductServiceImpl implements ProductService {
         product.setLastUpdateDate(LocalDate.now());
 
         productRepository.save(product);
+
+        logger.info("Product details updated successfully for product ID {}", product.getId());
     }
 
     private Product getProductById(String productId) {
-        return productRepository.findById(productId)
-                .orElseThrow(() -> new IllegalStateException("Product not found"));
+        logger.info("Fetching product with ID {}", productId);
+
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new ProductNotFoundException("Product not found"));
+
+        logger.info("Product fetched successfully with ID {}", productId);
+
+        return product;
     }
 }
