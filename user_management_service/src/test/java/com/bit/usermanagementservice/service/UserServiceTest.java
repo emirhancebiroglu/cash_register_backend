@@ -7,8 +7,6 @@ import com.bit.usermanagementservice.dto.getuser.UserDTO;
 import com.bit.usermanagementservice.dto.updateuser.UpdateUserReq;
 import com.bit.usermanagementservice.entity.Role;
 import com.bit.usermanagementservice.entity.User;
-import com.bit.usermanagementservice.exceptions.invalidemail.InvalidEmailException;
-import com.bit.usermanagementservice.exceptions.invalidname.InvalidNameException;
 import com.bit.usermanagementservice.exceptions.rolenotfound.RoleNotFoundException;
 import com.bit.usermanagementservice.exceptions.useralreadyactive.UserAlreadyActiveException;
 import com.bit.usermanagementservice.exceptions.useralreadydeleted.UserAlreadyDeletedException;
@@ -22,6 +20,7 @@ import com.bit.usermanagementservice.utils.PasswordGenerator;
 import com.bit.usermanagementservice.utils.UserCodeGenerator;
 import com.bit.usermanagementservice.validators.EmailValidator;
 import com.bit.usermanagementservice.validators.NameValidator;
+import com.bit.usermanagementservice.validators.UserValidator;
 import lombok.Data;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -66,6 +65,9 @@ class UserServiceTest {
 
     @Mock
     EmailValidator emailValidator;
+
+    @Mock
+    UserValidator userValidator;
 
     @Mock
     EmailService emailService;
@@ -137,11 +139,6 @@ class UserServiceTest {
 
     @Test
     void addUser_WithAdminRole_HandlesInitialAdmin() {
-
-        when(emailValidator.isValidEmail(addUserReq.getEmail())).thenReturn(true);
-        when(nameValidator.validateFirstName(addUserReq.getFirstName())).thenReturn(true);
-        when(nameValidator.validateLastName(addUserReq.getLastName())).thenReturn(true);
-
         when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.of(new Role("ROLE_ADMIN")));
         when(userRepository.findByUserCode("admin")).thenReturn(Optional.of(new User()));
         when(userRepository.findMaxId()).thenReturn(null);
@@ -166,10 +163,6 @@ class UserServiceTest {
 
     @Test
     void addUser_WithNonExistingRole_ThrowsRoleNotFoundException() {
-        when(emailValidator.isValidEmail(addUserReq.getEmail())).thenReturn(true);
-        when(nameValidator.validateFirstName(addUserReq.getFirstName())).thenReturn(true);
-        when(nameValidator.validateLastName(addUserReq.getLastName())).thenReturn(true);
-
         assertThrows(RoleNotFoundException.class, () -> userService.addUser(addUserReq));
     }
 
@@ -177,10 +170,6 @@ class UserServiceTest {
     void updateUser_IfUserIsNotDeleted() {
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
         when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.of(new Role("ROLE_ADMIN")));
-
-        when(nameValidator.validateFirstName(updateUserReq.getFirstName())).thenReturn(true);
-        when(nameValidator.validateLastName(updateUserReq.getLastName())).thenReturn(true);
-        when(emailValidator.isValidEmail(updateUserReq.getEmail())).thenReturn(true);
 
         userService.updateUser(userId, updateUserReq);
 
@@ -193,36 +182,12 @@ class UserServiceTest {
 
     @Test
     void updateUser_IfUserIsDeleted() {
+        existingUser.setDeleted(true);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+
         assertThrows(UserNotFoundException.class, () -> userService.updateUser(userId, updateUserReq));
 
         verify(userRepository, never()).save(any(User.class));
-    }
-
-    @Test
-    void updateUser_WithInvalidEmail_ThrowsInvalidEmailException() {
-        when(userRepository.findById(userId)).thenReturn(Optional.of(new User()));
-        when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.of(new Role()));
-        when(nameValidator.validateFirstName(updateUserReq.getFirstName())).thenReturn(true);
-        when(nameValidator.validateLastName(updateUserReq.getLastName())).thenReturn(true);
-
-        assertThrows(InvalidEmailException.class, () -> userService.updateUser(userId, updateUserReq));
-    }
-
-    @Test
-    void updateUser_WithInvalidLastName_ThrowsInvalidLastNameException() {
-        when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.of(new Role()));
-        when(userRepository.findById(userId)).thenReturn(Optional.of(new User()));
-        when(nameValidator.validateFirstName(updateUserReq.getFirstName())).thenReturn(true);
-
-        assertThrows(InvalidNameException.class, () -> userService.updateUser(userId, updateUserReq));
-    }
-
-    @Test
-    void updateUser_WithInvalidFirstName_ThrowsInvalidFirstNameException() {
-        when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.of(new Role()));
-        when(userRepository.findById(userId)).thenReturn(Optional.of(new User()));
-
-        assertThrows(InvalidNameException.class, () -> userService.updateUser(userId, updateUserReq));
     }
 
     @Test
@@ -235,10 +200,6 @@ class UserServiceTest {
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
         when(roleRepository.findByName("ROLE_ADMIN")).thenReturn(Optional.of(new Role("ROLE_ADMIN")));
-
-        when(nameValidator.validateFirstName(updateUserReq.getFirstName())).thenReturn(true);
-        when(nameValidator.validateLastName(updateUserReq.getLastName())).thenReturn(true);
-        when(emailValidator.isValidEmail(updateUserReq.getEmail())).thenReturn(true);
 
         when(userCodeGenerator.createUserCode(Collections.singleton("ROLE_ADMIN"), userId)).thenReturn("C1456754");
 

@@ -11,8 +11,6 @@ import com.bit.usermanagementservice.dto.kafka.UserUpdateDTO;
 import com.bit.usermanagementservice.dto.updateuser.UpdateUserReq;
 import com.bit.usermanagementservice.entity.Role;
 import com.bit.usermanagementservice.entity.User;
-import com.bit.usermanagementservice.exceptions.invalidemail.InvalidEmailException;
-import com.bit.usermanagementservice.exceptions.invalidname.InvalidNameException;
 import com.bit.usermanagementservice.exceptions.rolenotfound.RoleNotFoundException;
 import com.bit.usermanagementservice.exceptions.useralreadyactive.UserAlreadyActiveException;
 import com.bit.usermanagementservice.exceptions.useralreadydeleted.UserAlreadyDeletedException;
@@ -25,8 +23,7 @@ import com.bit.usermanagementservice.service.UserService;
 import com.bit.usermanagementservice.utils.CredentialsProducer;
 import com.bit.usermanagementservice.utils.PasswordGenerator;
 import com.bit.usermanagementservice.utils.UserCodeGenerator;
-import com.bit.usermanagementservice.validators.EmailValidator;
-import com.bit.usermanagementservice.validators.NameValidator;
+import com.bit.usermanagementservice.validators.UserValidator;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,11 +45,10 @@ public class UserServiceImpl implements UserService {
     private final PasswordEncoderConfig passwordEncoderConfig;
     private final PasswordGenerator passwordGenerator;
     private final UserCodeGenerator userCodeGenerator;
-    private final NameValidator nameValidator;
-    private final EmailValidator emailValidator;
     private final EmailService emailService;
     private final AdminInitializationConfig adminInitializationConfig;
     private final CredentialsProducer credentialsProducer;
+    private final UserValidator userValidator;
     private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
     private static final String FIRST_NAME = "firstName";
@@ -62,7 +58,7 @@ public class UserServiceImpl implements UserService {
         logger.info("Adding user...");
 
         checkIfUserExists(addUserReq);
-        validateUserData(addUserReq);
+        userValidator.validateUserData(addUserReq);
 
         Set<Role> roles = mapRolesForAddUser(addUserReq);
         handleInitialAdmin(roles);
@@ -161,7 +157,7 @@ public class UserServiceImpl implements UserService {
 
         return users.stream()
                 .map(this::mapUserToDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -175,7 +171,7 @@ public class UserServiceImpl implements UserService {
 
         return users.stream()
                 .map(this::mapUserToDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     @Override
@@ -195,7 +191,7 @@ public class UserServiceImpl implements UserService {
 
             return users.stream()
                     .map(this::mapUserToDTO)
-                    .collect(Collectors.toList());
+                    .toList();
         }
 
         Page<User> userPage = userRepository.findByFirstNameStartingWithIgnoreCaseOrLastNameStartingWithIgnoreCase(name, name, PageRequest.of(pageNo, pageSize, Sort.by(FIRST_NAME).ascending()));
@@ -205,7 +201,7 @@ public class UserServiceImpl implements UserService {
 
         return users.stream()
                 .map(this::mapUserToDTO)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private User buildUser(AddUserReq addUserReq, String userCode, String password, Set<Role> roles){
@@ -225,30 +221,6 @@ public class UserServiceImpl implements UserService {
         if (existingUser.isPresent()){
             String userEmail = existingUser.get().getEmail();
             throw new UserAlreadyExistsException("User already exists: " + userEmail);
-        }
-    }
-
-    private void validateUserData(AddUserReq addUserReq){
-        validateEmail(addUserReq.getEmail());
-        validateFirstName(addUserReq.getFirstName());
-        validateLastName(addUserReq.getLastName());
-    }
-
-    private void validateEmail(String email) {
-        if (!emailValidator.isValidEmail(email)){
-            throw new InvalidEmailException("Invalid email: " + email);
-        }
-    }
-
-    private void validateFirstName(String firstName){
-        if (!nameValidator.validateFirstName(firstName)){
-            throw new InvalidNameException("Invalid first name: " + firstName);
-        }
-    }
-
-    private void validateLastName(String lastName){
-        if (!nameValidator.validateLastName(lastName)){
-            throw new InvalidNameException("Invalid last name: " + lastName);
         }
     }
 
@@ -298,17 +270,17 @@ public class UserServiceImpl implements UserService {
 
     private void updateExistingUser(User existingUser, UpdateUserReq updateUserReq, Set<Role> roles) {
         if (!updateUserReq.getFirstName().isEmpty()){
-            validateFirstName(updateUserReq.getFirstName());
+            userValidator.validateFirstName(updateUserReq.getFirstName());
             existingUser.setFirstName(updateUserReq.getFirstName());
         }
 
         if (!updateUserReq.getLastName().isEmpty()){
-            validateLastName(updateUserReq.getLastName());
+            userValidator.validateLastName(updateUserReq.getLastName());
             existingUser.setLastName(updateUserReq.getLastName());
         }
 
         if (!updateUserReq.getEmail().isEmpty()){
-            validateEmail(updateUserReq.getEmail());
+            userValidator.validateEmail(updateUserReq.getEmail());
             existingUser.setEmail(updateUserReq.getEmail());
         }
 

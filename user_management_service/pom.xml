@@ -123,6 +123,7 @@
 						<exclude>com/bit/usermanagementservice/exceptions/useralreadydeleted/UserAlreadyDeletedExceptionHandler.class</exclude>
 						<exclude>com/bit/usermanagementservice/exceptions/useralreadyexists/UserAlreadyExistsExceptionHandler.class</exclude>
 						<exclude>com/bit/usermanagementservice/exceptions/usernotfound/UserNotFoundExceptionHandler.class</exclude>
+						<exclude>com/bit/usermanagementservice/exceptions/atleastoneroleneeded/AtLeastOneRoleNeededExceptionHandler.class</exclude>
 						<exclude>com/bit/usermanagementservice/exceptions/ErrorDetails.class</exclude>
 						<exclude>com/bit/usermanagementservice/config/EmailConfig.class</exclude>
 						<exclude>com/bit/usermanagementservice/config/KafkaProducerConfig.class</exclude>
