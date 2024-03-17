@@ -76,7 +76,7 @@ class FavoriteProductServiceTest {
                 .when(favoriteProductValidator)
                 .isProductExist(any(), any());
 
-        assertThrows(IllegalArgumentException.class, () -> favoriteProductService.addProductToFavorites(productId));
+        assertThrows(ProductNotFoundException.class, () -> favoriteProductService.addProductToFavorites(productId));
 
         verify(favoriteProductRepository, never()).save(any(FavoriteProduct.class));
     }
@@ -103,7 +103,7 @@ class FavoriteProductServiceTest {
 
         doThrow(ProductIsNotFavoriteException.class)
                 .when(favoriteProductValidator)
-                .isProductFavorite(productId, "testUser", favoriteProductRepository);
+                .isProductNotFavorite(productId, "testUser", favoriteProductRepository);
 
         assertThrows(ProductIsNotFavoriteException.class, () -> favoriteProductService.removeProductFromFavorites(productId));
 

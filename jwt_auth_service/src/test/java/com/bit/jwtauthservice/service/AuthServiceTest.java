@@ -111,7 +111,7 @@ class AuthServiceTest {
 
         LoginRes loginRes = authService.login(loginReq);
 
-        assertEquals(jwt, loginRes.getToken());
+        assertEquals(jwt, loginRes.getAccessToken());
         verify(userRepository, times(1)).findByUserCode(userCode);
         verify(passwordEncoderConfig, times(2)).passwordEncoder();
         verify(jwtService, times(1)).generateToken(user);

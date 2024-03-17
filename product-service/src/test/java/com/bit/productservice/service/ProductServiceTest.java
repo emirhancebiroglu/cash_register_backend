@@ -342,6 +342,7 @@ class ProductServiceTest {
     void reAddProduct_Success() {
         Product dummyProduct = new Product();
         dummyProduct.setId("test");
+        dummyProduct.setDeleted(true);
 
         when(productRepository.findById(dummyProduct.getId())).thenReturn(Optional.of(dummyProduct));
 

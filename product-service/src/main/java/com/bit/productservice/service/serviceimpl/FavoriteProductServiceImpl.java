@@ -34,6 +34,7 @@ public class FavoriteProductServiceImpl implements FavoriteProductService {
         logger.info("Adding product with ID {} to favorites for user {}", productId, getUserCode(request));
 
         favoriteProductValidator.isProductExist(productRepository, productId);
+        favoriteProductValidator.isProductFavorite(productId, getUserCode(request), favoriteProductRepository);
 
         favoriteProductRepository.save(new FavoriteProduct(getUserCode(request), productId));
 
@@ -45,7 +46,7 @@ public class FavoriteProductServiceImpl implements FavoriteProductService {
         logger.info("Removing product with ID {} from favorites for user {}", productId, getUserCode(request));
 
         favoriteProductValidator.isProductExist(productRepository, productId);
-        favoriteProductValidator.isProductFavorite(productId, getUserCode(request), favoriteProductRepository);
+        favoriteProductValidator.isProductNotFavorite(productId, getUserCode(request), favoriteProductRepository);
 
         favoriteProductRepository.deleteByUserCodeAndProductId(getUserCode(request), productId);
 
@@ -91,6 +92,6 @@ public class FavoriteProductServiceImpl implements FavoriteProductService {
             return jwtUtil.extractUsername(token);
         }
 
-        throw new IllegalArgumentException("User not found");
+        return null;
     }
 }

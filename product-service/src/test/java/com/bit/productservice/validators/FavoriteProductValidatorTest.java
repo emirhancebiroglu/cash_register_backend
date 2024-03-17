@@ -51,7 +51,7 @@ class FavoriteProductValidatorTest {
     void validateFavoriteProduct_productDoesNotExistAndIsntFavorite_throwsProductIsNotFavoriteException() {
         when(favoriteProductRepository.existsByUserCodeAndProductId(userCode, productId)).thenReturn(false);
 
-        assertThrows(ProductIsNotFavoriteException.class, () -> favoriteProductValidator.isProductFavorite(productId, userCode, favoriteProductRepository));
+        assertThrows(ProductIsNotFavoriteException.class, () -> favoriteProductValidator.isProductNotFavorite(productId, userCode, favoriteProductRepository));
 
         verify(favoriteProductRepository, times(1)).existsByUserCodeAndProductId(userCode, productId);
     }

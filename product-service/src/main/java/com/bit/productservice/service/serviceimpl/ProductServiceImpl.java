@@ -7,6 +7,8 @@ import com.bit.productservice.entity.Image;
 import com.bit.productservice.entity.Product;
 import com.bit.productservice.exceptions.negativefield.NegativeFieldException;
 import com.bit.productservice.exceptions.nulloremptyfield.NullOrEmptyFieldException;
+import com.bit.productservice.exceptions.productalreadydeleted.ProductAlreadyDeletedException;
+import com.bit.productservice.exceptions.productalreadyinstocks.ProductAlreadyInStocksException;
 import com.bit.productservice.exceptions.productnotfound.ProductNotFoundException;
 import com.bit.productservice.repository.ImageRepository;
 import com.bit.productservice.repository.ProductRepository;
@@ -220,12 +222,17 @@ public class ProductServiceImpl implements ProductService {
 
         Product product = getProductById(productId);
 
-        product.setDeleted(true);
-        product.setLastUpdateDate(LocalDate.now());
+        if (!product.isDeleted()){
+            product.setDeleted(true);
+            product.setLastUpdateDate(LocalDate.now());
 
-        productRepository.save(product);
+            productRepository.save(product);
 
-        logger.info("Product deleted successfully");
+            logger.info("Product deleted successfully");
+        }
+        else{
+            throw new ProductAlreadyDeletedException("Product already deleted");
+        }
     }
 
     @Override
@@ -233,12 +240,18 @@ public class ProductServiceImpl implements ProductService {
         logger.info("Re-adding product...");
 
         Product product = getProductById(productId);
-        product.setDeleted(false);
-        product.setLastUpdateDate(LocalDate.now());
 
-        productRepository.save(product);
+       if (product.isDeleted()){
+           product.setDeleted(false);
+           product.setLastUpdateDate(LocalDate.now());
 
-        logger.info("Product re-added successfully");
+           productRepository.save(product);
+
+           logger.info("Product re-added successfully");
+       }
+       else{
+           throw new ProductAlreadyInStocksException("Product already in stocks");
+       }
     }
 
     private ProductDTO convertToDTO(Product product) {

@@ -21,13 +21,17 @@ import com.bit.jwtauthservice.repository.UserRepository;
 import com.bit.jwtauthservice.service.AuthService;
 import com.bit.jwtauthservice.service.EmailService;
 import com.bit.jwtauthservice.service.JwtService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -39,6 +43,7 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
     private final EmailService emailService;
     private final PasswordEncoderConfig passwordEncoderConfig;
+    private final HttpServletRequest request;
     private static final String USER_NOT_FOUND = "User not found";
 
     @Value("${password.reset.link.body}")
@@ -61,11 +66,16 @@ public class AuthServiceImpl implements AuthService {
             throw new BadCredentialsException("Invalid password");
         }
 
-        var jwt = jwtService.generateToken(user);
+        var jwtToken = jwtService.generateToken(user);
+        var refreshToken = jwtService.generateRefreshToken(user);
 
         logger.info("User '{}' authenticated successfully.", loginReq.getUserCode());
 
-        return LoginRes.builder().token(jwt).build();
+        return LoginRes
+                .builder()
+                .accessToken(jwtToken)
+                .refreshToken(refreshToken)
+                .build();
     }
 
     @Override
@@ -138,7 +148,7 @@ public class AuthServiceImpl implements AuthService {
     public void changePassword(ChangePasswordReq changePasswordReq) {
         logger.info("Changing the password...");
 
-        String userCode = SecurityContextHolder.getContext().getAuthentication().getName();
+        String userCode = jwtService.extractUsername(request.getHeader("Authorization").substring(7));
 
         User user = userRepository.findByUserCode(userCode)
                 .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND));
@@ -155,5 +165,32 @@ public class AuthServiceImpl implements AuthService {
         userRepository.save(user);
 
         logger.info("Password changed successfully");
+    }
+
+    @Override
+    public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
+        final String refreshToken;
+        final String userCode;
+        if (authHeader == null ||!authHeader.startsWith("Bearer ")) {
+            return;
+        }
+        refreshToken = authHeader.substring(7);
+        userCode = jwtService.extractUsername(refreshToken);
+        if (userCode != null) {
+            var user = this.userRepository.findByUserCode(userCode)
+                    .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND));
+
+            if (jwtService.isTokenValid(refreshToken, user)) {
+                var accessToken = jwtService.generateToken(user);
+//                revokeAllUserTokens(user);
+//                saveUserToken(user, accessToken);
+                var authResponse = LoginRes.builder()
+                        .accessToken(accessToken)
+                        .refreshToken(refreshToken)
+                        .build();
+                new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
+            }
+        }
     }
 }

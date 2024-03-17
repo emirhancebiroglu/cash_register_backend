@@ -7,11 +7,15 @@
   import com.bit.jwtauthservice.dto.password.ResetPasswordReq;
   import com.bit.jwtauthservice.dto.usercode.ForgotUserCodeReq;
   import com.bit.jwtauthservice.service.AuthService;
+  import jakarta.servlet.http.HttpServletRequest;
+  import jakarta.servlet.http.HttpServletResponse;
   import jakarta.validation.Valid;
   import lombok.RequiredArgsConstructor;
   import org.springframework.http.HttpStatus;
   import org.springframework.http.ResponseEntity;
   import org.springframework.web.bind.annotation.*;
+
+  import java.io.IOException;
 
   @RestController
   @RequestMapping("/api/auth")
@@ -22,6 +26,13 @@
     @PostMapping("/login")
     public LoginRes login(@RequestBody LoginReq loginReq){
       return authService.login(loginReq);
+    }
+
+    @PostMapping("/refresh-token")
+    public void refreshToken(
+            HttpServletRequest request, HttpServletResponse response
+    ) throws IOException {
+      authService.refreshToken(request, response);
     }
 
     @PostMapping("/forgot-user-code")

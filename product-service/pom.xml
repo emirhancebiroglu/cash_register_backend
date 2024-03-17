@@ -120,11 +120,14 @@
                         <exclude>com/bit/productservice/entity/Product.class</exclude>
                         <exclude>com/bit/productservice/exceptions/bothcodetypeprovided/BothCodeTypeProvidedExceptionHandler.class</exclude>
                         <exclude>com/bit/productservice/exceptions/nocodeprovided/NoCodeProvidedExceptionHandler.class</exclude>
+                        <exclude>com/bit/productservice/exceptions/productalreadydeleted/ProductAlreadyDeletedExceptionHandler.class</exclude>
+                        <exclude>com/bit/productservice/exceptions/productalreadyinstocks/ProductAlreadyInStocksExceptionHandler.class</exclude>
                         <exclude>com/bit/productservice/exceptions/negativefield/NegativeFieldExceptionHandler.class</exclude>
                         <exclude>com/bit/productservice/exceptions/nulloremptyfield/NullOrEmptyFieldExceptionHandler.class</exclude>
                         <exclude>com/bit/productservice/exceptions/productisnotfavorite/ProductIsNotFavoriteExceptionHandler.class</exclude>
                         <exclude>com/bit/productservice/exceptions/productnotfound/ProductNotFoundExceptionHandler.class</exclude>
                         <exclude>com/bit/productservice/exceptions/productwithsamebarcode/ProductWithSameBarcodeExceptionHandler.class</exclude>
+                        <exclude>com/bit/productservice/exceptions/productalreadyinfavorite/ProductAlreadyInFavoriteExceptionHandler.class</exclude>
                         <exclude>com/bit/productservice/exceptions/productwithsamename/ProductWithSameNameExceptionHandler.class</exclude>
                         <exclude>com/bit/productservice/exceptions/productwithsameproductcode/ProductWithSameProductCodeExceptionHandler.class</exclude>
                         <exclude>com/bit/productservice/exceptions/ErrorDetails.class</exclude>
