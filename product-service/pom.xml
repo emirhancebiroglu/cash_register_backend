@@ -8,6 +8,7 @@
         <version>0.0.1-SNAPSHOT</version>
         <relativePath/>
     </parent>
+
     <groupId>org</groupId>
     <artifactId>product-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
@@ -63,25 +64,37 @@
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-security</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.springframework.security</groupId>
-            <artifactId>spring-security-test</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>com.bit</groupId>
-            <artifactId>auth-filter</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
         <dependency>
             <groupId>com.cloudinary</groupId>
             <artifactId>cloudinary-http45</artifactId>
             <version>1.38.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+            <version>4.1.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-api</artifactId>
+            <version>0.11.5</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-impl</artifactId>
+            <version>0.11.5</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.jsonwebtoken</groupId>
+            <artifactId>jjwt-jackson</artifactId>
+            <version>0.11.5</version>
         </dependency>
 
     </dependencies>
@@ -99,7 +112,6 @@
                 <version>${jacoco.version}</version>
                 <configuration>
                     <excludes>
-                        <exclude>com/bit/productservice/config/SecurityConfig.class</exclude>
                         <exclude>com/bit/productservice/dto/addproduct/AddProductReq.class</exclude>
                         <exclude>com/bit/productservice/dto/updateproduct/UpdateProductReq.class</exclude>
                         <exclude>com/bit/productservice/dto/ProductDTO.class</exclude>

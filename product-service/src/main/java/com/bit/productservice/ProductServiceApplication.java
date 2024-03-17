@@ -4,7 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication(
-        scanBasePackages = {"com.bit.productservice", "com.bit.sharedfilter"}
+        scanBasePackages = {"com.bit.productservice"}
 )
 public class ProductServiceApplication {
 

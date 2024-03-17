@@ -9,7 +9,10 @@ import com.bit.productservice.exceptions.productnotfound.ProductNotFoundExceptio
 import com.bit.productservice.repository.FavoriteProductRepository;
 import com.bit.productservice.repository.ProductRepository;
 import com.bit.productservice.service.serviceimpl.FavoriteProductServiceImpl;
+import com.bit.productservice.utils.JwtUtil;
 import com.bit.productservice.validators.FavoriteProductValidator;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.Getter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -17,8 +20,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.security.authentication.TestingAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Collections;
 import java.util.List;
@@ -35,17 +36,29 @@ class FavoriteProductServiceTest {
     @Mock
     private FavoriteProductValidator favoriteProductValidator;
 
+    @Mock
+    @Getter
+    private HttpServletRequest request;
+
+    @Mock
+    private JwtUtil jwtUtil;
+
     @InjectMocks
     private FavoriteProductServiceImpl favoriteProductService;
+
+    private String token;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        SecurityContextHolder.getContext().setAuthentication(new TestingAuthenticationToken("user123", null));
+
+        token = "valid_jwt_token";
     }
 
     @Test
     void addProductToFavorites_ValidProduct_Success() {
+        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
+        when(jwtUtil.extractUsername(token)).thenReturn("testUser");
         String productId = "123";
         when(productRepository.existsById(productId)).thenReturn(true);
 
@@ -59,9 +72,9 @@ class FavoriteProductServiceTest {
         String productId = "456";
         when(productRepository.existsById(productId)).thenReturn(false);
 
-        doThrow(IllegalArgumentException.class)
+        doThrow(ProductNotFoundException.class)
                 .when(favoriteProductValidator)
-                .validateFavoriteProduct(any(), any(), any(), any());
+                .isProductExist(any(), any());
 
         assertThrows(IllegalArgumentException.class, () -> favoriteProductService.addProductToFavorites(productId));
 
@@ -70,22 +83,27 @@ class FavoriteProductServiceTest {
 
     @Test
     void removeProductFromFavorites_ValidProduct_Success() {
+        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
+        when(jwtUtil.extractUsername(token)).thenReturn("testUser");
         String productId = "123";
-        when(favoriteProductRepository.existsByUserCodeAndProductId("user123", productId)).thenReturn(true);
+
+        when(favoriteProductRepository.existsByUserCodeAndProductId("testUser", productId)).thenReturn(true);
 
         favoriteProductService.removeProductFromFavorites(productId);
 
-        verify(favoriteProductRepository, times(1)).deleteByUserCodeAndProductId("user123", productId);
+        verify(favoriteProductRepository, times(1)).deleteByUserCodeAndProductId("testUser", productId);
     }
 
     @Test
     void removeProductFromFavorites_ProductIstNotFavorite_ThrowsException() {
         String productId = "456";
-        String userCode = "user123";
+
+        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
+        when(jwtUtil.extractUsername(token)).thenReturn("testUser");
 
         doThrow(ProductIsNotFavoriteException.class)
                 .when(favoriteProductValidator)
-                .validateFavoriteProduct(productRepository, productId, userCode, favoriteProductRepository);
+                .isProductFavorite(productId, "testUser", favoriteProductRepository);
 
         assertThrows(ProductIsNotFavoriteException.class, () -> favoriteProductService.removeProductFromFavorites(productId));
 
@@ -95,11 +113,13 @@ class FavoriteProductServiceTest {
     @Test
     void removeProductFromFavorites_ProductIstNotFound_ThrowsException() {
         String productId = "456";
-        String userCode = "user123";
+
+        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
+        when(jwtUtil.extractUsername(token)).thenReturn("testUser");
 
         doThrow(ProductNotFoundException.class)
                 .when(favoriteProductValidator)
-                .validateFavoriteProduct(productRepository, productId, userCode, favoriteProductRepository);
+                .isProductExist(productRepository, productId);
 
         when(productRepository.getProductById(productId)).thenThrow(ProductNotFoundException.class);
 
@@ -110,11 +130,13 @@ class FavoriteProductServiceTest {
 
     @Test
     void listFavoriteProductsForCurrentUser_Success() {
-        String userCode = "user123";
         PageRequest pageRequest = PageRequest.of(0, 10);
 
+        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
+        when(jwtUtil.extractUsername(token)).thenReturn("testUser");
+
         Page<FavoriteProduct> favoriteProductPage = mock(Page.class);
-        when(favoriteProductRepository.findByUserCode(userCode, pageRequest)).thenReturn(favoriteProductPage);
+        when(favoriteProductRepository.findByUserCode("testUser", pageRequest)).thenReturn(favoriteProductPage);
 
         FavoriteProduct favoriteProduct = new FavoriteProduct();
         favoriteProduct.setProductId("456");

@@ -34,17 +34,6 @@
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-security</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>org.springframework.security</groupId>
-			<artifactId>spring-security-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-test</artifactId>
 			<scope>test</scope>
 		</dependency>
@@ -57,14 +46,19 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.bit</groupId>
-			<artifactId>auth-filter</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-mail</artifactId>
 		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-mail</artifactId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.springframework.cloud</groupId>
+			<artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+			<version>4.1.0</version>
 		</dependency>
 
 		<dependency>
@@ -128,7 +122,6 @@
 						<exclude>com/bit/usermanagementservice/config/EmailConfig.class</exclude>
 						<exclude>com/bit/usermanagementservice/config/KafkaProducerConfig.class</exclude>
 						<exclude>com/bit/usermanagementservice/config/PasswordEncoderConfig.class</exclude>
-						<exclude>com/bit/usermanagementservice/config/SecurityConfig.class</exclude>
 						<exclude>com/bit/usermanagementservice/entity/User.class</exclude>
 						<exclude>com/bit/usermanagementservice/entity/Role.class</exclude>
 						<exclude>com/bit/usermanagementservice/dto/kafka/UserCredentialsDTO.class</exclude>

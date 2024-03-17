@@ -4,7 +4,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication(
-		scanBasePackages = {"com.bit.usermanagementservice", "com.bit.sharedfilter"}
+		scanBasePackages = {"com.bit.usermanagementservice"}
 )
 public class UserManagementServiceApplication {
 

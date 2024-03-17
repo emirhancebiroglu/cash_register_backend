@@ -8,11 +8,13 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class FavoriteProductValidator {
-    public void validateFavoriteProduct(ProductRepository productRepository, String productId, String userCode, FavoriteProductRepository favoriteProductRepository){
+    public void isProductExist(ProductRepository productRepository, String productId){
         if (productRepository.getProductById(productId) == null){
             throw new ProductNotFoundException("Product not found.");
         }
+    }
 
+    public void isProductFavorite(String productId, String userCode, FavoriteProductRepository favoriteProductRepository){
         if (!favoriteProductRepository.existsByUserCodeAndProductId(userCode, productId)) {
             throw new ProductIsNotFavoriteException("Product is not favorite.");
         }
