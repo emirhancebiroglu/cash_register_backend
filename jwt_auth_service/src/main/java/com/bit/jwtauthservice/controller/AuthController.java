@@ -14,6 +14,7 @@
   import org.springframework.http.HttpStatus;
   import org.springframework.http.ResponseEntity;
   import org.springframework.web.bind.annotation.*;
+  import reactor.core.publisher.Mono;
 
   import java.io.IOException;
 
@@ -57,5 +58,10 @@
     public ResponseEntity<String> changePassword(@Valid @RequestBody ChangePasswordReq changePasswordReq){
       authService.changePassword(changePasswordReq);
       return ResponseEntity.status(HttpStatus.OK).body("Password changed successfully!");
+    }
+
+    @GetMapping("/validate-token")
+    public Mono<Boolean> validateToken(@RequestParam String jwt){
+      return authService.validateToken(jwt);
     }
   }

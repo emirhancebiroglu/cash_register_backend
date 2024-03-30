@@ -1,5 +1,6 @@
 package com.bit.gatewayservice.filter;
 
+import com.bit.gatewayservice.config.WebClientConfig;
 import com.bit.gatewayservice.exceptions.invalidrole.InvalidRoleException;
 import com.bit.gatewayservice.exceptions.invalidtoken.InvalidTokenException;
 import com.bit.gatewayservice.exceptions.missingauthorizationheader.MissingAuthorizationHeaderException;
@@ -12,57 +13,66 @@ import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
-import java.util.Objects;
 
 @EqualsAndHashCode(callSuper = true)
 @Component
 @Data
-public class AuthenticationFilter
-    extends AbstractGatewayFilterFactory<AuthenticationFilter.Config> {
+public class AuthenticationFilter extends AbstractGatewayFilterFactory<AuthenticationFilter.Config> {
 
   private final RouteValidator validator;
-  private JwtUtil jwtUtil;
+  private final JwtUtil jwtUtil;
+  private final WebClientConfig webClientConfig;
   private static final Logger logger = LoggerFactory.getLogger(AuthenticationFilter.class);
 
-  public AuthenticationFilter(RouteValidator validator, JwtUtil jwtUtil) {
+  public AuthenticationFilter(RouteValidator validator, JwtUtil jwtUtil, WebClientConfig webClientConfig) {
     super(Config.class);
     this.validator = validator;
     this.jwtUtil = jwtUtil;
+    this.webClientConfig = webClientConfig;
   }
 
   @Override
   public GatewayFilter apply(Config config) {
-    return ((exchange, chain) -> {
+    return (exchange, chain) -> {
       var request = exchange.getRequest();
-      HttpHeaders headers = exchange.getRequest().getHeaders();
 
-      if (validator.isSecured.test(exchange.getRequest())) {
-        if (!exchange.getRequest().getHeaders().containsKey(
-                HttpHeaders.AUTHORIZATION)) {
-          throw new MissingAuthorizationHeaderException("Missing authorization header");
+      if (validator.isSecured.test(request)) {
+        HttpHeaders headers = request.getHeaders();
+        String authHeader = headers.getFirst(HttpHeaders.AUTHORIZATION);
+
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+          throw new MissingAuthorizationHeaderException("Missing or invalid authorization header");
         }
 
-        String authHeader = Objects.requireNonNull(headers.get(HttpHeaders.AUTHORIZATION)).get(0);
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-          authHeader = authHeader.substring(7);
-        }
+        String jwtToken = authHeader.substring(7);
+
         try {
-          jwtUtil.validateToken(authHeader);
-
+          jwtUtil.validateToken(jwtToken);
         } catch (Exception e) {
-          logger.error("Error validating");
-          throw new InvalidTokenException("un-authorized access to application");
+          logger.error("Error validating token: {}", e.getMessage());
+          throw new InvalidTokenException("Unauthorized access to application");
         }
 
-        if (!jwtUtil.hasAnyRole(request, config.getRoles())){
-          throw new InvalidRoleException("You dont have necessary role");
-        }
+        return isTokenValid(jwtToken)
+                .flatMap(valid -> {
+                  if (Boolean.TRUE.equals(valid)) {
+                    if (!jwtUtil.hasAnyRole(request, config.getRoles())) {
+                      return Mono.error(new InvalidRoleException("Insufficient role permissions"));
+                    }
+                    return chain.filter(exchange);
+                  } else {
+                    return Mono.error(new InvalidTokenException("Invalid or expired token"));
+                  }
+                });
       }
+
       return chain.filter(exchange);
-    });
+    };
   }
+
   @Data
   public static class Config {
     private List<String> roles;
@@ -71,5 +81,15 @@ public class AuthenticationFilter
   @Override
   public List<String> shortcutFieldOrder() {
     return List.of("roles");
+  }
+
+  private Mono<Boolean> isTokenValid(String jwt) {
+    return webClientConfig.webClient().get()
+            .uri(uriBuilder -> uriBuilder
+                    .path("/api/auth/validate-token")
+                    .queryParam("jwt", jwt)
+                    .build())
+            .retrieve()
+            .bodyToMono(Boolean.class);
   }
 }

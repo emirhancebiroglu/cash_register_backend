@@ -7,6 +7,8 @@ import com.bit.jwtauthservice.dto.password.ForgotPasswordReq;
 import com.bit.jwtauthservice.dto.password.ResetPasswordReq;
 import com.bit.jwtauthservice.dto.usercode.ForgotUserCodeReq;
 import com.bit.jwtauthservice.service.AuthService;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -14,6 +16,9 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import reactor.core.publisher.Mono;
+
+import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
@@ -86,5 +91,30 @@ class AuthControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Password changed successfully!", response.getBody());
         verify(authService, times(1)).changePassword(changePasswordReq);
+    }
+
+    @Test
+    void validateToken() {
+        String jwt = "testJwtToken";
+
+        boolean expectedValidity = true;
+
+        when(authService.validateToken(jwt)).thenReturn(Mono.just(expectedValidity));
+
+        Mono<Boolean> actualValidity = authController.validateToken(jwt);
+
+        assertEquals(expectedValidity, actualValidity.block());
+
+        verify(authService, times(1)).validateToken(jwt);
+    }
+
+    @Test
+    void refreshToken() throws IOException {
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        HttpServletResponse response = mock(HttpServletResponse.class);
+
+        authController.refreshToken(request, response);
+
+        verify(authService, times(1)).refreshToken(request, response);
     }
 }

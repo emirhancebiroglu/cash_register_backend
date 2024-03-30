@@ -8,15 +8,19 @@ import com.bit.jwtauthservice.dto.password.ForgotPasswordReq;
 import com.bit.jwtauthservice.dto.password.ResetPasswordReq;
 import com.bit.jwtauthservice.dto.usercode.ForgotUserCodeReq;
 import com.bit.jwtauthservice.entity.ResetPasswordToken;
+import com.bit.jwtauthservice.entity.Token;
 import com.bit.jwtauthservice.entity.User;
 import com.bit.jwtauthservice.exceptions.badcredentials.BadCredentialsException;
 import com.bit.jwtauthservice.exceptions.confirmpassword.ConfirmPasswordException;
 import com.bit.jwtauthservice.exceptions.incorrectoldpassword.IncorrectOldPasswordException;
+import com.bit.jwtauthservice.exceptions.invalidrefreshtoken.InvalidRefreshTokenException;
 import com.bit.jwtauthservice.exceptions.passwordmismatch.PasswordMismatchException;
 import com.bit.jwtauthservice.exceptions.resettokenexpiration.InvalidResetTokenException;
 import com.bit.jwtauthservice.exceptions.samepassword.SamePasswordException;
+import com.bit.jwtauthservice.exceptions.tokennotfound.TokenNotFoundException;
 import com.bit.jwtauthservice.exceptions.usernotfound.UserNotFoundException;
 import com.bit.jwtauthservice.repository.ResetPasswordTokenRepository;
+import com.bit.jwtauthservice.repository.TokenRepository;
 import com.bit.jwtauthservice.repository.UserRepository;
 import com.bit.jwtauthservice.service.AuthService;
 import com.bit.jwtauthservice.service.EmailService;
@@ -29,7 +33,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -44,6 +53,8 @@ public class AuthServiceImpl implements AuthService {
     private final EmailService emailService;
     private final PasswordEncoderConfig passwordEncoderConfig;
     private final HttpServletRequest request;
+    private final TokenRepository tokenRepository;
+    private final LogoutHandler logoutHandler;
     private static final String USER_NOT_FOUND = "User not found";
 
     @Value("${password.reset.link.body}")
@@ -68,6 +79,9 @@ public class AuthServiceImpl implements AuthService {
 
         var jwtToken = jwtService.generateToken(user);
         var refreshToken = jwtService.generateRefreshToken(user);
+
+        revokeAllUserTokens(user);
+        saveUserToken(user, jwtToken);
 
         logger.info("User '{}' authenticated successfully.", loginReq.getUserCode());
 
@@ -164,33 +178,76 @@ public class AuthServiceImpl implements AuthService {
         user.setPassword(passwordEncoderConfig.passwordEncoder().encode(changePasswordReq.getNewPassword()));
         userRepository.save(user);
 
+        Authentication authentication  = SecurityContextHolder.getContext().getAuthentication();
+        logoutHandler.logout(request, null, authentication);
+
         logger.info("Password changed successfully");
     }
 
     @Override
     public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        logger.info("Initiating token refresh process.");
+
         final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-        final String refreshToken;
-        final String userCode;
-        if (authHeader == null ||!authHeader.startsWith("Bearer ")) {
-            return;
-        }
-        refreshToken = authHeader.substring(7);
-        userCode = jwtService.extractUsername(refreshToken);
+        final String refreshToken = authHeader.substring(7);
+        final String userCode = jwtService.extractUsername(refreshToken);
+
         if (userCode != null) {
-            var user = this.userRepository.findByUserCode(userCode)
+            var user = userRepository.findByUserCode(userCode)
                     .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND));
 
             if (jwtService.isTokenValid(refreshToken, user)) {
                 var accessToken = jwtService.generateToken(user);
-//                revokeAllUserTokens(user);
-//                saveUserToken(user, accessToken);
+                revokeAllUserTokens(user);
+                saveUserToken(user, accessToken);
                 var authResponse = LoginRes.builder()
                         .accessToken(accessToken)
                         .refreshToken(refreshToken)
                         .build();
                 new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
+
+                logger.info("Token refresh process completed successfully.");
+            }
+            else{
+                logger.error("Invalid refresh token");
+                throw new InvalidRefreshTokenException("Invalid refresh token");
             }
         }
+    }
+
+    @Override
+    public Mono<Boolean> validateToken(String jwt) {
+        logger.info("Validating token: {}", jwt);
+
+        return Mono.fromCallable(() -> tokenRepository.findByJwtToken(jwt)
+                        .orElseThrow(() -> new TokenNotFoundException("Token not found")))
+                .subscribeOn(Schedulers.boundedElastic())
+                .map(token -> !token.isExpired() && !token.isRevoked())
+                .doOnSuccess(validity -> logger.info("Token validation result: {}", validity));
+    }
+
+    private void saveUserToken(User user, String jwtToken) {
+        var token = Token.builder()
+                .user(user)
+                .jwtToken(jwtToken)
+                .revoked(false)
+                .expired(false).build();
+
+        tokenRepository.save(token);
+    }
+
+    private void revokeAllUserTokens(User user){
+        var validUserTokens = tokenRepository.findAllValidTokensByUser(user.getId());
+
+        if (validUserTokens.isEmpty()) {
+            return;
+        }
+
+        validUserTokens.forEach(t -> {
+            t.setExpired(true);
+            t.setRevoked(true);
+        });
+
+        tokenRepository.saveAll(validUserTokens);
     }
 }
