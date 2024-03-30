@@ -10,9 +10,11 @@ import lombok.EqualsAndHashCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
+import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
+import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
@@ -42,31 +44,12 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
       if (validator.isSecured.test(request)) {
         HttpHeaders headers = request.getHeaders();
         String authHeader = headers.getFirst(HttpHeaders.AUTHORIZATION);
-
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-          throw new MissingAuthorizationHeaderException("Missing or invalid authorization header");
-        }
+        validateAuthorizationHeader(authHeader);
 
         String jwtToken = authHeader.substring(7);
+        validateToken(jwtToken);
 
-        try {
-          jwtUtil.validateToken(jwtToken);
-        } catch (Exception e) {
-          logger.error("Error validating token: {}", e.getMessage());
-          throw new InvalidTokenException("Unauthorized access to application");
-        }
-
-        return isTokenValid(jwtToken)
-                .flatMap(valid -> {
-                  if (Boolean.TRUE.equals(valid)) {
-                    if (!jwtUtil.hasAnyRole(request, config.getRoles())) {
-                      return Mono.error(new InvalidRoleException("Insufficient role permissions"));
-                    }
-                    return chain.filter(exchange);
-                  } else {
-                    return Mono.error(new InvalidTokenException("Invalid or expired token"));
-                  }
-                });
+        return handleValidToken(jwtToken, exchange, config, chain);
       }
 
       return chain.filter(exchange);
@@ -91,5 +74,34 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
                     .build())
             .retrieve()
             .bodyToMono(Boolean.class);
+  }
+
+  private void validateAuthorizationHeader(String authHeader) {
+    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+      throw new MissingAuthorizationHeaderException("Missing or invalid authorization header");
+    }
+  }
+
+  private void validateToken(String jwtToken) {
+    try {
+      jwtUtil.validateToken(jwtToken);
+    } catch (Exception e) {
+      logger.error("Error validating token: {}", e.getMessage());
+      throw new InvalidTokenException("Unauthorized access to application");
+    }
+  }
+
+  private Mono<Void> handleValidToken(String jwtToken, ServerWebExchange exchange, Config config, GatewayFilterChain chain) {
+    return isTokenValid(jwtToken)
+            .flatMap(valid -> {
+              if (Boolean.TRUE.equals(valid)) {
+                if (!jwtUtil.hasAnyRole(exchange.getRequest(), config.getRoles())) {
+                  return Mono.error(new InvalidRoleException("Insufficient role permissions"));
+                }
+                return chain.filter(exchange.mutate().request(exchange.getRequest().mutate().header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtToken).build()).build());
+              } else {
+                return Mono.error(new InvalidTokenException("Invalid or expired token"));
+              }
+            });
   }
 }
