@@ -1,6 +1,7 @@
 package com.bit.productservice.service.serviceimpl;
 
 import com.bit.productservice.dto.ProductDTO;
+import com.bit.productservice.dto.ProductInfo;
 import com.bit.productservice.dto.addproduct.AddProductReq;
 import com.bit.productservice.dto.updateproduct.UpdateProductReq;
 import com.bit.productservice.entity.Image;
@@ -24,10 +25,13 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -252,6 +256,63 @@ public class ProductServiceImpl implements ProductService {
        else{
            throw new ProductAlreadyInStocksException("Product already in stocks");
        }
+    }
+
+    @Override
+    public Mono<ProductInfo> checkProduct(String code) {
+        logger.info("Checking product...");
+
+        return Mono.fromCallable(() -> {
+            Product product = productRepository.findByBarcode(code);
+            if (product == null) {
+                product = productRepository.findByProductCode(code);
+            }
+
+            boolean exists = product != null;
+            double price = exists ? product.getPrice() : 0.0;
+            int stockAmount = exists ? product.getStockAmount() : 0;
+            String name = exists ? product.getName() : "";
+
+            logger.info("Product checked successfully.");
+
+            return new ProductInfo(exists, name, price, stockAmount);
+        }).subscribeOn(Schedulers.boundedElastic());
+    }
+
+    @Override
+    public void updateStocks(Map<String, Integer> productsIdWithQuantity, boolean shouldDecrease) {
+        logger.info("Updating stocks...");
+
+        for (Map.Entry<String, Integer> entry : productsIdWithQuantity.entrySet()) {
+            String code = entry.getKey();
+            Integer quantity = entry.getValue();
+
+            Product product = null;
+
+            if (code != null) {
+                product = productRepository.findByProductCode(code);
+            }
+
+            if (product == null) {
+                product = productRepository.findByBarcode(code);
+            }
+
+            if (product == null) {
+                throw new ProductNotFoundException("Product not found");
+            }
+
+            int newStock;
+            if (shouldDecrease) {
+                newStock = product.getStockAmount() - quantity;
+            } else {
+                newStock = product.getStockAmount() + quantity;
+            }
+            product.setStockAmount(newStock);
+
+            productRepository.save(product);
+
+            logger.info("Product stock updated successfully");
+        }
     }
 
     private ProductDTO convertToDTO(Product product) {

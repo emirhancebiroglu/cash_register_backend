@@ -29,6 +29,15 @@ spring:
               args:
                 roles: [ROLE_ADMIN, ROLE_CASHIER, ROLE_STORE_MANAGER]
 
+        - id: sales-service
+          uri: lb://SALES-SERVICE
+          predicates:
+            - Path=/api/cashier/**
+          filters:
+            - name: AuthenticationFilter
+              args:
+                roles: [ROLE_CASHIER]
+
   application:
     name: GATEWAY-SERVICE
 

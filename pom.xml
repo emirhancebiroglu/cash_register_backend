@@ -22,6 +22,7 @@
         <module>jwt_auth_service</module>
         <module>product-service</module>
         <module>api-gateway</module>
+        <module>sales-service</module>
     </modules>
 
     <properties>
