@@ -1,6 +1,7 @@
 package bit.salesservice.service.serviceimpl;
 
 import bit.salesservice.dto.CampaignDTO;
+import bit.salesservice.dto.CampaignReq;
 import bit.salesservice.entity.Campaign;
 import bit.salesservice.entity.DiscountType;
 import bit.salesservice.exceptions.activecampaign.ActiveCampaignException;
@@ -23,6 +24,8 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -153,6 +156,34 @@ public class CampaignServiceImpl implements CampaignService {
         campaignRepository.save(campaign);
 
         logger.info("Campaign reactivated successfully");
+    }
+
+    @Override
+    public List<CampaignReq> getAllCampaigns() {
+        List<Campaign> campaignList = campaignRepository.findAll();
+        List<CampaignReq> campaignReqList = new ArrayList<>();
+
+        for (Campaign campaign : campaignList) {
+            CampaignReq campaignReq = mapToCampaignReq(campaign);
+            campaignReqList.add(campaignReq);
+        }
+
+        return campaignReqList;
+    }
+
+    private CampaignReq mapToCampaignReq(Campaign campaign) {
+        CampaignReq campaignReq = new CampaignReq();
+
+        campaignReq.setName(campaign.getName());
+        campaignReq.setCodes(campaign.getCodes());
+        campaignReq.setDurationDays(campaign.getDurationDays());
+        campaignReq.setDiscountType(campaign.getDiscountType().toString());
+        campaignReq.setDiscountAmount(campaign.getDiscountAmount());
+        campaignReq.setInactive(campaign.isInactive());
+        campaignReq.setStartDate(campaign.getStartDate());
+        campaign.setEndDate(campaign.getEndDate());
+
+        return campaignReq;
     }
 
     private static DiscountType getDiscountType(CampaignDTO campaignDTO) {

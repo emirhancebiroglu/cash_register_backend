@@ -1,11 +1,14 @@
 package bit.salesservice.controller;
 
 import bit.salesservice.dto.CampaignDTO;
+import bit.salesservice.dto.CampaignReq;
 import bit.salesservice.service.CampaignService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/cashier")
@@ -35,5 +38,11 @@ public class CampaignController {
     public ResponseEntity<String> reactivateCampaign(@PathVariable Long campaignId, @PathVariable Integer durationDays) {
         campaignService.reactivateCampaign(campaignId, durationDays);
         return ResponseEntity.status(HttpStatus.OK).body("Campaign reactivated successfully");
+    }
+
+
+    @GetMapping("/campaign/list")
+    public ResponseEntity<List<CampaignReq>> getAllCampaigns() {
+        return ResponseEntity.status(HttpStatus.OK).body(campaignService.getAllCampaigns());
     }
 }
