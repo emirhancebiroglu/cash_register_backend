@@ -1,4 +1,4 @@
-package bit.salesservice.exceptions.nullcampaignname;
+package bit.salesservice.exceptions.invalidchange;
 
 import bit.salesservice.exceptions.ErrorDetails;
 import org.springframework.http.HttpStatus;
@@ -9,9 +9,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import java.time.LocalDateTime;
 
 @ControllerAdvice
-public class NullDiscountAmountExceptionHandler {
-    @ExceptionHandler(NullDiscountAmountException.class)
-    public ResponseEntity<ErrorDetails> handleNullDiscountAmountExceptionHandler(NullDiscountAmountException ex){
+public class InvalidChangeExceptionHandler {
+    @ExceptionHandler(InvalidChangeException.class)
+    public ResponseEntity<ErrorDetails> handleInvalidChangeExceptionHandler(InvalidChangeException ex){
         ErrorDetails errorDetails = new ErrorDetails(
                 HttpStatus.BAD_REQUEST.value(),
                 LocalDateTime.now(),

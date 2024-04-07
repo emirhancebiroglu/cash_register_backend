@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -13,6 +14,7 @@ import java.util.List;
 @Data
 @RequiredArgsConstructor
 @AllArgsConstructor
+@ToString(exclude = "products")
 public class Checkout {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -30,6 +32,9 @@ public class Checkout {
 
     @Column(name = "money_taken")
     private Double moneyTaken;
+
+    @Column(name = "returned_money")
+    private Double returnedMoney;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_method")

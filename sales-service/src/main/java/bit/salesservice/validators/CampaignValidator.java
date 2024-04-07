@@ -1,14 +1,14 @@
 package bit.salesservice.validators;
 
-import bit.salesservice.dto.CampaignDTO;
+import bit.salesservice.dto.AddAndUpdateCampaignReq;
 import bit.salesservice.entity.Campaign;
 import bit.salesservice.exceptions.invaliddiscountamount.InvalidDiscountAmountException;
 import bit.salesservice.exceptions.invaliddiscounttype.InvalidDiscountTypeException;
 import bit.salesservice.exceptions.invaliddurationdays.InvalidDurationDaysException;
 import bit.salesservice.exceptions.invalidquantity.InvalidQuantityException;
 import bit.salesservice.exceptions.multiplecampaign.MultipleCampaignException;
-import bit.salesservice.exceptions.nullcampaignname.NullDiscountAmountException;
-import bit.salesservice.exceptions.nulldiscountamount.NullCampaignNameException;
+import bit.salesservice.exceptions.nullcampaignname.NullCampaignNameException;
+import bit.salesservice.exceptions.nulldiscountamount.NullDiscountAmountException;
 import bit.salesservice.repository.CampaignRepository;
 import org.springframework.stereotype.Component;
 
@@ -16,19 +16,19 @@ import java.util.List;
 
 @Component
 public class CampaignValidator {
-    public void validateCampaignDTO(CampaignDTO campaignDTO, CampaignRepository campaignRepository) {
-        checkIfDiscountAmountNull(campaignDTO.getDiscountAmount());
-        checkIfDurationDaysNull(campaignDTO.getDurationDays());
-        validateProductCodes(campaignDTO.getCodes(), campaignRepository);
-        validateDurationDays(campaignDTO);
-        validateCampaignName(campaignDTO.getName());
-        validateDiscountAmount(campaignDTO.getDiscountAmount());
-        validateDiscountType(campaignDTO.getDiscountType());
-        validateNeededQuantity(campaignDTO.getNeededQuantity());
+    public void validateCampaignDTO(AddAndUpdateCampaignReq addAndUpdateCampaignReq, CampaignRepository campaignRepository) {
+        checkIfDiscountAmountNull(addAndUpdateCampaignReq.getDiscountAmount());
+        checkIfDurationDaysNull(addAndUpdateCampaignReq.getDurationDays());
+        validateProductCodes(addAndUpdateCampaignReq.getCodes(), campaignRepository);
+        validateDurationDays(addAndUpdateCampaignReq);
+        validateCampaignName(addAndUpdateCampaignReq.getName());
+        validateDiscountAmount(addAndUpdateCampaignReq.getDiscountAmount());
+        validateDiscountType(addAndUpdateCampaignReq.getDiscountType());
+        validateNeededQuantity(addAndUpdateCampaignReq.getNeededQuantity());
     }
 
-    public void validateDurationDays(CampaignDTO campaignDTO) {
-        Integer durationDays = campaignDTO.getDurationDays();
+    public void validateDurationDays(AddAndUpdateCampaignReq addAndUpdateCampaignReq) {
+        Integer durationDays = addAndUpdateCampaignReq.getDurationDays();
 
         if (durationDays <= 0) {
             throw new InvalidDurationDaysException("Duration of the campaign must be a positive integer");
@@ -68,13 +68,13 @@ public class CampaignValidator {
 
     private void checkIfDiscountAmountNull(Double amount){
         if (amount == null) {
-            throw new NullDiscountAmountException("No discount amount provided");
+            throw new NullCampaignNameException("No discount amount provided");
         }
     }
 
     private void validateCampaignName(String name) {
         if (name.isEmpty()) {
-            throw new NullCampaignNameException("No campaign name provided");
+            throw new NullDiscountAmountException("No campaign name provided");
         }
     }
 

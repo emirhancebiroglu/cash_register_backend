@@ -1,7 +1,7 @@
 package bit.salesservice.controller;
 
-import bit.salesservice.dto.CampaignDTO;
-import bit.salesservice.dto.CampaignReq;
+import bit.salesservice.dto.AddAndUpdateCampaignReq;
+import bit.salesservice.dto.ListCampaignsReq;
 import bit.salesservice.service.CampaignService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -17,14 +17,14 @@ public class CampaignController {
     private final CampaignService campaignService;
 
     @PostMapping("/campaign/add")
-    public ResponseEntity<String> addCampaign(@RequestBody CampaignDTO campaignDTO) {
-        campaignService.addCampaign(campaignDTO);
+    public ResponseEntity<String> addCampaign(@RequestBody AddAndUpdateCampaignReq addAndUpdateCampaignReq) {
+        campaignService.addCampaign(addAndUpdateCampaignReq);
         return ResponseEntity.status(HttpStatus.CREATED).body("Campaign added successfully");
     }
 
     @PutMapping("/campaign/update/{campaignId}")
-    public ResponseEntity<String> updateCampaign(@RequestBody CampaignDTO campaignDTO, @PathVariable Long campaignId) {
-        campaignService.updateCampaign(campaignDTO, campaignId);
+    public ResponseEntity<String> updateCampaign(@RequestBody AddAndUpdateCampaignReq addAndUpdateCampaignReq, @PathVariable Long campaignId) {
+        campaignService.updateCampaign(addAndUpdateCampaignReq, campaignId);
         return ResponseEntity.status(HttpStatus.OK).body("Campaign updated successfully");
     }
 
@@ -42,7 +42,7 @@ public class CampaignController {
 
 
     @GetMapping("/campaign/list")
-    public ResponseEntity<List<CampaignReq>> getAllCampaigns() {
+    public ResponseEntity<List<ListCampaignsReq>> getAllCampaigns() {
         return ResponseEntity.status(HttpStatus.OK).body(campaignService.getAllCampaigns());
     }
 }

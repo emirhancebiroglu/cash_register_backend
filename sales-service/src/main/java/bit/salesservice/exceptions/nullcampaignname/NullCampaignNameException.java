@@ -1,4 +1,4 @@
-package bit.salesservice.exceptions.nulldiscountamount;
+package bit.salesservice.exceptions.nullcampaignname;
 
 public class NullCampaignNameException extends RuntimeException {
     public NullCampaignNameException(String message) {

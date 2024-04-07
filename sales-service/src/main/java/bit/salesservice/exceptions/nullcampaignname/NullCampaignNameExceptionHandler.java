@@ -1,4 +1,4 @@
-package bit.salesservice.exceptions.nulldiscountamount;
+package bit.salesservice.exceptions.nullcampaignname;
 
 import bit.salesservice.exceptions.ErrorDetails;
 import org.springframework.http.HttpStatus;

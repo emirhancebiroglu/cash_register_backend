@@ -5,7 +5,7 @@ import lombok.Data;
 import java.util.List;
 
 @Data
-public class CampaignDTO {
+public class AddAndUpdateCampaignReq {
     private String name;
     private Integer durationDays;
     private List<String> codes;

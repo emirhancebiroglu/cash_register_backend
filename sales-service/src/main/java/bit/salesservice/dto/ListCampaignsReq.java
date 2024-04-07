@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
-public class CampaignReq {
+public class ListCampaignsReq {
     private String name;
     private boolean isInactive;
     private LocalDateTime startDate;

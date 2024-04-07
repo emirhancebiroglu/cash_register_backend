@@ -1,18 +1,18 @@
 package bit.salesservice.service;
 
-import bit.salesservice.dto.CampaignDTO;
-import bit.salesservice.dto.CampaignReq;
+import bit.salesservice.dto.AddAndUpdateCampaignReq;
+import bit.salesservice.dto.ListCampaignsReq;
 
 import java.util.List;
 
 public interface CampaignService {
-    void addCampaign(CampaignDTO campaignDTO);
+    void addCampaign(AddAndUpdateCampaignReq addAndUpdateCampaignReq);
 
-    void updateCampaign(CampaignDTO campaignDTO, Long campaignId);
+    void updateCampaign(AddAndUpdateCampaignReq addAndUpdateCampaignReq, Long campaignId);
 
     void inactivateCampaign(Long campaignId);
 
     void reactivateCampaign(Long campaignId, Integer durationDays);
 
-    List<CampaignReq> getAllCampaigns();
+    List<ListCampaignsReq> getAllCampaigns();
 }

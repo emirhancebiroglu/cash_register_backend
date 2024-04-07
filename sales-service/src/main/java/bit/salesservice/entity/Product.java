@@ -26,6 +26,9 @@ public class Product {
     @Column(name = "name", nullable = false)
     private String name;
 
+    @Column(name = "applied_campaign")
+    private String appliedCampaign;
+
     @Column(name = "quantity", nullable = false, columnDefinition = "integer default 1")
     private Integer quantity;
 

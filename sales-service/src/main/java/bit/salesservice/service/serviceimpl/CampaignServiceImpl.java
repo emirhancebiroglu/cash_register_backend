@@ -1,7 +1,7 @@
 package bit.salesservice.service.serviceimpl;
 
-import bit.salesservice.dto.CampaignDTO;
-import bit.salesservice.dto.CampaignReq;
+import bit.salesservice.dto.AddAndUpdateCampaignReq;
+import bit.salesservice.dto.ListCampaignsReq;
 import bit.salesservice.entity.Campaign;
 import bit.salesservice.entity.DiscountType;
 import bit.salesservice.exceptions.activecampaign.ActiveCampaignException;
@@ -40,23 +40,23 @@ public class CampaignServiceImpl implements CampaignService {
     private static final String NOT_FOUND = "Campaign not found";
 
     @Override
-    public void addCampaign(CampaignDTO campaignDTO) {
+    public void addCampaign(AddAndUpdateCampaignReq addAndUpdateCampaignReq) {
         logger.info("Adding campaign...");
 
-        if (campaignRepository.findByName(campaignDTO.getName()) != null){
-            throw new CampaignAlreadyExistsException("Campaign wit the name " + campaignDTO.getName() + " already exists");
+        if (campaignRepository.findByName(addAndUpdateCampaignReq.getName()) != null){
+            throw new CampaignAlreadyExistsException("Campaign wit the name " + addAndUpdateCampaignReq.getName() + " already exists");
         }
 
-        checkIfProductsAvailable(campaignDTO)
+        checkIfProductsAvailable(addAndUpdateCampaignReq)
                 .doOnError(error -> {
                     logger.error("Error occurred while checking products availability: {}", error.getMessage());
                     throw new ProductNotFoundException(error.getMessage());
                 })
                 .block();
 
-        campaignValidator.validateCampaignDTO(campaignDTO, campaignRepository);
+        campaignValidator.validateCampaignDTO(addAndUpdateCampaignReq, campaignRepository);
 
-        Campaign campaign = mapToCampaign(campaignDTO);
+        Campaign campaign = mapToCampaign(addAndUpdateCampaignReq);
 
         campaignRepository.save(campaign);
 
@@ -64,7 +64,7 @@ public class CampaignServiceImpl implements CampaignService {
     }
 
     @Override
-    public void updateCampaign(CampaignDTO campaignDTO, Long campaignId) {
+    public void updateCampaign(AddAndUpdateCampaignReq addAndUpdateCampaignReq, Long campaignId) {
         logger.info("Updating campaign...");
 
         Campaign existingCampaign = campaignRepository.findById(campaignId)
@@ -74,42 +74,42 @@ public class CampaignServiceImpl implements CampaignService {
             throw new InactiveCampaignException("Campaign is inactivated or has reached its end date, please reactivate the campaign to update it.");
         }
 
-        if (!campaignDTO.getCodes().isEmpty()){
-            checkIfProductsAvailable(campaignDTO)
+        if (!addAndUpdateCampaignReq.getCodes().isEmpty()){
+            checkIfProductsAvailable(addAndUpdateCampaignReq)
                     .doOnError(error -> {
                         logger.error("Error occurred while checking products availability: {}", error.getMessage());
                         throw new ProductNotFoundException(error.getMessage());
                     })
                     .block();
 
-            campaignValidator.validateProductCodes(campaignDTO.getCodes(), campaignRepository);
-            existingCampaign.setCodes(campaignDTO.getCodes());
+            campaignValidator.validateProductCodes(addAndUpdateCampaignReq.getCodes(), campaignRepository);
+            existingCampaign.setCodes(addAndUpdateCampaignReq.getCodes());
         }
 
-        if (!Objects.equals(existingCampaign.getName(), campaignDTO.getName()) && !campaignDTO.getName().isEmpty()){
-            existingCampaign.setName(campaignDTO.getName());
+        if (!Objects.equals(existingCampaign.getName(), addAndUpdateCampaignReq.getName()) && !addAndUpdateCampaignReq.getName().isEmpty()){
+            existingCampaign.setName(addAndUpdateCampaignReq.getName());
         }
 
-        if (campaignDTO.getDurationDays() != null && (!Objects.equals(existingCampaign.getEndDate(), existingCampaign.getStartDate().plusDays(campaignDTO.getDurationDays())))){
-                existingCampaign.setDurationDays(campaignDTO.getDurationDays());
-                existingCampaign.setEndDate(existingCampaign.getStartDate().plusDays(campaignDTO.getDurationDays()));
+        if (addAndUpdateCampaignReq.getDurationDays() != null && (!Objects.equals(existingCampaign.getEndDate(), existingCampaign.getStartDate().plusDays(addAndUpdateCampaignReq.getDurationDays())))){
+                existingCampaign.setDurationDays(addAndUpdateCampaignReq.getDurationDays());
+                existingCampaign.setEndDate(existingCampaign.getStartDate().plusDays(addAndUpdateCampaignReq.getDurationDays()));
         }
 
-        if (!campaignDTO.getDiscountType().isEmpty()){
-            DiscountType discountType = getDiscountType(campaignDTO);
+        if (!addAndUpdateCampaignReq.getDiscountType().isEmpty()){
+            DiscountType discountType = getDiscountType(addAndUpdateCampaignReq);
 
             if (!Objects.equals(existingCampaign.getDiscountType(), discountType)){
                 existingCampaign.setDiscountType(discountType);
             }
         }
 
-        if (campaignDTO.getDiscountAmount() != null && !Objects.equals(existingCampaign.getDiscountAmount(), campaignDTO.getDiscountAmount())){
-            campaignValidator.validateDiscountAmount(campaignDTO.getDiscountAmount());
-            existingCampaign.setDiscountAmount(campaignDTO.getDiscountAmount());
+        if (addAndUpdateCampaignReq.getDiscountAmount() != null && !Objects.equals(existingCampaign.getDiscountAmount(), addAndUpdateCampaignReq.getDiscountAmount())){
+            campaignValidator.validateDiscountAmount(addAndUpdateCampaignReq.getDiscountAmount());
+            existingCampaign.setDiscountAmount(addAndUpdateCampaignReq.getDiscountAmount());
         }
 
-        if (campaignDTO.getNeededQuantity() != null && !Objects.equals(existingCampaign.getNeededQuantity(), campaignDTO.getNeededQuantity())){
-            existingCampaign.setNeededQuantity(campaignDTO.getNeededQuantity());
+        if (addAndUpdateCampaignReq.getNeededQuantity() != null && !Objects.equals(existingCampaign.getNeededQuantity(), addAndUpdateCampaignReq.getNeededQuantity())){
+            existingCampaign.setNeededQuantity(addAndUpdateCampaignReq.getNeededQuantity());
         }
 
         existingCampaign.setUpdatedDate(LocalDateTime.now());
@@ -159,38 +159,38 @@ public class CampaignServiceImpl implements CampaignService {
     }
 
     @Override
-    public List<CampaignReq> getAllCampaigns() {
+    public List<ListCampaignsReq> getAllCampaigns() {
         List<Campaign> campaignList = campaignRepository.findAll();
-        List<CampaignReq> campaignReqList = new ArrayList<>();
+        List<ListCampaignsReq> listCampaignsReqList = new ArrayList<>();
 
         for (Campaign campaign : campaignList) {
-            CampaignReq campaignReq = mapToCampaignReq(campaign);
-            campaignReqList.add(campaignReq);
+            ListCampaignsReq listCampaignsReq = mapToCampaignReq(campaign);
+            listCampaignsReqList.add(listCampaignsReq);
         }
 
-        return campaignReqList;
+        return listCampaignsReqList;
     }
 
-    private CampaignReq mapToCampaignReq(Campaign campaign) {
-        CampaignReq campaignReq = new CampaignReq();
+    private ListCampaignsReq mapToCampaignReq(Campaign campaign) {
+        ListCampaignsReq listCampaignsReq = new ListCampaignsReq();
 
-        campaignReq.setName(campaign.getName());
-        campaignReq.setCodes(campaign.getCodes());
-        campaignReq.setDurationDays(campaign.getDurationDays());
-        campaignReq.setDiscountType(campaign.getDiscountType().toString());
-        campaignReq.setDiscountAmount(campaign.getDiscountAmount());
-        campaignReq.setInactive(campaign.isInactive());
-        campaignReq.setStartDate(campaign.getStartDate());
+        listCampaignsReq.setName(campaign.getName());
+        listCampaignsReq.setCodes(campaign.getCodes());
+        listCampaignsReq.setDurationDays(campaign.getDurationDays());
+        listCampaignsReq.setDiscountType(campaign.getDiscountType().toString());
+        listCampaignsReq.setDiscountAmount(campaign.getDiscountAmount());
+        listCampaignsReq.setInactive(campaign.isInactive());
+        listCampaignsReq.setStartDate(campaign.getStartDate());
         campaign.setEndDate(campaign.getEndDate());
 
-        return campaignReq;
+        return listCampaignsReq;
     }
 
-    private static DiscountType getDiscountType(CampaignDTO campaignDTO) {
+    private static DiscountType getDiscountType(AddAndUpdateCampaignReq addAndUpdateCampaignReq) {
         DiscountType discountType;
 
         try {
-            discountType = DiscountType.valueOf(campaignDTO.getDiscountType());
+            discountType = DiscountType.valueOf(addAndUpdateCampaignReq.getDiscountType());
         }
         catch (IllegalArgumentException e){
             throw new InvalidDiscountTypeException("Invalid discount type");
@@ -198,8 +198,8 @@ public class CampaignServiceImpl implements CampaignService {
         return discountType;
     }
 
-    private Mono<Void> checkIfProductsAvailable(CampaignDTO campaignDTO) {
-        return Flux.fromIterable(campaignDTO.getCodes())
+    private Mono<Void> checkIfProductsAvailable(AddAndUpdateCampaignReq addAndUpdateCampaignReq) {
+        return Flux.fromIterable(addAndUpdateCampaignReq.getCodes())
                 .flatMap(code -> {
                     final String productCode = code;
                     return Mono.just(info.getProductInfo(productCode, jwtToken))
@@ -213,26 +213,26 @@ public class CampaignServiceImpl implements CampaignService {
                 .then();
     }
 
-    private Campaign mapToCampaign(CampaignDTO campaignDTO) {
-        DiscountType discountType = getDiscountType(campaignDTO);
-        Integer durationDays = campaignDTO.getDurationDays();
+    private Campaign mapToCampaign(AddAndUpdateCampaignReq addAndUpdateCampaignReq) {
+        DiscountType discountType = getDiscountType(addAndUpdateCampaignReq);
+        Integer durationDays = addAndUpdateCampaignReq.getDurationDays();
 
         Campaign campaign = new Campaign();
 
-        campaign.setCodes(campaignDTO.getCodes());
-        campaign.setName(campaignDTO.getName());
+        campaign.setCodes(addAndUpdateCampaignReq.getCodes());
+        campaign.setName(addAndUpdateCampaignReq.getName());
         campaign.setStartDate(LocalDateTime.now());
         campaign.setUpdatedDate(LocalDateTime.now());
         campaign.setDurationDays(durationDays);
         campaign.setEndDate(LocalDateTime.now().plusDays(durationDays));
         campaign.setDiscountType(discountType);
-        campaign.setDiscountAmount(campaignDTO.getDiscountAmount());
+        campaign.setDiscountAmount(addAndUpdateCampaignReq.getDiscountAmount());
 
-        if (campaignDTO.getNeededQuantity() != null){
-            if (discountType == DiscountType.FIXED_AMOUNT && campaignDTO.getNeededQuantity() > 1){
+        if (addAndUpdateCampaignReq.getNeededQuantity() != null){
+            if (discountType == DiscountType.FIXED_AMOUNT && addAndUpdateCampaignReq.getNeededQuantity() > 1){
                 throw new FixedAmountDiscountTypeWithProvidedQuantityException("Fixed amount discount type should not require more than 1 quantity for the campaign");
             }
-            campaign.setNeededQuantity(campaignDTO.getNeededQuantity());
+            campaign.setNeededQuantity(addAndUpdateCampaignReq.getNeededQuantity());
         }
         else{
             campaign.setNeededQuantity(1);

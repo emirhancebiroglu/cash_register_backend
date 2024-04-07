@@ -1,6 +1,6 @@
 package bit.salesservice.controller;
 
-import bit.salesservice.dto.ProductReq;
+import bit.salesservice.dto.AddAndListProductReq;
 import bit.salesservice.service.ShoppingBagService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -16,7 +16,7 @@ public class ShoppingBagController {
     private final ShoppingBagService shoppingBagService;
 
     @PostMapping("/bag/add-product")
-    public ResponseEntity<String> addProductToShoppingBag(@RequestBody ProductReq req) {
+    public ResponseEntity<String> addProductToShoppingBag(@RequestBody AddAndListProductReq req) {
         shoppingBagService.addProductToBag(req);
         return ResponseEntity.status(HttpStatus.CREATED).body("Product added successfully");
     }
@@ -41,7 +41,7 @@ public class ShoppingBagController {
     }
 
     @GetMapping("/bag/get-products")
-    public List<ProductReq> getProductsInShoppingBagForCurrentCheckout() {
+    public List<AddAndListProductReq> getProductsInShoppingBagForCurrentCheckout() {
         return shoppingBagService.getProductsInBagForCurrentCheckout();
     }
 }

@@ -1,7 +1,8 @@
 package bit.salesservice.service.serviceimpl;
 
 import bit.salesservice.dto.ProductInfo;
-import bit.salesservice.dto.ProductReq;
+import bit.salesservice.dto.AddAndListProductReq;
+import bit.salesservice.dto.kafka.ReturnedProductInfoDTO;
 import bit.salesservice.entity.Campaign;
 import bit.salesservice.entity.Checkout;
 import bit.salesservice.entity.DiscountType;
@@ -15,11 +16,13 @@ import bit.salesservice.repository.CheckoutRepository;
 import bit.salesservice.repository.ShoppingBagRepository;
 import bit.salesservice.service.ShoppingBagService;
 import bit.salesservice.utils.ProductInfoHttpRequest;
+import bit.salesservice.utils.SaleReportProducer;
 import lombok.RequiredArgsConstructor;
 import org.apache.http.HttpHeaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -31,14 +34,14 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
     private final ShoppingBagRepository shoppingBagRepository;
     private final CheckoutRepository checkoutRepository;
     private final CampaignRepository campaignRepository;
+    private final SaleReportProducer saleReportProducer;
     private final String jwtToken = HttpHeaders.AUTHORIZATION.substring(7);
     private static final Logger logger = LoggerFactory.getLogger(ShoppingBagServiceImpl.class);
     private final ProductInfoHttpRequest info;
     private static final String NOT_FOUND = "Product not found";
 
-
     @Override
-    public void addProductToBag(ProductReq req) {
+    public void addProductToBag(AddAndListProductReq req) {
         logger.info("Adding product to shopping bag...");
 
         ProductInfo productInfo = info.getProductInfo(req.getCode(), jwtToken);
@@ -69,17 +72,19 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
             existingProduct = new Product();
             existingProduct.setCode(req.getCode());
             existingProduct.setName(productInfo.getName());
+            if (currentCheckout.getProducts() == null){
+                currentCheckout.setTotalPrice(0D);
+            }
             existingProduct.setQuantity(req.getQuantity());
             existingProduct.setPrice(productInfo.getPrice());
             existingProduct.setCheckout(currentCheckout);
-            currentCheckout.setTotalPrice(0D);
         }
 
-        updateCheckoutTotalForAddingProduct(existingProduct, productInfo.getPrice(), req);
+        updateCheckoutTotalForAddingProduct(existingProduct, productInfo.getPrice(), req.getQuantity());
         shoppingBagRepository.save(existingProduct);
 
+        logger.info("Product added successfully");
     }
-
 
     @Override
     public void removeProductFromBag(Long id, Integer quantity) {
@@ -103,27 +108,30 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
             product.setQuantity(0);
             product.setRemoved(true);
         }
-        currentCheckout.setTotalPrice(currentCheckout.getTotalPrice() - product.getPrice() * quantity);
 
+        updateCheckoutTotalForRemovingOrReturningProduct(product, product.getPrice(), quantity);
         shoppingBagRepository.save(product);
-        checkoutRepository.save(currentCheckout);
 
         logger.info("Product removed successfully");
     }
 
     @Override
+    @Transactional
     public void removeAll() {
         logger.info("Removing all products from shopping bag...");
 
         Checkout currentCheckout = getCurrentCheckout();
 
-        List<Product> products = shoppingBagRepository.findByCheckout(currentCheckout);
+        List<Product> products = shoppingBagRepository.findByCheckoutId(currentCheckout.getId());
 
         for (Product product : products){
-            product.setRemoved(true);
-            product.setQuantity(0);
-            shoppingBagRepository.save(product);
+            if (!product.isRemoved()){
+                product.setRemoved(true);
+                product.setQuantity(0);
+            }
         }
+
+        shoppingBagRepository.saveAll(products);
 
         currentCheckout.setTotalPrice(0D);
         checkoutRepository.save(currentCheckout);
@@ -132,12 +140,12 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
     }
 
     @Override
-    public List<ProductReq> getProductsInBagForCurrentCheckout() {
+    public List<AddAndListProductReq> getProductsInBagForCurrentCheckout() {
         logger.info("Getting products in shopping bag for current checkout...");
 
         Checkout currentCheckout = getCurrentCheckout();
 
-        List<ProductReq> products;
+        List<AddAndListProductReq> products;
 
         if (!currentCheckout.isCompleted()){
             products = shoppingBagRepository.findProductReqByCheckoutAndRemoved(currentCheckout);
@@ -160,6 +168,10 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
             Product product = shoppingBagRepository.findByIdAndCheckoutId(id, checkout.getId())
                     .orElseThrow(() -> new ProductNotFoundException(NOT_FOUND));
 
+            if (product.isRemoved() || product.isReturned()){
+                throw new ProductNotFoundException("This product is removed or returned");
+            }
+
             int quantity = product.getQuantity();
 
             if (quantity < quantityToReturn) {
@@ -173,12 +185,10 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
                 product.setReturned(true);
             }
 
-            product.setReturnedQuantity(quantityToReturn);
-            checkout.setTotalPrice(checkout.getTotalPrice() - product.getPrice() * product.getQuantity());
-            checkout.setUpdatedDate(LocalDateTime.now());
+            product.setReturnedQuantity(product.getReturnedQuantity() + quantityToReturn);
 
+            updateCheckoutTotalForRemovingOrReturningProduct(product, product.getPrice(), quantity);
             shoppingBagRepository.save(product);
-            checkoutRepository.save(checkout);
         }
         else{
             throw new UncompletedCheckoutException("Checkout is not completed.");
@@ -199,14 +209,27 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
         return currentCheckout;
     }
 
-    private void updateCheckoutTotalForAddingProduct(Product product, double total, ProductReq req){
+    private void updateCheckoutTotalForAddingProduct(Product product, double price, Integer quantity){
         Checkout checkout = product.getCheckout();
-        checkout.setTotalPrice(applyCampaignsAndUpdatePrice(product, total * req.getQuantity(), req));
+        checkout.setTotalPrice(applyCampaignsAndUpdatePrice(product, price * quantity, quantity));
         checkout.setUpdatedDate(LocalDateTime.now());
         checkoutRepository.save(checkout);
     }
 
-    private static int getStockAmount(ProductReq req, ProductInfo productInfo) {
+    private void updateCheckoutTotalForRemovingOrReturningProduct(Product product, double price, Integer quantity){
+        double newTotalPrice = unApplyCampaignsAndUpdatePrice(product, price * quantity, quantity);
+
+        Checkout checkout = product.getCheckout();
+        if (product.getReturnedQuantity() > 0){
+            checkout.setReturnedMoney(checkout.getReturnedMoney() + (checkout.getTotalPrice() - newTotalPrice));
+            sendReturnedProductsInfoToReportingService(product, checkout.getReturnedMoney());
+        }
+        checkout.setTotalPrice(newTotalPrice);
+        checkout.setUpdatedDate(LocalDateTime.now());
+        checkoutRepository.save(checkout);
+    }
+
+    private static int getStockAmount(AddAndListProductReq req, ProductInfo productInfo) {
         boolean exists = productInfo.isExists();
         int stockAmount = productInfo.getStockAmount();
 
@@ -220,36 +243,136 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
         return stockAmount;
     }
 
-    private double applyCampaignsAndUpdatePrice(Product existingProduct, double total, ProductReq req) {
+    private Double applyCampaignsAndUpdatePrice(Product existingProduct, double total, Integer quantity) {
         Campaign campaign = campaignRepository.findFirstByCodesContaining(existingProduct.getCode());
 
         if (campaign == null || campaign.isInactive()) {
             return existingProduct.getCheckout().getTotalPrice() + total;
         }
 
-        double discountAmount = calculateDiscountAmount(campaign, existingProduct, req);
+        double discountAmount = calculateDiscountAmountWhileApplyingCampaign(campaign, existingProduct, quantity);
 
         return existingProduct.getCheckout().getTotalPrice() + total - discountAmount;
     }
 
-    private double calculateDiscountAmount(Campaign campaign, Product existingProduct, ProductReq req) {
+    private Double unApplyCampaignsAndUpdatePrice(Product product, double total, Integer quantity) {
+        Campaign campaign = campaignRepository.findFirstByCodesContaining(product.getCode());
+
+        if (campaign == null || campaign.isInactive()) {
+            return product.getCheckout().getTotalPrice() - total;
+        }
+
+        double discountAmount = calculateDiscountAmountWhileUnapplyingCampaign(campaign, product, quantity);
+
+        return product.getCheckout().getTotalPrice() - discountAmount;
+    }
+
+    private double calculateDiscountAmountWhileApplyingCampaign(Campaign campaign, Product existingProduct, Integer quantity) {
         if (campaign.getDiscountType() == DiscountType.PERCENTAGE) {
-            if (campaign.getNeededQuantity() > 1 && existingProduct.getQuantity() % campaign.getNeededQuantity() != 0) {
-                return 0;
+            if (campaign.getNeededQuantity() ==  1){
+                if (existingProduct.getAppliedCampaign() == null) {
+                    existingProduct.setAppliedCampaign(campaign.getName());
+                }
+                return (existingProduct.getPrice() * campaign.getDiscountAmount()) / 100;
             }
-            return (existingProduct.getPrice() * campaign.getDiscountAmount() / 100) * req.getQuantity();
+
+            int numberOfProductsWithUnappliedCampaign = (existingProduct.getQuantity() - quantity) % campaign.getNeededQuantity();
+
+            int counter = 0;
+
+            for (int i = 1; i <= quantity + numberOfProductsWithUnappliedCampaign; i++) {
+                if (i % campaign.getNeededQuantity() == 0){
+                    counter++;
+                }
+            }
+
+            if (counter > 0 && existingProduct.getAppliedCampaign() == null) {
+                existingProduct.setAppliedCampaign(campaign.getName());
+            }
+
+            return campaign.getNeededQuantity() * counter * ((existingProduct.getPrice() * campaign.getDiscountAmount()) / 100);
         } else if (campaign.getDiscountType() == DiscountType.FIXED_AMOUNT) {
-            return campaign.getDiscountAmount() * req.getQuantity();
+            if (existingProduct.getAppliedCampaign() == null) {
+                existingProduct.setAppliedCampaign(campaign.getName());
+            }
+            return campaign.getDiscountAmount() * quantity;
         }
         return 0;
     }
 
-    private void checkIfProductAvailable(ProductReq req, ProductInfo productInfo){
+    private double calculateDiscountAmountWhileUnapplyingCampaign(Campaign campaign, Product existingProduct, Integer quantity) {
+        double price = existingProduct.getPrice();
+
+        if (campaign.getDiscountType() == DiscountType.PERCENTAGE) {
+            if (campaign.getNeededQuantity() ==  1){
+                return (price - ((price * campaign.getDiscountAmount()) / 100)) * quantity;
+            }
+
+            int numberOfTimesCampaignApplied = (existingProduct.getQuantity() + quantity) / campaign.getNeededQuantity();
+            int numberOfProductsWithUnappliedCampaign = (existingProduct.getQuantity() + quantity) % campaign.getNeededQuantity();
+
+            double priceToDecrease = 0;
+            int counter = 1;
+            int quantityToDecrease = quantity - numberOfProductsWithUnappliedCampaign;
+            int quantityToDecreaseTemp = quantityToDecrease;
+
+            if (numberOfTimesCampaignApplied > 0){
+                for (int i = 0; i < numberOfTimesCampaignApplied; i++){
+                    if (quantityToDecreaseTemp == 0){
+                        break;
+                    }
+
+                    for (int j = 1; j <= quantityToDecrease; j++) {
+                        if (j  == 1){
+                            priceToDecrease += 0;
+
+                        }
+                        else{
+                            priceToDecrease += price;
+                            counter++;
+
+                        }
+                        quantityToDecreaseTemp--;
+                        if (quantityToDecreaseTemp == 0){
+                            break;
+                        }
+
+                        if (counter == campaign.getNeededQuantity()){
+                            quantityToDecrease -= counter;
+                            counter = 1;
+                            break;
+                        }
+                    }
+                }
+
+                return numberOfProductsWithUnappliedCampaign * existingProduct.getPrice() + priceToDecrease;
+            }
+            else{
+                return quantity * price;
+            }
+
+        } else if (campaign.getDiscountType() == DiscountType.FIXED_AMOUNT) {
+            return (price - campaign.getDiscountAmount()) * quantity;
+        }
+
+        return price * quantity;
+    }
+
+    private void checkIfProductAvailable(AddAndListProductReq req, ProductInfo productInfo){
         int stockAmount = getStockAmount(req, productInfo);
         boolean exists = productInfo.isExists();
 
         if (!exists || stockAmount == 0){
             throw new ProductNotFoundException("Product not exists or in stock");
         }
+    }
+
+    private void sendReturnedProductsInfoToReportingService(Product product, Double returnedMoney) {
+        ReturnedProductInfoDTO returnedProductInfoDTO = new ReturnedProductInfoDTO(
+                product,
+                returnedMoney
+        );
+
+        saleReportProducer.sendReturnedProductInfoToReportingSerivce("returned-product-info", returnedProductInfoDTO);
     }
 }

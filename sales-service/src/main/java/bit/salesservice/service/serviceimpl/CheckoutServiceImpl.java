@@ -1,13 +1,17 @@
 package bit.salesservice.service.serviceimpl;
 
 import bit.salesservice.config.WebClientConfig;
+import bit.salesservice.dto.CompleteCheckoutReq;
 import bit.salesservice.dto.UpdateStockRequest;
+import bit.salesservice.dto.kafka.CancelledSaleReportDTO;
+import bit.salesservice.dto.kafka.SaleReportDTO;
 import bit.salesservice.entity.Checkout;
 import bit.salesservice.entity.PaymentMethod;
 import bit.salesservice.entity.Product;
 import bit.salesservice.exceptions.checkoutnotfound.CheckoutNotFoundException;
 import bit.salesservice.repository.CheckoutRepository;
 import bit.salesservice.service.CheckoutService;
+import bit.salesservice.utils.SaleReportProducer;
 import bit.salesservice.validators.CheckoutValidator;
 import lombok.RequiredArgsConstructor;
 import org.apache.http.HttpHeaders;
@@ -25,6 +29,7 @@ import java.util.Map;
 public class CheckoutServiceImpl implements CheckoutService {
     private final CheckoutRepository checkoutRepository;
     private final WebClientConfig webClientConfig;
+    private final SaleReportProducer saleReportProducer;
     private final String jwtToken = HttpHeaders.AUTHORIZATION.substring(7);
     private final CheckoutValidator checkoutValidator;
     private static final Logger logger = LoggerFactory.getLogger(CheckoutServiceImpl.class);
@@ -37,8 +42,8 @@ public class CheckoutServiceImpl implements CheckoutService {
                 .orElseThrow(() -> new CheckoutNotFoundException("Checkout not found"));
 
         checkout.setCancelled(true);
-        checkout.setCompleted(false);
         checkout.setCancelledDate(LocalDateTime.now());
+        checkout.setReturnedMoney(checkout.getTotalPrice());
 
         for (Product product : checkout.getProducts()) {
             product.setReturned(true);
@@ -49,14 +54,16 @@ public class CheckoutServiceImpl implements CheckoutService {
 
         checkoutRepository.save(checkout);
 
+        sendCancelledSaleReportInfoToReportingService(checkout.getId(), checkout.isCancelled(), checkout.getCancelledDate(), checkout.getReturnedMoney());
+
         logger.info("Checkout cancelled successfully");
     }
 
     @Override
-    public void completeCheckout(String paymentMethodStr) {
+    public void completeCheckout(CompleteCheckoutReq completeCheckoutReq) {
         logger.info("Performing checkout process...");
 
-        Checkout checkout = validateAndSetCheckout(paymentMethodStr);
+        Checkout checkout = validateAndSetCheckout(completeCheckoutReq);
         checkoutRepository.save(checkout);
 
         Checkout nextCheckout = new Checkout();
@@ -67,17 +74,28 @@ public class CheckoutServiceImpl implements CheckoutService {
         Map<String, Integer> productsIdWithQuantity = getProductsIdWithQuantity(checkout);
         updateStocks(jwtToken, productsIdWithQuantity, true);
 
+        sendSaleReportToReportingService(checkout);
+
         logger.info("Checkout completed successfully");
     }
 
-    private Checkout validateAndSetCheckout(String paymentMethodStr) {
+    private Checkout validateAndSetCheckout(CompleteCheckoutReq completeCheckoutReq) {
         Checkout checkout = checkoutRepository.findFirstByOrderByIdDesc();
 
-        checkoutValidator.validateCheckout(checkout, paymentMethodStr);
+        checkoutValidator.validateCheckout(checkout, completeCheckoutReq);
 
-        checkout.setPaymentMethod(PaymentMethod.valueOf(paymentMethodStr));
+        checkout.setPaymentMethod(PaymentMethod.valueOf(completeCheckoutReq.getPaymentMethod()));
         checkout.setCompleted(true);
         checkout.setCompletedDate(LocalDateTime.now());
+
+        if (checkout.getPaymentMethod() == PaymentMethod.CREDIT_CARD){
+            checkout.setMoneyTaken(checkout.getTotalPrice());
+            checkout.setChange(0D);
+        }
+        else{
+            checkout.setMoneyTaken(completeCheckoutReq.getMoneyTaken());
+            checkout.setChange(checkout.getTotalPrice() - completeCheckoutReq.getMoneyTaken());
+        }
         return checkout;
     }
 
@@ -98,5 +116,25 @@ public class CheckoutServiceImpl implements CheckoutService {
             productsIdWithQuantity.put(product.getCode(), product.getQuantity());
         }
         return productsIdWithQuantity;
+    }
+    private void sendSaleReportToReportingService(Checkout checkout){
+        SaleReportDTO saleReportDTO = new SaleReportDTO(
+                checkout.getId(),
+                checkout.getProducts(),
+                checkout.getTotalPrice(),
+                checkout.getPaymentMethod(),
+                checkout.getMoneyTaken(),
+                checkout.getChange(),
+                checkout.getCompletedDate(),
+                checkout.getCancelledDate(),
+                checkout.getReturnedMoney()
+        );
+
+        saleReportProducer.sendSaleReport("sale-report", saleReportDTO);
+    }
+
+    private void sendCancelledSaleReportInfoToReportingService(Long id, boolean cancelled, LocalDateTime cancelledDate, Double returnedMoney) {
+        CancelledSaleReportDTO cancelledSaleReportDTO = new CancelledSaleReportDTO(id, cancelled, cancelledDate, returnedMoney);
+        saleReportProducer.sendCancelledSaleReport("cancelled-sale-report", cancelledSaleReportDTO);
     }
 }

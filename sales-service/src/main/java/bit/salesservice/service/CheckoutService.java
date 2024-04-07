@@ -1,6 +1,8 @@
 package bit.salesservice.service;
 
+import bit.salesservice.dto.CompleteCheckoutReq;
+
 public interface CheckoutService {
     void cancelCheckout(Long checkoutId);
-    void completeCheckout(String paymentMethodStr);
+    void completeCheckout(CompleteCheckoutReq completeCheckoutReq);
 }
