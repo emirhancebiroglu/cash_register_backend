@@ -18,4 +18,6 @@ public interface ProductRepository extends JpaRepository<Product, String>, JpaSp
     boolean existsByName(String name);
     boolean existsByProductCode(String productCode);
     boolean existsByBarcode(String barcode);
+    Product findByProductCode(String code);
+    Product findByBarcode(String code);
 }

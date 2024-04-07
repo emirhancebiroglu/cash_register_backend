@@ -1,6 +1,8 @@
 package com.bit.productservice.controller;
 
 import com.bit.productservice.dto.ProductDTO;
+import com.bit.productservice.dto.ProductInfo;
+import com.bit.productservice.dto.UpdateStockRequest;
 import com.bit.productservice.dto.addproduct.AddProductReq;
 import com.bit.productservice.dto.updateproduct.UpdateProductReq;
 import com.bit.productservice.service.ProductService;
@@ -9,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.util.List;
@@ -47,6 +50,11 @@ public class ProductController {
         return productService.searchProductByBarcode(barcode, pageNo, pageSize);
     }
 
+    @GetMapping("/check-product")
+    public Mono<ProductInfo> checkProduct(@RequestParam String code){
+        return productService.checkProduct(code);
+    }
+
     @PostMapping("/add-product")
     public ResponseEntity<String> addProduct(@RequestParam(value = "image", required = false) MultipartFile file, AddProductReq addProductReq) throws IOException {
         productService.addProduct(addProductReq, file);
@@ -74,5 +82,10 @@ public class ProductController {
         productService.reAddProduct(productId);
         return ResponseEntity.status(HttpStatus.OK).body("Product re-added successfully");
 
+    }
+
+    @PostMapping("/update-stocks")
+    public void updateStocks(@RequestBody UpdateStockRequest request){
+        productService.updateStocks(request.getProductsIdWithQuantity(), request.isShouldDecrease());
     }
 }

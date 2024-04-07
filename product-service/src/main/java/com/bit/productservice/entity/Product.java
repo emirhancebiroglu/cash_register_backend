@@ -36,7 +36,7 @@ public class Product {
     @Column(name = "stockAmount", nullable = false)
     private int stockAmount;
 
-    @Column(name = "inStock", nullable = false)
+    @Column(name = "inStock", nullable = false, columnDefinition = "boolean default false")
     private boolean inStock;
 
     @Column(name = "isDeleted", nullable = false, columnDefinition = "boolean default false")
