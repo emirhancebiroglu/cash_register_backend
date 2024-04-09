@@ -68,6 +68,12 @@
         </dependency>
 
         <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+            <version>[6.1.4,)</version>
+        </dependency>
+
+        <dependency>
             <groupId>com.cloudinary</groupId>
             <artifactId>cloudinary-http45</artifactId>
             <version>1.38.0</version>
@@ -77,6 +83,30 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
             <version>4.1.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.woodstox</groupId>
+            <artifactId>woodstox-core</artifactId>
+            <version>[6.2.1,)</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>[19.0,)</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.thoughtworks.xstream</groupId>
+            <artifactId>xstream</artifactId>
+            <version>[1.4.19,)</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.codehaus.jettison</groupId>
+            <artifactId>jettison</artifactId>
+            <version>[1.4.0,)</version>
         </dependency>
 
         <dependency>
@@ -97,6 +127,12 @@
             <version>0.11.5</version>
         </dependency>
 
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
     </dependencies>
 
     <build>
@@ -115,6 +151,8 @@
                         <exclude>com/bit/productservice/dto/addproduct/AddProductReq.class</exclude>
                         <exclude>com/bit/productservice/dto/updateproduct/UpdateProductReq.class</exclude>
                         <exclude>com/bit/productservice/dto/ProductDTO.class</exclude>
+                        <exclude>com/bit/productservice/dto/ProductInfo.class</exclude>
+                        <exclude>com/bit/productservice/dto/UpdateStockRequest.class</exclude>
                         <exclude>com/bit/productservice/entity/FavoriteProduct.class</exclude>
                         <exclude>com/bit/productservice/entity/Image.class</exclude>
                         <exclude>com/bit/productservice/entity/Product.class</exclude>

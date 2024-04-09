@@ -8,7 +8,6 @@ import bit.salesservice.exceptions.invaliddurationdays.InvalidDurationDaysExcept
 import bit.salesservice.exceptions.invalidquantity.InvalidQuantityException;
 import bit.salesservice.exceptions.multiplecampaign.MultipleCampaignException;
 import bit.salesservice.exceptions.nullcampaignname.NullCampaignNameException;
-import bit.salesservice.exceptions.nulldiscountamount.NullDiscountAmountException;
 import bit.salesservice.repository.CampaignRepository;
 import org.springframework.stereotype.Component;
 
@@ -68,13 +67,13 @@ public class CampaignValidator {
 
     private void checkIfDiscountAmountNull(Double amount){
         if (amount == null) {
-            throw new NullCampaignNameException("No discount amount provided");
+            throw new InvalidDiscountAmountException("No discount amount provided");
         }
     }
 
     private void validateCampaignName(String name) {
         if (name.isEmpty()) {
-            throw new NullDiscountAmountException("No campaign name provided");
+            throw new NullCampaignNameException("No campaign name provided");
         }
     }
 
@@ -83,5 +82,4 @@ public class CampaignValidator {
             throw new InvalidDurationDaysException("Duration of the campaign is not provided");
         }
     }
-
 }

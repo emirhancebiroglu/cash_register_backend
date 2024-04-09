@@ -37,7 +37,7 @@ public class CheckoutValidator {
         if (Objects.equals(completeCheckoutReq.getPaymentMethod(), "CASH") && completeCheckoutReq.getChange() == null){
             throw new InvalidChangeException("You should provide the change amount with this payment method");
         }
-        else if(Objects.equals(completeCheckoutReq.getPaymentMethod(), "CREDIT_CARD") && completeCheckoutReq.getMoneyTaken() != null){
+        else if(Objects.equals(completeCheckoutReq.getPaymentMethod(), "CREDIT_CARD") && completeCheckoutReq.getChange() != null){
             throw new InvalidChangeException("You should not provide this field with this payment method");
         }
     }
@@ -67,7 +67,7 @@ public class CheckoutValidator {
 
         try {
             PaymentMethod.valueOf(paymentMethodStr);
-        } catch (InvalidPaymentMethodException e) {
+        } catch (IllegalArgumentException e) {
             throw new InvalidPaymentMethodException("Invalid payment method");
         }
     }

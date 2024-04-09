@@ -25,7 +25,7 @@ public class SaleReportProducer {
         logger.info("Cancelled sale report sent to kafka topic: {}", topic);
     }
 
-    public void sendReturnedProductInfoToReportingSerivce(String topic, ReturnedProductInfoDTO returnedProductInfoDTO){
+    public void sendReturnedProductInfoToReportingService(String topic, ReturnedProductInfoDTO returnedProductInfoDTO){
         kafkaTemplate.send(topic, returnedProductInfoDTO);
         logger.info("Returned product info sent to kafka topic: {}", topic);
     }

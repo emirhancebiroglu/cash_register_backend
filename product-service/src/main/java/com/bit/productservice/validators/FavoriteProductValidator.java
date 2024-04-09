@@ -26,5 +26,4 @@ public class FavoriteProductValidator {
             throw new ProductAlreadyInFavoriteException("Product is already in favorite list");
         }
     }
-
 }

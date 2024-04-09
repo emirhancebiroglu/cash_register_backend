@@ -1,12 +1,15 @@
 package com.bit.productservice.service;
 
 import com.bit.productservice.dto.ProductDTO;
+import com.bit.productservice.dto.ProductInfo;
 import com.bit.productservice.dto.addproduct.AddProductReq;
 import com.bit.productservice.dto.updateproduct.UpdateProductReq;
 import com.bit.productservice.entity.Image;
 import com.bit.productservice.entity.Product;
 import com.bit.productservice.exceptions.negativefield.NegativeFieldException;
 import com.bit.productservice.exceptions.nulloremptyfield.NullOrEmptyFieldException;
+import com.bit.productservice.exceptions.productalreadydeleted.ProductAlreadyDeletedException;
+import com.bit.productservice.exceptions.productalreadyinstocks.ProductAlreadyInStocksException;
 import com.bit.productservice.exceptions.productnotfound.ProductNotFoundException;
 import com.bit.productservice.repository.ImageRepository;
 import com.bit.productservice.repository.ProductRepository;
@@ -24,6 +27,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -339,6 +344,23 @@ class ProductServiceTest {
     }
 
     @Test
+    void testDeleteProduct_ProductAlreadyDeleted() {
+        String productId = "123";
+
+        Product product = new Product();
+        product.setId(productId);
+        product.setDeleted(true);
+
+        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
+
+        ProductAlreadyDeletedException exception = assertThrows(ProductAlreadyDeletedException.class, () -> productService.deleteProduct(productId));
+
+        assertEquals("Product already deleted", exception.getMessage());
+
+        verify(productRepository, never()).save(any());
+    }
+
+    @Test
     void reAddProduct_Success() {
         Product dummyProduct = new Product();
         dummyProduct.setId("test");
@@ -362,5 +384,68 @@ class ProductServiceTest {
         when(productRepository.getProductById(productId)).thenReturn(null);
 
         assertThrows(ProductNotFoundException.class, () -> productService.reAddProduct(productId));
+    }
+
+    @Test
+    void testReAddProduct_ProductAlreadyInStocks() {
+        String productId = "123";
+
+        Product product = new Product();
+        product.setId(productId);
+        product.setDeleted(false);
+
+        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
+
+        ProductAlreadyInStocksException exception = assertThrows(ProductAlreadyInStocksException.class, () -> productService.reAddProduct(productId));
+
+        assertEquals("Product already in stocks", exception.getMessage());
+
+        verify(productRepository, never()).save(any());
+    }
+
+    @Test
+    void testCheckProduct() {
+        String code = "ABC123";
+        Product product = new Product();
+        product.setBarcode("ABC123");
+        product.setName("Test Product");
+        product.setPrice(10.0);
+        product.setStockAmount(5);
+
+        when(productRepository.findByBarcode(code)).thenReturn(product);
+
+        Mono<ProductInfo> productInfoMono = productService.checkProduct(code);
+
+        StepVerifier.create(productInfoMono)
+                .expectNextMatches(productInfo ->
+                        productInfo.isExists() &&
+                                productInfo.getName().equals("Test Product") &&
+                                productInfo.getPrice() == 10.0 &&
+                                productInfo.getStockAmount() == 5)
+                .expectComplete()
+                .verify();
+    }
+
+    @Test
+    void testUpdateStocks() {
+        Map<String, Integer> productsIdWithQuantity = new HashMap<>();
+        productsIdWithQuantity.put("ABC123", 5);
+        productsIdWithQuantity.put("DEF456", 10);
+
+        Product product1 = new Product();
+        product1.setProductCode("ABC123");
+        product1.setStockAmount(10);
+
+        Product product2 = new Product();
+        product2.setBarcode("DEF456");
+        product2.setStockAmount(15);
+
+        when(productRepository.findByProductCode("ABC123")).thenReturn(product1);
+        when(productRepository.findByBarcode("DEF456")).thenReturn(product2);
+
+        productService.updateStocks(productsIdWithQuantity, true);
+
+        verify(productRepository, times(1)).save(product1);
+        verify(productRepository, times(1)).save(product2);
     }
 }

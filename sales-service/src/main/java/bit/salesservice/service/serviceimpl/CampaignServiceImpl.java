@@ -160,6 +160,8 @@ public class CampaignServiceImpl implements CampaignService {
 
     @Override
     public List<ListCampaignsReq> getAllCampaigns() {
+        logger.info("Getting all campaigns...");
+
         List<Campaign> campaignList = campaignRepository.findAll();
         List<ListCampaignsReq> listCampaignsReqList = new ArrayList<>();
 
@@ -167,6 +169,8 @@ public class CampaignServiceImpl implements CampaignService {
             ListCampaignsReq listCampaignsReq = mapToCampaignReq(campaign);
             listCampaignsReqList.add(listCampaignsReq);
         }
+
+        logger.info("All campaigns retrieved successfully");
 
         return listCampaignsReqList;
     }

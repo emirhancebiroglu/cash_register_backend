@@ -373,6 +373,6 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
                 returnedMoney
         );
 
-        saleReportProducer.sendReturnedProductInfoToReportingSerivce("returned-product-info", returnedProductInfoDTO);
+        saleReportProducer.sendReturnedProductInfoToReportingService("returned-product-info", returnedProductInfoDTO);
     }
 }

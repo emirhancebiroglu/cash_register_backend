@@ -74,6 +74,12 @@
 			<groupId>org.springframework.kafka</groupId>
 			<artifactId>spring-kafka</artifactId>
 		</dependency>
+
+		<dependency>
+			<groupId>io.projectreactor</groupId>
+			<artifactId>reactor-test</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -97,43 +103,44 @@
 				<version>${jacoco.version}</version>
 				<configuration>
 					<excludes>
-						<exclude>com/bit/salesservice/config/KafkaProducerConfig.class</exclude>
-						<exclude>com/bit/salesservice/config/WebClientConfig.class</exclude>
-						<exclude>com/bit/salesservice/dto/kafka/CancelledSaleReportDTO.class</exclude>
-						<exclude>com/bit/salesservice/dto/kafka/ReturnedProductInfoDTO.class</exclude>
-						<exclude>com/bit/salesservice/dto/kafka/SaleReportDTO.class</exclude>
-						<exclude>com/bit/salesservice/dto/AddAndListProductReq.class</exclude>
-						<exclude>com/bit/salesservice/dto/AddAndUpdateCampaignReq.class</exclude>
-						<exclude>com/bit/salesservice/dto/CompleteCheckoutReq.class</exclude>
-						<exclude>com/bit/salesservice/dto/ListCampaignsReq.class</exclude>
-						<exclude>com/bit/salesservice/dto/ProductInfo.class</exclude>
-						<exclude>com/bit/salesservice/dto/UpdateStockRequest.class</exclude>
-						<exclude>com/bit/salesservice/entity/Campaign.class</exclude>
-						<exclude>com/bit/salesservice/entity/Checkout.class</exclude>
-						<exclude>com/bit/salesservice/entity/DiscountType.class</exclude>
-						<exclude>com/bit/salesservice/entity/PaymentMethod.class</exclude>
-						<exclude>com/bit/salesservice/entity/Product.class</exclude>
-						<exclude>com/bit/salesservice/exceptions/activecampaign/ActiveCampaignExceptionHandler.class</exclude>
-						<exclude>com/bit/salesservice/exceptions/campaignalreadyexists/CampaignAlreadyExistsExceptionHandler.class</exclude>
-						<exclude>com/bit/salesservice/exceptions/campaignnotfound/CampaignNotFoundExceptionHandler.class</exclude>
-						<exclude>com/bit/salesservice/exceptions/checkoutnotfound/CheckoutNotFoundExceptionHandler.class</exclude>
-						<exclude>com/bit/salesservice/exceptions/completedcheckout/CompletedCheckoutExceptionHandler.class</exclude>
-						<exclude>com/bit/salesservice/exceptions/fixedamountdiscounttypewithprovidedquantity/FixedAmountDiscountTypeWithProvidedQuantityExceptionHandler.class</exclude>
-						<exclude>com/bit/salesservice/exceptions/inactivecampaign/InactiveCampaignExceptionHandler.class</exclude>
-						<exclude>com/bit/salesservice/exceptions/invalidchange/InvalidChangeExceptionHandler.class</exclude>
-						<exclude>com/bit/salesservice/exceptions/invaliddiscountamount/InvalidDiscountAmountExceptionHandler.class</exclude>
-						<exclude>com/bit/salesservice/exceptions/invaliddiscounttype/InvalidDiscountTypeExceptionHandler.class</exclude>
-						<exclude>com/bit/salesservice/exceptions/invaliddurationdays/InvalidDurationDaysExceptionHandler.class</exclude>
-						<exclude>com/bit/salesservice/exceptions/invalidmoneytaken/InvalidMoneyTakenExceptionHandler.class</exclude>
-						<exclude>com/bit/salesservice/exceptions/invalidpaymentmethod/InvalidPaymentMethodExceptionHandler.class</exclude>
-						<exclude>com/bit/salesservice/exceptions/invalidquantity/InvalidQuantityExceptionHandler.class</exclude>
-						<exclude>com/bit/salesservice/exceptions/multiplecampaign/MultipleCampaignExceptionHandler.class</exclude>
-						<exclude>com/bit/salesservice/exceptions/notinstocks/NotInStocksExceptionHandler.class</exclude>
-						<exclude>com/bit/salesservice/exceptions/nullcampaignname/NullCampaignNameExceptionHandler.class</exclude>
-						<exclude>com/bit/salesservice/exceptions/nulldiscountamount/NullDiscountAmountExceptionHandler.class</exclude>
-						<exclude>com/bit/salesservice/exceptions/productnotfound/ProductNotFoundExceptionHandler.class</exclude>
-						<exclude>com/bit/salesservice/exceptions/uncompletedcheckoutexception/UncompletedCheckoutExceptionHandler.class</exclude>
-						<exclude>com/bit/salesservice/exceptions/ErrorDetails.class</exclude>
+						<exclude>bit/salesservice/SalesServiceApplication.class</exclude>
+						<exclude>bit/salesservice/config/KafkaProducerConfig.class</exclude>
+						<exclude>bit/salesservice/config/WebClientConfig.class</exclude>
+						<exclude>bit/salesservice/dto/kafka/CancelledSaleReportDTO.class</exclude>
+						<exclude>bit/salesservice/dto/kafka/ReturnedProductInfoDTO.class</exclude>
+						<exclude>bit/salesservice/dto/kafka/SaleReportDTO.class</exclude>
+						<exclude>bit/salesservice/dto/AddAndListProductReq.class</exclude>
+						<exclude>bit/salesservice/dto/AddAndUpdateCampaignReq.class</exclude>
+						<exclude>bit/salesservice/dto/CompleteCheckoutReq.class</exclude>
+						<exclude>bit/salesservice/dto/ListCampaignsReq.class</exclude>
+						<exclude>bit/salesservice/dto/ProductInfo.class</exclude>
+						<exclude>bit/salesservice/dto/UpdateStockRequest.class</exclude>
+						<exclude>bit/salesservice/entity/Campaign.class</exclude>
+						<exclude>bit/salesservice/entity/Checkout.class</exclude>
+						<exclude>bit/salesservice/entity/DiscountType.class</exclude>
+						<exclude>bit/salesservice/entity/PaymentMethod.class</exclude>
+						<exclude>bit/salesservice/entity/Product.class</exclude>
+						<exclude>bit/salesservice/exceptions/activecampaign/ActiveCampaignExceptionHandler.class</exclude>
+						<exclude>bit/salesservice/exceptions/campaignalreadyexists/CampaignAlreadyExistsExceptionHandler.class</exclude>
+						<exclude>bit/salesservice/exceptions/campaignnotfound/CampaignNotFoundExceptionHandler.class</exclude>
+						<exclude>bit/salesservice/exceptions/checkoutnotfound/CheckoutNotFoundExceptionHandler.class</exclude>
+						<exclude>bit/salesservice/exceptions/completedcheckout/CompletedCheckoutExceptionHandler.class</exclude>
+						<exclude>bit/salesservice/exceptions/fixedamountdiscounttypewithprovidedquantity/FixedAmountDiscountTypeWithProvidedQuantityExceptionHandler.class</exclude>
+						<exclude>bit/salesservice/exceptions/inactivecampaign/InactiveCampaignExceptionHandler.class</exclude>
+						<exclude>bit/salesservice/exceptions/invalidchange/InvalidChangeExceptionHandler.class</exclude>
+						<exclude>bit/salesservice/exceptions/invaliddiscountamount/InvalidDiscountAmountExceptionHandler.class</exclude>
+						<exclude>bit/salesservice/exceptions/invaliddiscounttype/InvalidDiscountTypeExceptionHandler.class</exclude>
+						<exclude>bit/salesservice/exceptions/invaliddurationdays/InvalidDurationDaysExceptionHandler.class</exclude>
+						<exclude>bit/salesservice/exceptions/invalidmoneytaken/InvalidMoneyTakenExceptionHandler.class</exclude>
+						<exclude>bit/salesservice/exceptions/invalidpaymentmethod/InvalidPaymentMethodExceptionHandler.class</exclude>
+						<exclude>bit/salesservice/exceptions/invalidquantity/InvalidQuantityExceptionHandler.class</exclude>
+						<exclude>bit/salesservice/exceptions/multiplecampaign/MultipleCampaignExceptionHandler.class</exclude>
+						<exclude>bit/salesservice/exceptions/notinstocks/NotInStocksExceptionHandler.class</exclude>
+						<exclude>bit/salesservice/exceptions/nullcampaignname/NullCampaignNameExceptionHandler.class</exclude>
+						<exclude>bit/salesservice/exceptions/productnotfound/ProductNotFoundExceptionHandler.class</exclude>
+						<exclude>bit/salesservice/exceptions/uncompletedcheckoutexception/UncompletedCheckoutExceptionHandler.class</exclude>
+						<exclude>bit/salesservice/exceptions/ErrorDetails.class</exclude>
+						<exclude>bit/salesservice/utils/ProductInfoHttpRequest.class</exclude>
 					</excludes>
 				</configuration>
 				<executions>

@@ -4,12 +4,14 @@ import bit.salesservice.entity.PaymentMethod;
 import bit.salesservice.entity.Product;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
 @AllArgsConstructor
+@NoArgsConstructor
 public class SaleReportDTO {
     private Long id;
     private List<Product> products;

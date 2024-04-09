@@ -1,6 +1,7 @@
 package com.bit.productservice.validators;
 
 import com.bit.productservice.entity.Product;
+import com.bit.productservice.exceptions.productalreadyinfavorite.ProductAlreadyInFavoriteException;
 import com.bit.productservice.exceptions.productisnotfavorite.ProductIsNotFavoriteException;
 import com.bit.productservice.exceptions.productnotfound.ProductNotFoundException;
 import com.bit.productservice.repository.FavoriteProductRepository;
@@ -16,7 +17,6 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class FavoriteProductValidatorTest {
-
     @Mock
     private ProductRepository productRepository;
 
@@ -52,6 +52,16 @@ class FavoriteProductValidatorTest {
         when(favoriteProductRepository.existsByUserCodeAndProductId(userCode, productId)).thenReturn(false);
 
         assertThrows(ProductIsNotFavoriteException.class, () -> favoriteProductValidator.isProductNotFavorite(productId, userCode, favoriteProductRepository));
+
+        verify(favoriteProductRepository, times(1)).existsByUserCodeAndProductId(userCode, productId);
+    }
+
+    @Test
+    void validateFavoriteProduct_productIsAlreadyFavorite_throwsProductAlreadyInFavoriteException() {
+        when(favoriteProductRepository.existsByUserCodeAndProductId(userCode, productId)).thenReturn(true);
+
+        assertThrows(ProductAlreadyInFavoriteException.class,
+                () -> favoriteProductValidator.isProductFavorite(productId, userCode, favoriteProductRepository));
 
         verify(favoriteProductRepository, times(1)).existsByUserCodeAndProductId(userCode, productId);
     }
