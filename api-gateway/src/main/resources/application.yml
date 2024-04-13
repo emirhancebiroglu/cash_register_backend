@@ -38,6 +38,15 @@ spring:
               args:
                 roles: [ROLE_CASHIER]
 
+        - id: reporting-service
+          uri: lb://REPORTING-SERVICE
+          predicates:
+            - Path=/api/store-manager/**
+          filters:
+            - name: AuthenticationFilter
+              args:
+                roles: [ ROLE_STORE_MANAGER ]
+
   application:
     name: GATEWAY-SERVICE
 

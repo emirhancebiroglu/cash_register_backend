@@ -23,6 +23,7 @@
         <module>product-service</module>
         <module>api-gateway</module>
         <module>sales-service</module>
+        <module>reporting-service</module>
     </modules>
 
     <properties>
