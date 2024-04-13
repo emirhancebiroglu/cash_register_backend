@@ -9,5 +9,5 @@ public interface ShoppingBagService {
     void removeProductFromBag(Long id, Integer quantity);
     void removeAll();
     List<AddAndListProductReq> getProductsInBagForCurrentCheckout();
-    void returnProductFromBag(Long id, Integer quantityToReturn, Long checkoutId);
+    void returnProductFromBag(Long id, Integer quantity);
 }

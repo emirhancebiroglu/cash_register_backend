@@ -5,7 +5,6 @@ import bit.salesservice.entity.Checkout;
 import bit.salesservice.entity.PaymentMethod;
 import bit.salesservice.exceptions.checkoutnotfound.CheckoutNotFoundException;
 import bit.salesservice.exceptions.completedcheckout.CompletedCheckoutException;
-import bit.salesservice.exceptions.invalidchange.InvalidChangeException;
 import bit.salesservice.exceptions.invalidmoneytaken.InvalidMoneyTakenException;
 import bit.salesservice.exceptions.invalidpaymentmethod.InvalidPaymentMethodException;
 import bit.salesservice.exceptions.productnotfound.ProductNotFoundException;
@@ -19,26 +18,21 @@ public class CheckoutValidator {
         validateCheckoutNotNull(checkout);
         validateProductsNotEmpty(checkout);
         validateCheckoutNotCompleted(checkout);
-        validatePaymentMethod(completeCheckoutReq.getPaymentMethod());
+        validatePaymentMethod(completeCheckoutReq);
         validateMoneyTaken(completeCheckoutReq);
-        validateChange(completeCheckoutReq);
     }
 
     private void validateMoneyTaken(CompleteCheckoutReq completeCheckoutReq) {
-        if (Objects.equals(completeCheckoutReq.getPaymentMethod(), "CASH") && completeCheckoutReq.getMoneyTaken() == null){
-            throw new InvalidMoneyTakenException("You should provide how much money you take from customer with this payment method");
+        if (Objects.equals(completeCheckoutReq.getPaymentMethod(), "CASH")){
+            if (completeCheckoutReq.getMoneyTaken() == null){
+                throw new InvalidMoneyTakenException("You should provide how much money you take from customer with this payment method");
+            }
+            else if (completeCheckoutReq.getMoneyTaken() <= 0){
+                throw new InvalidMoneyTakenException("Money taken cannot be 0 or negative");
+            }
         }
         else if(Objects.equals(completeCheckoutReq.getPaymentMethod(), "CREDIT_CARD") && completeCheckoutReq.getMoneyTaken() != null){
             throw new InvalidMoneyTakenException("You should not provide this field with this payment method");
-        }
-    }
-
-    private void validateChange(CompleteCheckoutReq completeCheckoutReq) {
-        if (Objects.equals(completeCheckoutReq.getPaymentMethod(), "CASH") && completeCheckoutReq.getChange() == null){
-            throw new InvalidChangeException("You should provide the change amount with this payment method");
-        }
-        else if(Objects.equals(completeCheckoutReq.getPaymentMethod(), "CREDIT_CARD") && completeCheckoutReq.getChange() != null){
-            throw new InvalidChangeException("You should not provide this field with this payment method");
         }
     }
 
@@ -60,7 +54,9 @@ public class CheckoutValidator {
         }
     }
 
-    private void validatePaymentMethod(String paymentMethodStr) {
+    private void validatePaymentMethod(CompleteCheckoutReq completeCheckoutReq) {
+        String paymentMethodStr = completeCheckoutReq.getPaymentMethod();
+
         if (paymentMethodStr == null) {
             throw new InvalidPaymentMethodException("Payment method cannot be null");
         }

@@ -140,7 +140,6 @@
 						<exclude>bit/salesservice/exceptions/completedcheckout/CompletedCheckoutExceptionHandler.class</exclude>
 						<exclude>bit/salesservice/exceptions/fixedamountdiscounttypewithprovidedquantity/FixedAmountDiscountTypeWithProvidedQuantityExceptionHandler.class</exclude>
 						<exclude>bit/salesservice/exceptions/inactivecampaign/InactiveCampaignExceptionHandler.class</exclude>
-						<exclude>bit/salesservice/exceptions/invalidchange/InvalidChangeExceptionHandler.class</exclude>
 						<exclude>bit/salesservice/exceptions/invaliddiscountamount/InvalidDiscountAmountExceptionHandler.class</exclude>
 						<exclude>bit/salesservice/exceptions/invaliddiscounttype/InvalidDiscountTypeExceptionHandler.class</exclude>
 						<exclude>bit/salesservice/exceptions/invaliddurationdays/InvalidDurationDaysExceptionHandler.class</exclude>

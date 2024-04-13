@@ -1,8 +1,6 @@
 package bit.salesservice.service.serviceimpl;
 
-import bit.salesservice.config.WebClientConfig;
 import bit.salesservice.dto.CompleteCheckoutReq;
-import bit.salesservice.dto.UpdateStockRequest;
 import bit.salesservice.dto.kafka.CancelledSaleReportDTO;
 import bit.salesservice.dto.kafka.SaleReportDTO;
 import bit.salesservice.entity.Checkout;
@@ -11,6 +9,7 @@ import bit.salesservice.entity.Product;
 import bit.salesservice.exceptions.checkoutnotfound.CheckoutNotFoundException;
 import bit.salesservice.repository.CheckoutRepository;
 import bit.salesservice.service.CheckoutService;
+import bit.salesservice.utils.ProductInfoHttpRequest;
 import bit.salesservice.utils.SaleReportProducer;
 import bit.salesservice.validators.CheckoutValidator;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +17,6 @@ import org.apache.http.HttpHeaders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.BodyInserters;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
@@ -28,10 +26,10 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class CheckoutServiceImpl implements CheckoutService {
     private final CheckoutRepository checkoutRepository;
-    private final WebClientConfig webClientConfig;
     private final SaleReportProducer saleReportProducer;
     private final String jwtToken = HttpHeaders.AUTHORIZATION.substring(7);
     private final CheckoutValidator checkoutValidator;
+    private final ProductInfoHttpRequest request;
     private static final Logger logger = LoggerFactory.getLogger(CheckoutServiceImpl.class);
 
     @Override
@@ -50,7 +48,7 @@ public class CheckoutServiceImpl implements CheckoutService {
         }
 
         Map<String, Integer> productsIdWithQuantity = getProductsIdWithQuantity(checkout);
-        updateStocks(jwtToken, productsIdWithQuantity, false);
+        request.updateStocks(jwtToken, productsIdWithQuantity, false);
 
         checkoutRepository.save(checkout);
 
@@ -69,10 +67,11 @@ public class CheckoutServiceImpl implements CheckoutService {
         Checkout nextCheckout = new Checkout();
         nextCheckout.setCreatedDate(LocalDateTime.now());
         nextCheckout.setUpdatedDate(LocalDateTime.now());
+        nextCheckout.setTotalPrice(0D);
         checkoutRepository.save(nextCheckout);
 
         Map<String, Integer> productsIdWithQuantity = getProductsIdWithQuantity(checkout);
-        updateStocks(jwtToken, productsIdWithQuantity, true);
+        request.updateStocks(jwtToken, productsIdWithQuantity, true);
 
         sendSaleReportToReportingService(checkout);
 
@@ -94,20 +93,9 @@ public class CheckoutServiceImpl implements CheckoutService {
         }
         else{
             checkout.setMoneyTaken(completeCheckoutReq.getMoneyTaken());
-            checkout.setChange(checkout.getTotalPrice() - completeCheckoutReq.getMoneyTaken());
+            checkout.setChange(completeCheckoutReq.getMoneyTaken() - checkout.getTotalPrice());
         }
         return checkout;
-    }
-
-    private void updateStocks(String authToken, Map<String, Integer> productsIdWithQuantity, boolean shouldDecrease){
-        webClientConfig.webClient().post()
-                .uri("/api/products/update-stocks")
-                .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
-                .body(BodyInserters.fromValue(new UpdateStockRequest(productsIdWithQuantity, shouldDecrease)))
-                .retrieve()
-                .bodyToMono(Void.class)
-                .doOnError(error -> logger.error("Failed to update stocks: {}", error.getMessage()))
-                .subscribe();
     }
 
     private static Map<String, Integer> getProductsIdWithQuantity(Checkout checkout) {

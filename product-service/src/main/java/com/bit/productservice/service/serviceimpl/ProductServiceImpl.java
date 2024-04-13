@@ -307,7 +307,9 @@ public class ProductServiceImpl implements ProductService {
             } else {
                 newStock = product.getStockAmount() + quantity;
             }
+
             product.setStockAmount(newStock);
+            product.setInStock(product.getStockAmount() != 0);
 
             productRepository.save(product);
 

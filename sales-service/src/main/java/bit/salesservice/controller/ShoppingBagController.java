@@ -27,9 +27,9 @@ public class ShoppingBagController {
         return ResponseEntity.status(HttpStatus.OK).body("Product removed successfully");
     }
 
-    @PostMapping("/bag/return-product/{productId}/{quantityToReturn}/{checkoutId}")
-    public ResponseEntity<String> returnProductFromShoppingBag(@PathVariable Long productId, @PathVariable Integer quantityToReturn, @PathVariable Long checkoutId) {
-        shoppingBagService.returnProductFromBag(productId, quantityToReturn, checkoutId);
+    @PostMapping("/bag/return-product/{id}/{quantity}")
+    public ResponseEntity<String> returnProductFromShoppingBag(@PathVariable Long id, @PathVariable Integer quantity) {
+        shoppingBagService.returnProductFromBag(id, quantity);
         return ResponseEntity.status(HttpStatus.OK).body("Product returned successfully");
 
     }

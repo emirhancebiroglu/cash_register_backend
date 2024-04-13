@@ -8,6 +8,7 @@ import bit.salesservice.entity.Product;
 import bit.salesservice.exceptions.checkoutnotfound.CheckoutNotFoundException;
 import bit.salesservice.repository.CheckoutRepository;
 import bit.salesservice.service.serviceimpl.CheckoutServiceImpl;
+import bit.salesservice.utils.ProductInfoHttpRequest;
 import bit.salesservice.utils.SaleReportProducer;
 import bit.salesservice.validators.CheckoutValidator;
 import lombok.Getter;
@@ -47,6 +48,10 @@ class CheckoutServiceTest {
     @Mock
     private SaleReportProducer saleReportProducer;
 
+    @Getter
+    @Mock
+    private ProductInfoHttpRequest request;
+
     @InjectMocks
     private CheckoutServiceImpl checkoutService;
     private static MockWebServer mockWebServer;
@@ -69,7 +74,6 @@ class CheckoutServiceTest {
         completeCheckoutReq = new CompleteCheckoutReq();
         completeCheckoutReq.setPaymentMethod("CASH");
         completeCheckoutReq.setMoneyTaken(120D);
-        completeCheckoutReq.setChange(5D);
 
         List<Product> products = new ArrayList<>();
         products.add(new Product());

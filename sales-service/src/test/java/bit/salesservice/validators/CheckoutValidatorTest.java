@@ -5,7 +5,6 @@ import bit.salesservice.entity.Checkout;
 import bit.salesservice.entity.Product;
 import bit.salesservice.exceptions.checkoutnotfound.CheckoutNotFoundException;
 import bit.salesservice.exceptions.completedcheckout.CompletedCheckoutException;
-import bit.salesservice.exceptions.invalidchange.InvalidChangeException;
 import bit.salesservice.exceptions.invalidmoneytaken.InvalidMoneyTakenException;
 import bit.salesservice.exceptions.invalidpaymentmethod.InvalidPaymentMethodException;
 import bit.salesservice.exceptions.productnotfound.ProductNotFoundException;
@@ -43,8 +42,15 @@ class CheckoutValidatorTest {
     }
 
     @Test
-    void validateMoneyTaken_InvalidMoneyTakenException_With_Cash() {
+    void validateMoneyTaken_InvalidMoneyTakenException_With_Cash_NullField() {
         completeCheckoutReq.setPaymentMethod("CASH");
+        assertThrows(InvalidMoneyTakenException.class, () -> checkoutValidator.validateCheckout(checkout, completeCheckoutReq));
+    }
+
+    @Test
+    void validateMoneyTaken_InvalidMoneyTakenException_With_Cash_ZeroOrNegativeField() {
+        completeCheckoutReq.setPaymentMethod("CASH");
+        completeCheckoutReq.setMoneyTaken(0D);
         assertThrows(InvalidMoneyTakenException.class, () -> checkoutValidator.validateCheckout(checkout, completeCheckoutReq));
     }
 
@@ -53,20 +59,6 @@ class CheckoutValidatorTest {
         completeCheckoutReq.setPaymentMethod("CREDIT_CARD");
         completeCheckoutReq.setMoneyTaken(25D);
         assertThrows(InvalidMoneyTakenException.class, () -> checkoutValidator.validateCheckout(checkout, completeCheckoutReq));
-    }
-
-    @Test
-    void validateMoneyTaken_InvalidChangeException_With_Cash() {
-        completeCheckoutReq.setPaymentMethod("CASH");
-        completeCheckoutReq.setMoneyTaken(25D);
-        assertThrows(InvalidChangeException.class, () -> checkoutValidator.validateCheckout(checkout, completeCheckoutReq));
-    }
-
-    @Test
-    void validateMoneyTaken_InvalidChangeException_With_Credit_Card() {
-        completeCheckoutReq.setPaymentMethod("CREDIT_CARD");
-        completeCheckoutReq.setChange(25D);
-        assertThrows(InvalidChangeException.class, () -> checkoutValidator.validateCheckout(checkout, completeCheckoutReq));
     }
 
     @Test

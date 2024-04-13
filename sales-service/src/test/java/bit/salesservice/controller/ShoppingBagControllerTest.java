@@ -57,11 +57,10 @@ class ShoppingBagControllerTest {
     void returnProductFromShoppingBag_Success() {
         Long productId = 1L;
         Integer quantityToReturn = 2;
-        Long checkoutId = 1L;
 
-        doNothing().when(shoppingBagService).returnProductFromBag(productId, quantityToReturn, checkoutId);
+        doNothing().when(shoppingBagService).returnProductFromBag(productId, quantityToReturn);
 
-        ResponseEntity<String> response = shoppingBagController.returnProductFromShoppingBag(productId, quantityToReturn, checkoutId);
+        ResponseEntity<String> response = shoppingBagController.returnProductFromShoppingBag(productId, quantityToReturn);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Product returned successfully", response.getBody());

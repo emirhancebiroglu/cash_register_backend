@@ -105,7 +105,7 @@ class CampaignValidatorTest {
     void validateProductCodes_MultipleCampaigns() {
         when(campaignRepository.findByCodesContaining(anyString())).thenReturn(List.of(new Campaign(), new Campaign()));
 
-        assertThrows(MultipleCampaignException.class, () -> campaignValidator.validateProductCodes(Collections.singletonList("product1"), campaignRepository));
+        assertThrows(MultipleCampaignException.class, this::validateProductCodes);
     }
 
     @Test
@@ -146,5 +146,9 @@ class CampaignValidatorTest {
     @Test
     void validateNeededQuantity_ZeroQuantity() {
         assertThrows(InvalidQuantityException.class, () -> campaignValidator.validateNeededQuantity(0));
+    }
+
+    private void validateProductCodes() {
+        campaignValidator.validateProductCodes(Collections.singletonList("product1"), campaignRepository);
     }
 }

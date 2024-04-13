@@ -10,7 +10,6 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.kafka.core.KafkaTemplate;
 
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -33,7 +32,7 @@ class SaleReportProducerTest {
 
         saleReportProducer.sendSaleReport(topic, saleReportDTO);
 
-        verify(kafkaTemplate, times(1)).send(eq(topic), eq(saleReportDTO));
+        verify(kafkaTemplate, times(1)).send(topic, saleReportDTO);
     }
 
     @Test
@@ -43,7 +42,7 @@ class SaleReportProducerTest {
 
         saleReportProducer.sendCancelledSaleReport(topic, cancelledSaleReportDTO);
 
-        verify(kafkaTemplate, times(1)).send(eq(topic), eq(cancelledSaleReportDTO));
+        verify(kafkaTemplate, times(1)).send(topic, cancelledSaleReportDTO);
     }
 
     @Test
@@ -53,6 +52,6 @@ class SaleReportProducerTest {
 
         saleReportProducer.sendReturnedProductInfoToReportingService(topic, returnedProductInfoDTO);
 
-        verify(kafkaTemplate, times(1)).send(eq(topic), eq(returnedProductInfoDTO));
+        verify(kafkaTemplate, times(1)).send(topic, returnedProductInfoDTO);
     }
 }

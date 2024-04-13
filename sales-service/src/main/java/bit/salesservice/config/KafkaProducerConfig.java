@@ -26,9 +26,9 @@ public class KafkaProducerConfig {
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-        configProps.put(JsonSerializer.TYPE_MAPPINGS, "salereport:com.bit.salesservice.dto.kafka.SaleReportDTO, " +
-                "returnedproductinfo:com.bit.salesservice.dto.kafka.ReturnedProductInfoDTO, " +
-                "cancelledsalereport:com.bit.salesservice.dto.kafka.CancelledSaleReportDTO");
+        configProps.put(JsonSerializer.TYPE_MAPPINGS, "saleReport:com.bit.salesservice.dto.kafka.SaleReportDTO, " +
+                "returnedProductInfo:com.bit.salesservice.dto.kafka.ReturnedProductInfoDTO, " +
+                "cancelledSaleReport:com.bit.salesservice.dto.kafka.CancelledSaleReportDTO");
 
         logProducerConfiguration(configProps);
 

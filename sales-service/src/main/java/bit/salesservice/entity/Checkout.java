@@ -25,16 +25,16 @@ public class Checkout {
     private List<Product> products;
 
     @Column(name = "total_price")
-    private Double totalPrice;
+    private Double totalPrice = 0D;
 
     @Column(name = "change")
-    private Double change;
+    private Double change = 0D;
 
     @Column(name = "money_taken")
-    private Double moneyTaken;
+    private Double moneyTaken = 0D;
 
     @Column(name = "returned_money")
-    private Double returnedMoney;
+    private Double returnedMoney = 0D;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "payment_method")
