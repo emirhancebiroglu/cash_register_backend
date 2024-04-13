@@ -1,4 +1,4 @@
-package bit.salesservice.dto.kafka;
+package bit.reportingservice.dto.kafka;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

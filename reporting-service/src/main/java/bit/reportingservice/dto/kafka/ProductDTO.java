@@ -7,10 +7,13 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class ReturnedProductInfoDTO {
+public class ProductDTO {
     private Long id;
-    private Integer returnedQuantity;
-    private Double returnedMoney;
+    private String code;
+    private String name;
+    private String appliedCampaign;
     private Integer quantity;
-    private Boolean returned;
+    private Integer returnedQuantity;
+    private boolean isReturned;
+    private double price;
 }

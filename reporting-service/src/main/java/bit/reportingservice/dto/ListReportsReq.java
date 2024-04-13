@@ -1,19 +1,16 @@
-package bit.reportingservice.dto.kafka;
+package bit.reportingservice.dto;
 
 import bit.reportingservice.entity.PaymentMethod;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Data
 @AllArgsConstructor
-@NoArgsConstructor
-public class SaleReportDTO {
-    private Long id;
-    private List<ProductDTO> products;
+public class ListReportsReq {
+    private List<ListProductReq> products;
     private Double totalPrice;
     private PaymentMethod paymentMethod;
     private Double moneyTaken;
@@ -21,5 +18,5 @@ public class SaleReportDTO {
     private LocalDateTime completedDate;
     private LocalDateTime cancelledDate;
     private Double returnedMoney;
-    private boolean cancelled;
+    private Boolean cancelled;
 }
