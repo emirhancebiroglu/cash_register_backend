@@ -10,6 +10,7 @@ import bit.reportingservice.entity.*;
 import bit.reportingservice.repository.ProductRepository;
 import bit.reportingservice.repository.SaleReportRepository;
 import bit.reportingservice.service.ReportingService;
+import bit.reportingservice.utils.ReceiptGenerator;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -17,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
@@ -26,6 +28,7 @@ import java.util.List;
 public class ReportingServiceImpl implements ReportingService {
     private final SaleReportRepository saleReportRepository;
     private final ProductRepository productRepository;
+    private final ReceiptGenerator receiptGenerator;
     @Override
     public void saveSaleReport(SaleReportDTO saleReportDTO) {
         SaleReport saleReport = mapToSaleReport(saleReportDTO);
@@ -44,6 +47,8 @@ public class ReportingServiceImpl implements ReportingService {
 
         for (Product product : saleReport.getProducts()) {
             product.setReturned(true);
+            product.setReturnedQuantity(product.getQuantity());
+            product.setQuantity(0);
         }
 
         saleReportRepository.save(saleReport);
@@ -58,6 +63,7 @@ public class ReportingServiceImpl implements ReportingService {
         product.setQuantity(returnedProductInfoDTO.getQuantity());
         product.setReturnedQuantity(returnedProductInfoDTO.getReturnedQuantity());
         product.getSaleReport().setReturnedMoney(returnedProductInfoDTO.getReturnedMoney());
+        product.getSaleReport().setTotalPrice(product.getSaleReport().getTotalPrice() - returnedProductInfoDTO.getReturnedMoney());
 
         productRepository.save(product);
         saleReportRepository.save(product.getSaleReport());
@@ -84,6 +90,14 @@ public class ReportingServiceImpl implements ReportingService {
         Page<SaleReport> saleReportsPage = filterReports(filterBy, paymentMethod, pageable);
 
         return saleReportsPage.map(this::mapToListReportReq).getContent();
+    }
+
+    @Override
+    public byte[] generatePdfReceipt(Long reportId) throws IOException {
+        SaleReport saleReport = saleReportRepository.findById(reportId)
+                .orElseThrow(() -> new IllegalStateException("No such report"));
+
+        return receiptGenerator.generate(saleReport);
     }
 
     private Page<SaleReport> filterReports(FilterBy filterBy, PaymentMethod paymentMethod, Pageable pageable) {

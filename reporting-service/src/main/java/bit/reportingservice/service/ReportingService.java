@@ -8,6 +8,7 @@ import bit.reportingservice.entity.FilterBy;
 import bit.reportingservice.entity.PaymentMethod;
 import bit.reportingservice.entity.SortBy;
 
+import java.io.IOException;
 import java.util.List;
 
 public interface ReportingService {
@@ -15,4 +16,5 @@ public interface ReportingService {
     void saveCancelledStateOfSaleReport(CancelledSaleReportDTO cancelledSaleReportDTO);
     void updateProductAndSaleReport(ReturnedProductInfoDTO returnedProductInfoDTO);
     List<ListReportsReq> listReports(int page, int size, SortBy sortBy, FilterBy filter, PaymentMethod paymentMethod);
+    byte[] generatePdfReceipt(Long reportId) throws IOException;
 }

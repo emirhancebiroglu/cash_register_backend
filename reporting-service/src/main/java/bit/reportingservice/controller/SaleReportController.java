@@ -6,8 +6,13 @@ import bit.reportingservice.entity.PaymentMethod;
 import bit.reportingservice.entity.SortBy;
 import bit.reportingservice.service.ReportingService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -24,5 +29,16 @@ public class SaleReportController {
             @RequestParam(required = false) PaymentMethod paymentMethod
     ){
         return reportingService.listReports(page, size, sortBy, filterBy, paymentMethod);
+    }
+
+    @GetMapping("/generate-receipt/{reportId}")
+    public ResponseEntity<byte[]> generatePdfReceipt(@PathVariable Long reportId) throws IOException {
+        byte[] pdfBytes = reportingService.generatePdfReceipt(reportId);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("filename", "sale" + reportId + ".pdf");
+        headers.setContentLength(pdfBytes.length);
+        return new ResponseEntity<>(pdfBytes, headers, HttpStatus.OK);
     }
 }
