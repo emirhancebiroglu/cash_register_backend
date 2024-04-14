@@ -34,7 +34,8 @@ public class KafkaConsumerConfig {
         configProps.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
         configProps.put(JsonDeserializer.TYPE_MAPPINGS, "saleReport:bit.reportingservice.dto.kafka.SaleReportDTO, " +
                 "returnedProductInfo:bit.reportingservice.dto.kafka.ReturnedProductInfoDTO, " +
-                "cancelledSaleReport:bit.reportingservice.dto.kafka.CancelledSaleReportDTO");
+                "cancelledSaleReport:bit.reportingservice.dto.kafka.CancelledSaleReportDTO, " +
+                "campaign:bit.reportingservice.dto.kafka.CampaignDTO");
 
         logger.info("Kafka consumer factory created successfully.");
         return new DefaultKafkaConsumerFactory<>(configProps);

@@ -2,11 +2,9 @@ package bit.reportingservice.service.serviceimpl;
 
 import bit.reportingservice.dto.ListProductReq;
 import bit.reportingservice.dto.ListReportsReq;
-import bit.reportingservice.dto.kafka.CancelledSaleReportDTO;
-import bit.reportingservice.dto.kafka.ProductDTO;
-import bit.reportingservice.dto.kafka.ReturnedProductInfoDTO;
-import bit.reportingservice.dto.kafka.SaleReportDTO;
+import bit.reportingservice.dto.kafka.*;
 import bit.reportingservice.entity.*;
+import bit.reportingservice.repository.CampaignRepository;
 import bit.reportingservice.repository.ProductRepository;
 import bit.reportingservice.repository.SaleReportRepository;
 import bit.reportingservice.service.ReportingService;
@@ -22,12 +20,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
 public class ReportingServiceImpl implements ReportingService {
     private final SaleReportRepository saleReportRepository;
     private final ProductRepository productRepository;
+    private final CampaignRepository campaignRepository;
     private final ReceiptGenerator receiptGenerator;
     @Override
     public void saveSaleReport(SaleReportDTO saleReportDTO) {
@@ -44,6 +44,7 @@ public class ReportingServiceImpl implements ReportingService {
         saleReport.setCancelled(true);
         saleReport.setCancelledDate(cancelledSaleReportDTO.getCanceledDate());
         saleReport.setReturnedMoney(cancelledSaleReportDTO.getReturnedMoney());
+        saleReport.setTotalPrice(0D);
 
         for (Product product : saleReport.getProducts()) {
             product.setReturned(true);
@@ -98,6 +99,28 @@ public class ReportingServiceImpl implements ReportingService {
                 .orElseThrow(() -> new IllegalStateException("No such report"));
 
         return receiptGenerator.generate(saleReport);
+    }
+
+    @Override
+    public void saveCampaign(CampaignDTO campaignDTO) {
+        Optional<Campaign> campaign = campaignRepository.findByName(campaignDTO.getName());
+
+        if (campaign.isEmpty()){
+            Campaign newCampaign = new Campaign();
+            newCampaign.setName(campaignDTO.getName());
+            newCampaign.setDiscountAmount(campaignDTO.getDiscountAmount());
+            newCampaign.setDiscountType(campaignDTO.getDiscountType());
+            newCampaign.setNeededQuantity(campaignDTO.getNeededQuantity());
+
+            campaignRepository.save(newCampaign);
+        }
+        else{
+            campaign.get().setNeededQuantity(campaignDTO.getNeededQuantity());
+            campaign.get().setDiscountAmount(campaignDTO.getDiscountAmount());
+            campaign.get().setDiscountType(campaignDTO.getDiscountType());
+
+            campaignRepository.save(campaign.get());
+        }
     }
 
     private Page<SaleReport> filterReports(FilterBy filterBy, PaymentMethod paymentMethod, Pageable pageable) {

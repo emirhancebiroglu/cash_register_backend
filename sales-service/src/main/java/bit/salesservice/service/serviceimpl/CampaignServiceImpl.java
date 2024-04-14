@@ -2,6 +2,7 @@ package bit.salesservice.service.serviceimpl;
 
 import bit.salesservice.dto.AddAndUpdateCampaignReq;
 import bit.salesservice.dto.ListCampaignsReq;
+import bit.salesservice.dto.kafka.CampaignDTO;
 import bit.salesservice.entity.Campaign;
 import bit.salesservice.entity.DiscountType;
 import bit.salesservice.exceptions.activecampaign.ActiveCampaignException;
@@ -13,6 +14,7 @@ import bit.salesservice.exceptions.invaliddiscounttype.InvalidDiscountTypeExcept
 import bit.salesservice.exceptions.productnotfound.ProductNotFoundException;
 import bit.salesservice.repository.CampaignRepository;
 import bit.salesservice.service.CampaignService;
+import bit.salesservice.utils.CampaignProducer;
 import bit.salesservice.utils.ProductInfoHttpRequest;
 import bit.salesservice.validators.CampaignValidator;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +36,7 @@ public class CampaignServiceImpl implements CampaignService {
     private final CampaignRepository campaignRepository;
     private final ProductInfoHttpRequest info;
     private final CampaignValidator campaignValidator;
+    private final CampaignProducer campaignProducer;
     private static final Logger logger = LoggerFactory.getLogger(CampaignServiceImpl.class);
     private final String jwtToken = HttpHeaders.AUTHORIZATION.substring(7);
 
@@ -59,6 +62,8 @@ public class CampaignServiceImpl implements CampaignService {
         Campaign campaign = mapToCampaign(addAndUpdateCampaignReq);
 
         campaignRepository.save(campaign);
+
+        sendCampaignInfoToReportingService(campaign);
 
         logger.info("Campaign added successfully");
     }
@@ -114,6 +119,8 @@ public class CampaignServiceImpl implements CampaignService {
 
         existingCampaign.setUpdatedDate(LocalDateTime.now());
         campaignRepository.save(existingCampaign);
+
+        sendCampaignInfoToReportingService(existingCampaign);
 
         logger.info("Campaign updated successfully");
     }
@@ -242,5 +249,16 @@ public class CampaignServiceImpl implements CampaignService {
             campaign.setNeededQuantity(1);
         }
         return campaign;
+    }
+
+    private void sendCampaignInfoToReportingService(Campaign campaign){
+        CampaignDTO campaignDTO = new CampaignDTO(
+                campaign.getName(),
+                campaign.getDiscountType(),
+                campaign.getDiscountAmount(),
+                campaign.getNeededQuantity()
+        );
+
+        campaignProducer.sendCampaign("campaign", campaignDTO);
     }
 }

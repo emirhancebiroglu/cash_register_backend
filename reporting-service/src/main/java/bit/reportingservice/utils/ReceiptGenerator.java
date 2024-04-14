@@ -1,7 +1,10 @@
 package bit.reportingservice.utils;
 
+import bit.reportingservice.entity.Campaign;
 import bit.reportingservice.entity.Product;
 import bit.reportingservice.entity.SaleReport;
+import bit.reportingservice.repository.CampaignRepository;
+import lombok.RequiredArgsConstructor;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
@@ -16,10 +19,13 @@ import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Optional;
 
 @Component
+@RequiredArgsConstructor
 public class ReceiptGenerator {
-    private static final String SEPARATOR = "----------------------------------------------------------------------";
+    private final CampaignRepository campaignRepository;
+    private static final String SEPARATOR = "---------------------------------------------------------------------------";
 
     public byte[] generate(SaleReport saleReport) throws IOException {
         DecimalFormat decimalFormat = new DecimalFormat("#.##");
@@ -52,22 +58,43 @@ public class ReceiptGenerator {
 
                 contentStream.newLineAtOffset(0, -20);
                 for (Product product: saleReport.getProducts()){
+                    int quantity = product.getQuantity() + product.getReturnedQuantity();
+                    double discount;
+                    double priceWithCampaign = quantity * product.getPrice();
+                    int timesApplied;
+                    Optional<Campaign> campaign = campaignRepository.findByName(product.getAppliedCampaign());
+
+                    if (campaign.isPresent()){
+                        timesApplied = quantity / campaign.get().getNeededQuantity();
+                        discount = (product.getPrice() * (campaign.get().getDiscountAmount() / 100)) * (campaign.get().getNeededQuantity() * timesApplied);
+                        priceWithCampaign -= discount;
+                    }
+
                     contentStream.showText(product.getCode());
-                    contentStream.newLineAtOffset(+100, 0);
-                    contentStream.showText("( " + product.getQuantity() + "X " + product.getPrice() + " )");
+                    contentStream.newLineAtOffset(+85, 0);
+                    contentStream.showText("( " + quantity + "X " + product.getPrice() + " )");
+
+                    contentStream.newLineAtOffset(0, -15);
                     if (product.getReturnedQuantity() > 0){
-                        contentStream.newLineAtOffset(0, -15);
                         contentStream.showText(product.getReturnedQuantity() + " returned");
-                        contentStream.newLineAtOffset(-100, 0);
+                    }
+
+                    if (product.getAppliedCampaign() != null){
+                        contentStream.newLineAtOffset(+55, 0);
+                        contentStream.setFont(font, 10);
+                        contentStream.showText(product.getAppliedCampaign());
+                        contentStream.setFont(font, 11);
+                        contentStream.newLineAtOffset(-140, 0);
                     }
                     else{
-                        contentStream.newLineAtOffset(-100, -15);
+                        contentStream.newLineAtOffset(-85, 0);
                     }
+
                     contentStream.showText(product.getName());
-                    contentStream.newLineAtOffset(+220, +7.5F);
-                    String formattedPrice = decimalFormat.format(product.getQuantity() * product.getPrice());
+                    contentStream.newLineAtOffset(+230, +15F);
+                    String formattedPrice = decimalFormat.format(priceWithCampaign);
                     contentStream.showText(formattedPrice);
-                    contentStream.newLineAtOffset(-220, -22.5F);
+                    contentStream.newLineAtOffset(-230, -30);
                 }
 
                 contentStream.newLineAtOffset(0, -5);
@@ -76,36 +103,36 @@ public class ReceiptGenerator {
                 contentStream.newLineAtOffset(0, -20);
                 contentStream.showText("MONEY TAKEN");
 
-                contentStream.newLineAtOffset(+220, 0);
+                contentStream.newLineAtOffset(+230, 0);
                 contentStream.showText(decimalFormat.format(saleReport.getMoneyTaken()));
 
                 if (saleReport.getReturnedMoney() > 0){
-                    contentStream.newLineAtOffset(-220, -15);
+                    contentStream.newLineAtOffset(-230, -15);
                     contentStream.showText("RETURNED MONEY");
 
-                    contentStream.newLineAtOffset(+216, 0);
+                    contentStream.newLineAtOffset(+226, 0);
                     contentStream.showText("-" + decimalFormat.format(saleReport.getReturnedMoney()));
                     contentStream.newLineAtOffset(+4, 0);
                 }
 
-                contentStream.newLineAtOffset(-220, -15);
+                contentStream.newLineAtOffset(-230, -15);
                 contentStream.showText("CHANGE");
 
-                contentStream.newLineAtOffset(+216, 0);
+                contentStream.newLineAtOffset(+226, 0);
                 contentStream.showText("-" + decimalFormat.format(saleReport.getChange()));
                 contentStream.newLineAtOffset(+4, 0);
 
-                contentStream.newLineAtOffset(-220, -20);
+                contentStream.newLineAtOffset(-230, -20);
                 contentStream.showText(SEPARATOR);
 
                 contentStream.newLineAtOffset(0, -20);
                 contentStream.showText("TOTAL");
 
-                contentStream.newLineAtOffset(+220, 0);
+                contentStream.newLineAtOffset(+230, 0);
                 contentStream.showText(decimalFormat.format(saleReport.getTotalPrice()));
 
                 if (saleReport.isCancelled()){
-                    contentStream.newLineAtOffset(-120, -45);
+                    contentStream.newLineAtOffset(-130, -45);
                     contentStream.showText("CANCELLED");
                 }
 
