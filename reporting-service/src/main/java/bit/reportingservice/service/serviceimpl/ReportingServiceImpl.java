@@ -4,12 +4,19 @@ import bit.reportingservice.dto.ListProductReq;
 import bit.reportingservice.dto.ListReportsReq;
 import bit.reportingservice.dto.kafka.*;
 import bit.reportingservice.entity.*;
+import bit.reportingservice.exceptions.invalidfilter.InvalidFilterException;
+import bit.reportingservice.exceptions.invalidpaymentmethod.InvalidPaymentMethodException;
+import bit.reportingservice.exceptions.invalidsort.InvalidSortException;
+import bit.reportingservice.exceptions.productnotfound.ProductNotFoundException;
+import bit.reportingservice.exceptions.reportnotfound.ReportNotFoundException;
 import bit.reportingservice.repository.CampaignRepository;
 import bit.reportingservice.repository.ProductRepository;
 import bit.reportingservice.repository.SaleReportRepository;
 import bit.reportingservice.service.ReportingService;
 import bit.reportingservice.utils.ReceiptGenerator;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -29,17 +36,25 @@ public class ReportingServiceImpl implements ReportingService {
     private final ProductRepository productRepository;
     private final CampaignRepository campaignRepository;
     private final ReceiptGenerator receiptGenerator;
+    private static final Logger logger = LoggerFactory.getLogger(ReportingServiceImpl.class);
+
     @Override
     public void saveSaleReport(SaleReportDTO saleReportDTO) {
+        logger.info("Saving sale report...");
+
         SaleReport saleReport = mapToSaleReport(saleReportDTO);
 
         saleReportRepository.save(saleReport);
+
+        logger.info("Sale report saved");
     }
 
     @Override
     public void saveCancelledStateOfSaleReport(CancelledSaleReportDTO cancelledSaleReportDTO) {
+        logger.info("Saving cancelled sale report...");
+
         SaleReport saleReport = saleReportRepository.findById(cancelledSaleReportDTO.getId())
-                .orElseThrow(() -> new IllegalArgumentException("notfound"));
+                .orElseThrow(() -> new ReportNotFoundException("Report not found"));
 
         saleReport.setCancelled(true);
         saleReport.setCancelledDate(cancelledSaleReportDTO.getCanceledDate());
@@ -53,12 +68,16 @@ public class ReportingServiceImpl implements ReportingService {
         }
 
         saleReportRepository.save(saleReport);
+
+        logger.info("Cancelled sale report saved");
     }
 
     @Override
     public void updateProductAndSaleReport(ReturnedProductInfoDTO returnedProductInfoDTO) {
+        logger.info("Updating product and sale report...");
+
         Product product = productRepository.findById(returnedProductInfoDTO.getId())
-                .orElseThrow(() -> new IllegalArgumentException("notfound"));
+                .orElseThrow(() -> new ProductNotFoundException("Product not found"));
 
         product.setReturned(returnedProductInfoDTO.getReturned());
         product.setQuantity(returnedProductInfoDTO.getQuantity());
@@ -68,41 +87,53 @@ public class ReportingServiceImpl implements ReportingService {
 
         productRepository.save(product);
         saleReportRepository.save(product.getSaleReport());
+
+        logger.info("Product and sale report updated");
     }
 
     @Override
     public List<ListReportsReq> listReports(int page, int size, SortBy sortBy, FilterBy filterBy, PaymentMethod paymentMethod) {
+        logger.info("Listing reports...");
+
         if (filterBy != null){
             if (filterBy == FilterBy.PAYMENT_METHOD && (paymentMethod == null || !EnumSet.allOf(PaymentMethod.class).contains(paymentMethod))){
-                throw new IllegalArgumentException("invalid payment method provided");
+                throw new InvalidPaymentMethodException("invalid payment method provided");
             }
 
             if (!EnumSet.allOf(FilterBy.class).contains(filterBy)){
-                throw new IllegalArgumentException("Invalid filter method");
+                throw new InvalidFilterException("Invalid filter method");
             }
         }
 
         if (!EnumSet.allOf(SortBy.class).contains(sortBy)){
-                throw new IllegalArgumentException("Invalid sort method");
+                throw new InvalidSortException("Invalid sort method");
         }
 
         Pageable pageable = PageRequest.of(page, size, getSort(sortBy));
 
         Page<SaleReport> saleReportsPage = filterReports(filterBy, paymentMethod, pageable);
 
+        logger.info("Reports listed");
+
         return saleReportsPage.map(this::mapToListReportReq).getContent();
     }
 
     @Override
     public byte[] generatePdfReceipt(Long reportId) throws IOException {
+        logger.info("Generating pdf receipt...");
+
         SaleReport saleReport = saleReportRepository.findById(reportId)
-                .orElseThrow(() -> new IllegalStateException("No such report"));
+                .orElseThrow(() -> new ReportNotFoundException("Report not found"));
+
+        logger.info("Receipt generated");
 
         return receiptGenerator.generate(saleReport);
     }
 
     @Override
     public void saveCampaign(CampaignDTO campaignDTO) {
+        logger.info("Saving campaign...");
+
         Optional<Campaign> campaign = campaignRepository.findByName(campaignDTO.getName());
 
         if (campaign.isEmpty()){
@@ -121,6 +152,8 @@ public class ReportingServiceImpl implements ReportingService {
 
             campaignRepository.save(campaign.get());
         }
+
+        logger.info("Campaign saved");
     }
 
     private Page<SaleReport> filterReports(FilterBy filterBy, PaymentMethod paymentMethod, Pageable pageable) {
