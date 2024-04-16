@@ -14,6 +14,7 @@ import bit.salesservice.exceptions.invaliddiscounttype.InvalidDiscountTypeExcept
 import bit.salesservice.exceptions.productnotfound.ProductNotFoundException;
 import bit.salesservice.repository.CampaignRepository;
 import bit.salesservice.service.serviceimpl.CampaignServiceImpl;
+import bit.salesservice.utils.CampaignProducer;
 import bit.salesservice.utils.ProductInfoHttpRequest;
 import bit.salesservice.validators.CampaignValidator;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,6 +44,9 @@ class CampaignServiceTest {
     @Mock
     private CampaignValidator campaignValidator;
 
+    @Mock
+    private CampaignProducer campaignProducer;
+
     @InjectMocks
     private CampaignServiceImpl campaignService;
 
@@ -53,7 +57,7 @@ class CampaignServiceTest {
 
     @BeforeEach
     public void setUp() {
-        campaignService = new CampaignServiceImpl(campaignRepository, productInfoHttpRequest, campaignValidator);
+        campaignService = new CampaignServiceImpl(campaignRepository, productInfoHttpRequest, campaignValidator, campaignProducer);
 
         request = new AddAndUpdateCampaignReq();
         request.setName("Test Campaign");
