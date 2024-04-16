@@ -20,6 +20,11 @@ public class JwtUtil {
   @Value("${jwt.secret-key}")
   String jwtSecretKey;
 
+  /**
+   * Validates the given JWT token.
+   *
+   * @param token JWT token to be validated
+   */
   public void validateToken(final String token) {
     Jwts.parserBuilder()
         .setSigningKey(getSignKey())
@@ -27,11 +32,23 @@ public class JwtUtil {
         .parseClaimsJws(token);
   }
 
+
+  /**
+   * Retrieves the signing key from the JWT secret key.
+   *
+   * @return Key object representing the signing key
+   */
   private Key getSignKey() {
     byte[] keyBytes = Decoders.BASE64.decode(jwtSecretKey);
     return Keys.hmacShaKeyFor(keyBytes);
   }
 
+  /**
+   * Extracts authorities (roles) from the given JWT token.
+   *
+   * @param token JWT token from which authorities are extracted
+   * @return List of authorities extracted from the token
+   */
   public List<String> extractAuthorities(String token) {
     Key key = getSignKey();
 
@@ -41,9 +58,22 @@ public class JwtUtil {
             .parseClaimsJws(token);
 
     Claims claims = claimsJws.getBody();
-    return claims.get("authorities", List.class);
+
+    @SuppressWarnings("unchecked")
+    List<String> authorities = claims.get("authorities", List.class);
+
+    return authorities;
   }
 
+
+  /**
+   * Checks if the given request has any of the specified roles.
+   *
+   * @param request ServerHttpRequest object representing the request
+   * @param roles   List of roles to check for
+   * @return true if the request has any of the specified roles, false otherwise
+   * @throws MissingAuthorizationHeaderException if authorization header is missing in the request
+   */
   public boolean hasAnyRole(ServerHttpRequest request, List<String> roles) {
     String token = extractToken(request);
     List<String> authorities = extractAuthorities(token);
@@ -57,6 +87,14 @@ public class JwtUtil {
     return false;
   }
 
+
+  /**
+   * Extracts JWT token from the given ServerHttpRequest.
+   *
+   * @param request ServerHttpRequest object from which token is extracted
+   * @return JWT token extracted from the request
+   * @throws MissingAuthorizationHeaderException if authorization header is missing in the request
+   */
   private String extractToken(ServerHttpRequest request) {
     List<String> authorizationHeaders = request.getHeaders().get(HttpHeaders.AUTHORIZATION);
 

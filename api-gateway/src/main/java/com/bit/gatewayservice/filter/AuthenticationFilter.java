@@ -36,6 +36,12 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
     this.webClientConfig = webClientConfig;
   }
 
+  /**
+   * Apply the Authentication Filter.
+   *
+   * @param config The configuration for the filter.
+   * @return The GatewayFilter.
+   */
   @Override
   public GatewayFilter apply(Config config) {
     return (exchange, chain) -> {
@@ -66,6 +72,12 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
     return List.of("roles");
   }
 
+  /**
+   * Validate if the JWT token is valid.
+   *
+   * @param jwt The JWT token.
+   * @return A Mono indicating if the token is valid.
+   */
   private Mono<Boolean> isTokenValid(String jwt) {
     return webClientConfig.webClient().get()
             .uri(uriBuilder -> uriBuilder
@@ -76,12 +88,22 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
             .bodyToMono(Boolean.class);
   }
 
+  /**
+   * Validate the authorization header.
+   *
+   * @param authHeader The authorization header.
+   */
   private void validateAuthorizationHeader(String authHeader) {
     if (authHeader == null || !authHeader.startsWith("Bearer ")) {
       throw new MissingAuthorizationHeaderException("Missing or invalid authorization header");
     }
   }
 
+  /**
+   * Validate the JWT token.
+   *
+   * @param jwtToken The JWT token.
+   */
   private void validateToken(String jwtToken) {
     try {
       jwtUtil.validateToken(jwtToken);
@@ -91,6 +113,15 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
     }
   }
 
+  /**
+   * Handle a valid token.
+   *
+   * @param jwtToken The JWT token.
+   * @param exchange The server web exchange.
+   * @param config   The filter configuration.
+   * @param chain    The gateway filter chain.
+   * @return A Mono indicating the completion of handling the valid token.
+   */
   private Mono<Void> handleValidToken(String jwtToken, ServerWebExchange exchange, Config config, GatewayFilterChain chain) {
     return isTokenValid(jwtToken)
             .flatMap(valid -> {
