@@ -53,28 +53,36 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
             <version>4.1.0</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.fasterxml.woodstox</groupId>
-                    <artifactId>woodstox-core</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.google.guava</groupId>
-                    <artifactId>guava</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>com.thoughtworks.xstream</groupId>
-                    <artifactId>xstream</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.httpcomponents</groupId>
-                    <artifactId>httpclient</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.codehaus.jettison</groupId>
-                    <artifactId>jettison</artifactId>
-                </exclusion>
-            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpclient</artifactId>
+            <version>[4.5.3,)</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.fasterxml.woodstox</groupId>
+            <artifactId>woodstox-core</artifactId>
+            <version>[6.2.1,)</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>[19.0,)</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.thoughtworks.xstream</groupId>
+            <artifactId>xstream</artifactId>
+            <version>[1.4.19,)</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.codehaus.jettison</groupId>
+            <artifactId>jettison</artifactId>
+            <version>[1.4.0,)</version>
         </dependency>
 
         <dependency>
@@ -99,6 +107,18 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-web</artifactId>
+            <version>[6.1.4,)</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>3.0.2</version>
+        </dependency>
     </dependencies>
 
     <build>
@@ -114,7 +134,28 @@
                 <version>${jacoco.version}</version>
                 <configuration>
                     <excludes>
-                        <exclude>com/bit/jwtauthservice/JwtAuthServiceApplication.class</exclude>
+                        <exclude>bit/reportingservice/ReportingServiceApplication.class</exclude>
+                        <exclude>bit/reportingservice/config/KafkaConsumerConfig.class</exclude>
+                        <exclude>bit/reportingservice/dto/kafka/CampaignDTO.class</exclude>
+                        <exclude>bit/reportingservice/dto/kafka/CancelledSaleReportDTO.class</exclude>
+                        <exclude>bit/reportingservice/dto/kafka/ProductDTO.class</exclude>
+                        <exclude>bit/reportingservice/dto/kafka/ReturnedProductInfoDTO.class</exclude>
+                        <exclude>bit/reportingservice/dto/kafka/SaleReportDTO.class</exclude>
+                        <exclude>bit/reportingservice/dto/ListProductReq.class</exclude>
+                        <exclude>bit/reportingservice/dto/ListReportsReq.class</exclude>
+                        <exclude>bit/reportingservice/entity/Campaign.class</exclude>
+                        <exclude>bit/reportingservice/entity/DiscountType.class</exclude>
+                        <exclude>bit/reportingservice/entity/FilterBy.class</exclude>
+                        <exclude>bit/reportingservice/entity/PaymentMethod.class</exclude>
+                        <exclude>bit/reportingservice/entity/Product.class</exclude>
+                        <exclude>bit/reportingservice/entity/SaleReport.class</exclude>
+                        <exclude>bit/reportingservice/entity/SortBy.class</exclude>
+                        <exclude>bit/reportingservice/exceptions/invalidfilter/InvalidFilterExceptionHandler.class</exclude>
+                        <exclude>bit/reportingservice/exceptions/invalidpaymentmethod/InvalidPaymentMethodExceptionHandler.class</exclude>
+                        <exclude>bit/reportingservice/exceptions/invalidsort/InvalidSortExceptionHandler.class</exclude>
+                        <exclude>bit/reportingservice/exceptions/productnotfound/ProductNotFoundExceptionHandler.class</exclude>
+                        <exclude>bit/reportingservice/exceptions/reportnotfound/ReportNotFoundExceptionHandler.class</exclude>
+                        <exclude>bit/reportingservice/exceptions/ErrorDetails.class</exclude>
                     </excludes>
                 </configuration>
                 <executions>

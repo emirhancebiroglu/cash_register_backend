@@ -1,6 +1,5 @@
 package bit.salesservice.dto.kafka;
 
-import bit.salesservice.entity.Product;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -9,6 +8,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ReturnedProductInfoDTO {
-    private Product product;
+    private Long id;
+    private Integer returnedQuantity;
     private Double returnedMoney;
+    private Integer quantity;
+    private Boolean returned;
 }

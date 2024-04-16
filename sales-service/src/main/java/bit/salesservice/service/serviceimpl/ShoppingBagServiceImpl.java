@@ -199,7 +199,7 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
             request.updateStocks(jwtToken, productsIdWithQuantity, false);
 
             shoppingBagRepository.save(product);
-            sendReturnedProductsInfoToReportingService(product, product.getCheckout().getReturnedMoney());
+            sendReturnedProductsInfoToReportingService(product);
         }
         else{
             throw new UncompletedCheckoutException("Checkout is not completed.");
@@ -366,10 +366,13 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
         }
     }
 
-    private void sendReturnedProductsInfoToReportingService(Product product, Double returnedMoney) {
+    private void sendReturnedProductsInfoToReportingService(Product product) {
         ReturnedProductInfoDTO returnedProductInfoDTO = new ReturnedProductInfoDTO(
-                product,
-                returnedMoney
+                product.getId(),
+                product.getReturnedQuantity(),
+                product.getCheckout().getReturnedMoney(),
+                product.getQuantity(),
+                product.isReturned()
         );
 
         saleReportProducer.sendReturnedProductInfoToReportingService("returned-product-info", returnedProductInfoDTO);

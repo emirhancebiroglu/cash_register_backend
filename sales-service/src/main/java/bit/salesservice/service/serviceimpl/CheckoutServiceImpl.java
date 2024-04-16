@@ -1,6 +1,7 @@
 package bit.salesservice.service.serviceimpl;
 
 import bit.salesservice.dto.CompleteCheckoutReq;
+import bit.salesservice.dto.ProductDTO;
 import bit.salesservice.dto.kafka.CancelledSaleReportDTO;
 import bit.salesservice.dto.kafka.SaleReportDTO;
 import bit.salesservice.entity.Checkout;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -106,9 +108,13 @@ public class CheckoutServiceImpl implements CheckoutService {
         return productsIdWithQuantity;
     }
     private void sendSaleReportToReportingService(Checkout checkout){
+        List<ProductDTO> productDTOs = checkout.getProducts().stream()
+                .map(this::mapToProductDTO)
+                .toList();
+        
         SaleReportDTO saleReportDTO = new SaleReportDTO(
                 checkout.getId(),
-                checkout.getProducts(),
+                productDTOs,
                 checkout.getTotalPrice(),
                 checkout.getPaymentMethod(),
                 checkout.getMoneyTaken(),
@@ -119,6 +125,19 @@ public class CheckoutServiceImpl implements CheckoutService {
         );
 
         saleReportProducer.sendSaleReport("sale-report", saleReportDTO);
+    }
+
+    private ProductDTO mapToProductDTO(Product product) {
+        return new ProductDTO(
+                product.getId(),
+                product.getCode(),
+                product.getName(),
+                product.getAppliedCampaign(),
+                product.getQuantity(),
+                product.getReturnedQuantity(),
+                product.isReturned(),
+                product.getPrice()
+        );
     }
 
     private void sendCancelledSaleReportInfoToReportingService(Long id, boolean cancelled, LocalDateTime cancelledDate, Double returnedMoney) {

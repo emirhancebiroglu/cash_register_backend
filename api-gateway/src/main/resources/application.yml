@@ -41,7 +41,7 @@ spring:
         - id: reporting-service
           uri: lb://REPORTING-SERVICE
           predicates:
-            - Path=/api/store-manager/**
+            - Path=/api/reports/**
           filters:
             - name: AuthenticationFilter
               args:

@@ -51,12 +51,4 @@ public class Campaign {
 
     @Column(name = "needed_quantity", nullable = false)
     private Integer neededQuantity;
-
-    @PrePersist
-    @PreUpdate
-    private void updateInactivateFlag(){
-        if (LocalDateTime.now().isAfter(endDate)){
-            this.isInactive = true;
-        }
-    }
 }
