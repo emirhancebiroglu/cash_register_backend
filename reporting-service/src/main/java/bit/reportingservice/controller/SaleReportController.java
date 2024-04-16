@@ -1,9 +1,6 @@
 package bit.reportingservice.controller;
 
 import bit.reportingservice.dto.ListReportsReq;
-import bit.reportingservice.entity.FilterBy;
-import bit.reportingservice.entity.PaymentMethod;
-import bit.reportingservice.entity.SortBy;
 import bit.reportingservice.service.ReportingService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -24,9 +21,9 @@ public class SaleReportController {
     public List<ListReportsReq> listReports(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "COMPLETED_DATE_DESC") SortBy sortBy,
-            @RequestParam(required = false) FilterBy filterBy,
-            @RequestParam(required = false) PaymentMethod paymentMethod
+            @RequestParam(defaultValue = "COMPLETED_DATE_DESC") String sortBy,
+            @RequestParam(required = false) String filterBy,
+            @RequestParam(required = false) String paymentMethod
     ){
         return reportingService.listReports(page, size, sortBy, filterBy, paymentMethod);
     }

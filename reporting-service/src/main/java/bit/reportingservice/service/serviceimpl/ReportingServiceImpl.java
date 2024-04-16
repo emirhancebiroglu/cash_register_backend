@@ -3,7 +3,10 @@ package bit.reportingservice.service.serviceimpl;
 import bit.reportingservice.dto.ListProductReq;
 import bit.reportingservice.dto.ListReportsReq;
 import bit.reportingservice.dto.kafka.*;
-import bit.reportingservice.entity.*;
+import bit.reportingservice.entity.Campaign;
+import bit.reportingservice.entity.PaymentMethod;
+import bit.reportingservice.entity.Product;
+import bit.reportingservice.entity.SaleReport;
 import bit.reportingservice.exceptions.invalidfilter.InvalidFilterException;
 import bit.reportingservice.exceptions.invalidpaymentmethod.InvalidPaymentMethodException;
 import bit.reportingservice.exceptions.invalidsort.InvalidSortException;
@@ -25,7 +28,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
 
@@ -92,31 +94,17 @@ public class ReportingServiceImpl implements ReportingService {
     }
 
     @Override
-    public List<ListReportsReq> listReports(int page, int size, SortBy sortBy, FilterBy filterBy, PaymentMethod paymentMethod) {
-        logger.info("Listing reports...");
+    public List<ListReportsReq> listReports(int page, int size, String sortBy, String filterBy, String paymentMethod) {
+            logger.info("Listing reports...");
 
-        if (filterBy != null){
-            if (filterBy == FilterBy.PAYMENT_METHOD && (paymentMethod == null || !EnumSet.allOf(PaymentMethod.class).contains(paymentMethod))){
-                throw new InvalidPaymentMethodException("invalid payment method provided");
-            }
+            Pageable pageable = PageRequest.of(page, size, getSort(sortBy));
 
-            if (!EnumSet.allOf(FilterBy.class).contains(filterBy)){
-                throw new InvalidFilterException("Invalid filter method");
-            }
+            Page<SaleReport> saleReportsPage = filterReports(filterBy, getPaymentMethod(paymentMethod), pageable);
+
+             logger.info("Reports listed");
+
+            return saleReportsPage.map(this::mapToListReportReq).getContent();
         }
-
-        if (!EnumSet.allOf(SortBy.class).contains(sortBy)){
-                throw new InvalidSortException("Invalid sort method");
-        }
-
-        Pageable pageable = PageRequest.of(page, size, getSort(sortBy));
-
-        Page<SaleReport> saleReportsPage = filterReports(filterBy, paymentMethod, pageable);
-
-        logger.info("Reports listed");
-
-        return saleReportsPage.map(this::mapToListReportReq).getContent();
-    }
 
     @Override
     public byte[] generatePdfReceipt(Long reportId) throws IOException {
@@ -156,21 +144,23 @@ public class ReportingServiceImpl implements ReportingService {
         logger.info("Campaign saved");
     }
 
-    private Page<SaleReport> filterReports(FilterBy filterBy, PaymentMethod paymentMethod, Pageable pageable) {
+    private Page<SaleReport> filterReports(String filterBy, PaymentMethod paymentMethod, Pageable pageable) {
         if (filterBy == null) {
             return saleReportRepository.findAll(pageable);
         }
 
         return switch (filterBy) {
-            case CANCELLED_ONLY -> saleReportRepository.findByCancelled(true, pageable);
-            case PAYMENT_METHOD -> saleReportRepository.findByPaymentMethod(paymentMethod, pageable);
+            case "CANCELLED_ONLY" -> saleReportRepository.findByCancelled(true, pageable);
+            case "PAYMENT_METHOD" -> saleReportRepository.findByPaymentMethod(paymentMethod, pageable);
+            default -> throw new InvalidFilterException("Unexpected value: " + filterBy);
         };
     }
 
-    private Sort getSort(SortBy sortBy) {
+    private Sort getSort(String sortBy) {
         return switch (sortBy) {
-            case COMPLETED_DATE_DESC -> Sort.by(Sort.Direction.DESC, "completedDate");
-            case TOTAL_PRICE_DESC -> Sort.by(Sort.Direction.DESC, "totalPrice");
+            case "COMPLETED_DATE_DESC" -> Sort.by(Sort.Direction.DESC, "completedDate");
+            case "TOTAL_PRICE_DESC" -> Sort.by(Sort.Direction.DESC, "totalPrice");
+            default -> throw new InvalidSortException("Unexpected value: " + sortBy);
         };
     }
 
@@ -241,5 +231,18 @@ public class ReportingServiceImpl implements ReportingService {
         product.setPrice(productDTO.getPrice());
         product.setReturned(productDTO.isReturned());
         return product;
+    }
+
+    private static PaymentMethod getPaymentMethod(String payment){
+        if (payment == null) {
+            return null;
+        }
+
+        try {
+            return PaymentMethod.valueOf(payment);
+        }
+        catch (IllegalArgumentException e){
+            throw new InvalidPaymentMethodException("Invalid payment method");
+        }
     }
 }

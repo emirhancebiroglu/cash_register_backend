@@ -197,7 +197,7 @@ public class CampaignServiceImpl implements CampaignService {
         return listCampaignsReq;
     }
 
-    private static DiscountType getDiscountType(AddAndUpdateCampaignReq addAndUpdateCampaignReq) {
+        private static DiscountType getDiscountType(AddAndUpdateCampaignReq addAndUpdateCampaignReq) {
         DiscountType discountType;
 
         try {

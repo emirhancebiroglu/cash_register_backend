@@ -12,7 +12,6 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class CampaignConsumer {
     private final ReportingService reportingService;
-
     private static final Logger logger = LoggerFactory.getLogger(CampaignConsumer.class);
 
     @KafkaListener(topics = "campaign", groupId = "sales")
