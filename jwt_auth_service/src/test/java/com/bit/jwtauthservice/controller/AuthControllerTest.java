@@ -1,14 +1,18 @@
 package com.bit.jwtauthservice.controller;
 
+import com.bit.jwtauthservice.dto.RefreshTokenReq;
 import com.bit.jwtauthservice.dto.login.LoginReq;
 import com.bit.jwtauthservice.dto.login.LoginRes;
 import com.bit.jwtauthservice.dto.password.ChangePasswordReq;
 import com.bit.jwtauthservice.dto.password.ForgotPasswordReq;
 import com.bit.jwtauthservice.dto.password.ResetPasswordReq;
 import com.bit.jwtauthservice.dto.usercode.ForgotUserCodeReq;
+import com.bit.jwtauthservice.entity.RefreshToken;
+import com.bit.jwtauthservice.entity.User;
 import com.bit.jwtauthservice.service.AuthService;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
+import com.bit.jwtauthservice.service.JwtService;
+import com.bit.jwtauthservice.service.RefreshTokenService;
+import com.bit.jwtauthservice.utils.TokenStateChanger;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
@@ -18,14 +22,24 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Mono;
 
-import java.io.IOException;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
 class AuthControllerTest {
     @Mock
     private AuthService authService;
+
+    @Mock
+    private RefreshTokenService refreshTokenService;
+
+    @Mock
+    private JwtService jwtService;
+
+    @Mock
+    private TokenStateChanger tokenStateChanger;
 
     @InjectMocks
     private AuthController authController;
@@ -109,12 +123,32 @@ class AuthControllerTest {
     }
 
     @Test
-    void refreshToken() throws IOException {
-        HttpServletRequest request = mock(HttpServletRequest.class);
-        HttpServletResponse response = mock(HttpServletResponse.class);
+    void refreshToken(){
+        User user = new User();
 
-        authController.refreshToken(request, response);
+        RefreshTokenReq refreshTokenReq = new RefreshTokenReq();
+        refreshTokenReq.setRefreshToken("refreshToken");
 
-        verify(authService, times(1)).refreshToken(request, response);
+        RefreshToken refreshToken = new RefreshToken();
+        refreshToken.setToken(refreshTokenReq.getRefreshToken());
+        refreshToken.setUser(user);
+
+        when(refreshTokenService.findByToken("refreshToken")).thenReturn(Optional.of(refreshToken));
+        when(refreshTokenService.verifyExpiration(refreshToken)).thenReturn(refreshToken);
+        when(jwtService.generateToken(user)).thenReturn("generatedAccessToken");
+
+        doNothing().when(tokenStateChanger).revokeAllUserTokens(user);
+        doNothing().when(tokenStateChanger).saveUserToken(user, "generatedAccessToken");
+
+        LoginRes loginRes = authController.refreshToken(refreshTokenReq);
+
+        assertNotNull(loginRes);
+        assertEquals("generatedAccessToken", loginRes.getAccessToken());
+
+        verify(refreshTokenService, times(1)).findByToken("refreshToken");
+        verify(refreshTokenService, times(1)).verifyExpiration(refreshToken);
+        verify(jwtService, times(1)).generateToken(user);
+        verify(tokenStateChanger, times(1)).revokeAllUserTokens(user);
+        verify(tokenStateChanger, times(1)).saveUserToken(user, "generatedAccessToken");
     }
 }

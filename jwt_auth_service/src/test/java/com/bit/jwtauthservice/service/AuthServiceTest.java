@@ -7,25 +7,25 @@ import com.bit.jwtauthservice.dto.password.ChangePasswordReq;
 import com.bit.jwtauthservice.dto.password.ForgotPasswordReq;
 import com.bit.jwtauthservice.dto.password.ResetPasswordReq;
 import com.bit.jwtauthservice.dto.usercode.ForgotUserCodeReq;
+import com.bit.jwtauthservice.entity.RefreshToken;
 import com.bit.jwtauthservice.entity.ResetPasswordToken;
 import com.bit.jwtauthservice.entity.Token;
 import com.bit.jwtauthservice.entity.User;
 import com.bit.jwtauthservice.exceptions.badcredentials.BadCredentialsException;
 import com.bit.jwtauthservice.exceptions.confirmpassword.ConfirmPasswordException;
 import com.bit.jwtauthservice.exceptions.incorrectoldpassword.IncorrectOldPasswordException;
-import com.bit.jwtauthservice.exceptions.invalidrefreshtoken.InvalidRefreshTokenException;
 import com.bit.jwtauthservice.exceptions.passwordmismatch.PasswordMismatchException;
 import com.bit.jwtauthservice.exceptions.resettokenexpiration.InvalidResetTokenException;
 import com.bit.jwtauthservice.exceptions.samepassword.SamePasswordException;
 import com.bit.jwtauthservice.exceptions.tokennotfound.TokenNotFoundException;
 import com.bit.jwtauthservice.exceptions.usernotfound.UserNotFoundException;
+import com.bit.jwtauthservice.repository.RefreshTokenRepository;
 import com.bit.jwtauthservice.repository.ResetPasswordTokenRepository;
 import com.bit.jwtauthservice.repository.TokenRepository;
 import com.bit.jwtauthservice.repository.UserRepository;
 import com.bit.jwtauthservice.service.service_impl.AuthServiceImpl;
-import jakarta.servlet.ServletOutputStream;
+import com.bit.jwtauthservice.utils.TokenStateChanger;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.Getter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -33,16 +33,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpHeaders;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import java.io.IOException;
 import java.time.LocalDate;
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -79,7 +75,15 @@ class AuthServiceTest {
     private HttpServletRequest request;
 
     @Mock
-    private HttpServletResponse response;
+    private RefreshTokenService refreshTokenService;
+
+    @Getter
+    @Mock
+    private RefreshTokenRepository refreshTokenRepository;
+
+    @Getter
+    @Mock
+    private TokenStateChanger tokenStateChanger;
 
     @InjectMocks
     private AuthServiceImpl authService;
@@ -91,11 +95,20 @@ class AuthServiceTest {
     private ChangePasswordReq changePasswordReq;
     private String userCode;
     private String password;
+    private String jwt;
+    private LoginReq loginReq;
+    private RefreshToken refreshToken;
 
     @BeforeEach
     void setUp() {
+        jwt = "jwt";
+        userCode = "userCode";
+        password = "password";
 
+        loginReq = new LoginReq(userCode, password);
 
+        refreshToken = new RefreshToken();
+        refreshToken.setToken("refreshToken");
 
         resetPasswordToken = new ResetPasswordToken();
         resetPasswordToken.setToken("token");
@@ -103,10 +116,9 @@ class AuthServiceTest {
 
         passwordEncoder = mock(PasswordEncoder.class);
 
-        userCode = "userCode";
-        password = "password";
 
         user = new User();
+        user.setId(1L);
         user.setEmail("test@example.com");
         user.setResetPasswordToken(resetPasswordToken);
         user.setPassword(password);
@@ -124,13 +136,28 @@ class AuthServiceTest {
 
     @Test
     void login(){
-        LoginReq loginReq = new LoginReq(userCode, password);
-
         when(userRepository.findByUserCode(userCode)).thenReturn(Optional.of(user));
         when(passwordEncoderConfig.passwordEncoder()).thenReturn(passwordEncoder);
         when(passwordEncoderConfig.passwordEncoder().matches(password, user.getPassword())).thenReturn(true);
-        String jwt = "jwt";
         when(jwtService.generateToken(user)).thenReturn(jwt);
+        when(refreshTokenService.createRefreshToken(user)).thenReturn(refreshToken);
+
+        LoginRes loginRes = authService.login(loginReq);
+
+        assertEquals(jwt, loginRes.getAccessToken());
+        verify(userRepository, times(1)).findByUserCode(userCode);
+        verify(passwordEncoderConfig, times(2)).passwordEncoder();
+        verify(jwtService, times(1)).generateToken(user);
+    }
+
+    @Test
+    void login_WithNotNullRefreshToken(){
+        when(userRepository.findByUserCode(userCode)).thenReturn(Optional.of(user));
+        when(passwordEncoderConfig.passwordEncoder()).thenReturn(passwordEncoder);
+        when(passwordEncoderConfig.passwordEncoder().matches(password, user.getPassword())).thenReturn(true);
+        when(jwtService.generateToken(user)).thenReturn(jwt);
+        when(refreshTokenRepository.findByUserId(user.getId())).thenReturn(refreshToken);
+        when(refreshTokenService.createRefreshToken(user)).thenReturn(refreshToken);
 
         LoginRes loginRes = authService.login(loginReq);
 
@@ -349,41 +376,6 @@ class AuthServiceTest {
         assertThrows(UserNotFoundException.class, () -> authService.changePassword(changePasswordReq));
 
         verify(userRepository).findByUserCode(userCode);
-    }
-
-    @Test
-    void refreshToken() throws IOException {
-        ServletOutputStream outputStream = mock(ServletOutputStream.class);
-
-        List<Token> validUserTokens = Collections.singletonList(new Token());
-
-        when(response.getOutputStream()).thenReturn(outputStream);
-        when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer refreshToken");
-        when(jwtService.extractUsername("refreshToken")).thenReturn(userCode);
-        when(userRepository.findByUserCode(userCode)).thenReturn(Optional.of(user));
-        when(jwtService.isTokenValid("refreshToken", user)).thenReturn(true);
-        when(tokenRepository.findAllValidTokensByUser(user.getId())).thenReturn(validUserTokens);
-
-        authService.refreshToken(request, response);
-
-        verify(jwtService).extractUsername("refreshToken");
-        verify(userRepository).findByUserCode(userCode);
-        verify(jwtService).isTokenValid("refreshToken", user);
-        verify(jwtService).generateToken(user);
-    }
-
-    @Test
-    void refreshToken_InvalidRefreshToken_ThrowsInvalidRefreshTokenException() throws IOException {
-        when(request.getHeader(HttpHeaders.AUTHORIZATION)).thenReturn("Bearer refreshToken");
-        when(jwtService.extractUsername("refreshToken")).thenReturn(userCode);
-        when(userRepository.findByUserCode(userCode)).thenReturn(Optional.of(user));
-
-        when(jwtService.isTokenValid("refreshToken", user)).thenReturn(false);
-
-        assertThrows(InvalidRefreshTokenException.class, () -> authService.refreshToken(request, response));
-
-        verify(response, never()).getOutputStream();
-        verifyNoMoreInteractions(userRepository);
     }
 
     @Test

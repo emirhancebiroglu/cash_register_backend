@@ -28,6 +28,7 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
   private final JwtUtil jwtUtil;
   private final WebClientConfig webClientConfig;
   private static final Logger logger = LoggerFactory.getLogger(AuthenticationFilter.class);
+  private static final String BEARER = "Bearer ";
 
   public AuthenticationFilter(RouteValidator validator, JwtUtil jwtUtil, WebClientConfig webClientConfig) {
     super(Config.class);
@@ -94,7 +95,7 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
    * @param authHeader The authorization header.
    */
   private void validateAuthorizationHeader(String authHeader) {
-    if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+    if (authHeader == null || !authHeader.startsWith(BEARER)) {
       throw new MissingAuthorizationHeaderException("Missing or invalid authorization header");
     }
   }
@@ -123,16 +124,23 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
    * @return A Mono indicating the completion of handling the valid token.
    */
   private Mono<Void> handleValidToken(String jwtToken, ServerWebExchange exchange, Config config, GatewayFilterChain chain) {
+    if (jwtUtil.isRefreshToken(jwtToken)){
+      return checkRolesAndApplyFilter(jwtToken, exchange, config, chain);
+    }
     return isTokenValid(jwtToken)
             .flatMap(valid -> {
               if (Boolean.TRUE.equals(valid)) {
-                if (!jwtUtil.hasAnyRole(exchange.getRequest(), config.getRoles())) {
-                  return Mono.error(new InvalidRoleException("Insufficient role permissions"));
-                }
-                return chain.filter(exchange.mutate().request(exchange.getRequest().mutate().header(HttpHeaders.AUTHORIZATION, "Bearer " + jwtToken).build()).build());
+                return checkRolesAndApplyFilter(jwtToken, exchange, config, chain);
               } else {
                 return Mono.error(new InvalidTokenException("Invalid or expired token"));
               }
             });
+  }
+
+  private Mono<Void> checkRolesAndApplyFilter(String jwtToken, ServerWebExchange exchange, Config config, GatewayFilterChain chain) {
+    if (!jwtUtil.hasAnyRole(exchange.getRequest(), config.getRoles())) {
+      return Mono.error(new InvalidRoleException("Insufficient role permissions"));
+    }
+    return chain.filter(exchange.mutate().request(exchange.getRequest().mutate().header(HttpHeaders.AUTHORIZATION, BEARER + jwtToken).build()).build());
   }
 }

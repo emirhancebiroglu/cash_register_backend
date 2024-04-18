@@ -61,7 +61,8 @@ public class JwtServiceImpl implements JwtService {
     Map<String, Object> claims = Map.ofEntries(
             entry("authorities", userDetails.getAuthorities().stream()
                     .map(GrantedAuthority::getAuthority)
-                    .toList())
+                    .toList()),
+            entry("tokenType", "access")
     );
 
     String token = buildToken(claims, userDetails, jwtExpiration);
@@ -84,7 +85,8 @@ public class JwtServiceImpl implements JwtService {
     Map<String, Object> claims = Map.ofEntries(
             entry("authorities", userDetails.getAuthorities().stream()
                     .map(GrantedAuthority::getAuthority)
-                    .toList())
+                    .toList()),
+            entry("tokenType", "refresh")
     );
 
     String token = buildToken(claims, userDetails, refreshExpiration);

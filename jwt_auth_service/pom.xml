@@ -217,13 +217,13 @@
 						<exclude>com/bit/jwtauthservice/exceptions/tokennotfound/TokenNotFoundExceptionHandler.class</exclude>
 						<exclude>com/bit/jwtauthservice/exceptions/badcredentials/BadCredentialsExceptionHandler.class</exclude>
 						<exclude>com/bit/jwtauthservice/exceptions/confirmpassword/ConfirmPasswordExceptionHandler.class</exclude>
+						<exclude>com/bit/jwtauthservice/exceptions/expiredrefreshtoken/ExpiredRefreshTokenExceptionHandler.class</exclude>
 						<exclude>com/bit/jwtauthservice/exceptions/incorrectoldpassword/IncorrectOldPasswordExceptionHandler.class</exclude>
 						<exclude>com/bit/jwtauthservice/exceptions/mailconfig/MailConfigExceptionHandler.class</exclude>
 						<exclude>com/bit/jwtauthservice/exceptions/passwordmismatch/PasswordMismatchExceptionHandler.class</exclude>
 						<exclude>com/bit/jwtauthservice/exceptions/resettokenexpiration/InvalidResetTokenExceptionHandler.class</exclude>
 						<exclude>com/bit/jwtauthservice/exceptions/samepassword/SamePasswordExceptionHandler.class</exclude>
 						<exclude>com/bit/jwtauthservice/exceptions/invalidpassword/InvalidPasswordExceptionHandler.class</exclude>
-						<exclude>com/bit/jwtauthservice/exceptions/invalidrefreshtoken/InvalidRefreshTokenExceptionHandler.class</exclude>
 						<exclude>com/bit/jwtauthservice/exceptions/mailconfig/MailConfigException.class</exclude>
 						<exclude>com/bit/jwtauthservice/exceptions/ErrorDetails.class</exclude>
 						<exclude>com/bit/jwtauthservice/config/EmailConfig.class</exclude>
@@ -233,6 +233,7 @@
 						<exclude>com/bit/jwtauthservice/entity/User.class</exclude>
 						<exclude>com/bit/jwtauthservice/entity/Role.class</exclude>
 						<exclude>com/bit/jwtauthservice/entity/Token.class</exclude>
+						<exclude>com/bit/jwtauthservice/entity/RefreshToken.class</exclude>
 						<exclude>com/bit/jwtauthservice/entity/ResetPasswordToken.class</exclude>
 						<exclude>com/bit/jwtauthservice/dto/kafka/UserCredentialsDTO.class</exclude>
 						<exclude>com/bit/jwtauthservice/dto/kafka/UserUpdateDTO.class</exclude>
@@ -244,6 +245,8 @@
 						<exclude>com/bit/jwtauthservice/dto/login/LoginReq.class</exclude>
 						<exclude>com/bit/jwtauthservice/dto/login/LoginRes.class</exclude>
 						<exclude>com/bit/jwtauthservice/dto/usercode/ForgotUserCodeReq.class</exclude>
+						<exclude>com/bit/jwtauthservice/dto/RefreshTokenReq.class</exclude>
+
 					</excludes>
 				</configuration>
 				<executions>

@@ -108,4 +108,21 @@ public class JwtUtil {
 
     throw new MissingAuthorizationHeaderException("Missing authorization header");
   }
+
+  public boolean isRefreshToken(String token) {
+    Claims claims = extractAllClaims(token);
+
+    String tokenType = claims.get("tokenType", String.class);
+    return tokenType != null && tokenType.equals("refresh");
+  }
+
+  public Claims extractAllClaims(String token) {
+    return Jwts
+            .parserBuilder()
+            .setSigningKey(getSignKey())
+            .build()
+            .parseClaimsJws(token)
+            .getBody();
+  }
+
 }

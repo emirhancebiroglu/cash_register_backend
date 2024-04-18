@@ -1,17 +1,13 @@
 package com.bit.jwtauthservice.service;
 
+import com.bit.jwtauthservice.dto.login.LoginReq;
+import com.bit.jwtauthservice.dto.login.LoginRes;
 import com.bit.jwtauthservice.dto.password.ChangePasswordReq;
 import com.bit.jwtauthservice.dto.password.ForgotPasswordReq;
 import com.bit.jwtauthservice.dto.password.ResetPasswordReq;
-import com.bit.jwtauthservice.dto.login.LoginReq;
-import com.bit.jwtauthservice.dto.login.LoginRes;
 import com.bit.jwtauthservice.dto.usercode.ForgotUserCodeReq;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.web.bind.annotation.RequestBody;
 import reactor.core.publisher.Mono;
-
-import java.io.IOException;
 
 public interface AuthService {
     /**
@@ -50,15 +46,6 @@ public interface AuthService {
      * @param changePasswordReq The request containing the old and new passwords.
      */
     void changePassword(ChangePasswordReq changePasswordReq);
-
-    /**
-     * Generates and sends a new access token in response to a refresh token request.
-     *
-     * @param request  The HTTP servlet request.
-     * @param response The HTTP servlet response.
-     * @throws IOException If an I/O error occurs.
-     */
-    void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException;
 
     /**
      * Validates the authenticity and expiration of a JWT token.

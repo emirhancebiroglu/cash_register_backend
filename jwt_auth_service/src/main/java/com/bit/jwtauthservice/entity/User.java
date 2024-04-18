@@ -1,10 +1,7 @@
 package com.bit.jwtauthservice.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.NonNull;
+import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -23,6 +20,7 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
+@ToString(exclude = "tokens")
 public class User implements UserDetails {
     @Id
     @Column(name = "id")
@@ -49,7 +47,7 @@ public class User implements UserDetails {
     @JoinColumn(name = "reset_password_token_id", referencedColumnName = "id")
     private ResetPasswordToken resetPasswordToken;
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", fetch = FetchType.EAGER)
     private List<Token> tokens;
 
     public User(Long id, @NonNull String email, @NonNull String userCode, @NonNull String password,

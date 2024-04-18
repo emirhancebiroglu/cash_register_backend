@@ -1,22 +1,24 @@
   package com.bit.jwtauthservice.controller;
 
+  import com.bit.jwtauthservice.dto.RefreshTokenReq;
   import com.bit.jwtauthservice.dto.login.LoginReq;
   import com.bit.jwtauthservice.dto.login.LoginRes;
   import com.bit.jwtauthservice.dto.password.ChangePasswordReq;
   import com.bit.jwtauthservice.dto.password.ForgotPasswordReq;
   import com.bit.jwtauthservice.dto.password.ResetPasswordReq;
   import com.bit.jwtauthservice.dto.usercode.ForgotUserCodeReq;
+  import com.bit.jwtauthservice.entity.RefreshToken;
+  import com.bit.jwtauthservice.exceptions.expiredrefreshtoken.ExpiredRefreshTokenException;
   import com.bit.jwtauthservice.service.AuthService;
-  import jakarta.servlet.http.HttpServletRequest;
-  import jakarta.servlet.http.HttpServletResponse;
+  import com.bit.jwtauthservice.service.JwtService;
+  import com.bit.jwtauthservice.service.RefreshTokenService;
+  import com.bit.jwtauthservice.utils.TokenStateChanger;
   import jakarta.validation.Valid;
   import lombok.RequiredArgsConstructor;
   import org.springframework.http.HttpStatus;
   import org.springframework.http.ResponseEntity;
   import org.springframework.web.bind.annotation.*;
   import reactor.core.publisher.Mono;
-
-  import java.io.IOException;
 
   /**
    * Controller class for handling authentication-related endpoints.
@@ -26,6 +28,9 @@
   @RequiredArgsConstructor
   public class AuthController {
     private final AuthService authService;
+    private final RefreshTokenService refreshTokenService;
+    private final JwtService jwtService;
+    private final TokenStateChanger tokenStateChanger;
 
     /**
      * Endpoint for user login.
@@ -39,15 +44,21 @@
 
     /**
      * Endpoint for refreshing authentication token.
-     * @param request HttpServletRequest object
-     * @param response HttpServletResponse object
-     * @throws IOException if an I/O error occurs
      */
     @PostMapping("/refresh-token")
-    public void refreshToken(
-            HttpServletRequest request, HttpServletResponse response
-    ) throws IOException {
-      authService.refreshToken(request, response);
+    public LoginRes refreshToken(@RequestBody RefreshTokenReq refreshTokenReq){
+      return refreshTokenService.findByToken(refreshTokenReq.getRefreshToken())
+              .map(refreshTokenService::verifyExpiration)
+              .map(RefreshToken::getUser)
+              .map(user -> {
+                String accessToken = jwtService.generateToken(user);
+                tokenStateChanger.revokeAllUserTokens(user);
+                tokenStateChanger.saveUserToken(user, accessToken);
+                return LoginRes.builder()
+                        .accessToken(accessToken)
+                        .refreshToken(refreshTokenReq.getRefreshToken())
+                        .build();
+              }).orElseThrow(() -> new ExpiredRefreshTokenException("Invalid refresh token"));
     }
 
     /**

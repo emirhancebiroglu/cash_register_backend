@@ -7,32 +7,31 @@ import com.bit.jwtauthservice.dto.password.ChangePasswordReq;
 import com.bit.jwtauthservice.dto.password.ForgotPasswordReq;
 import com.bit.jwtauthservice.dto.password.ResetPasswordReq;
 import com.bit.jwtauthservice.dto.usercode.ForgotUserCodeReq;
+import com.bit.jwtauthservice.entity.RefreshToken;
 import com.bit.jwtauthservice.entity.ResetPasswordToken;
-import com.bit.jwtauthservice.entity.Token;
 import com.bit.jwtauthservice.entity.User;
 import com.bit.jwtauthservice.exceptions.badcredentials.BadCredentialsException;
 import com.bit.jwtauthservice.exceptions.confirmpassword.ConfirmPasswordException;
 import com.bit.jwtauthservice.exceptions.incorrectoldpassword.IncorrectOldPasswordException;
-import com.bit.jwtauthservice.exceptions.invalidrefreshtoken.InvalidRefreshTokenException;
 import com.bit.jwtauthservice.exceptions.passwordmismatch.PasswordMismatchException;
 import com.bit.jwtauthservice.exceptions.resettokenexpiration.InvalidResetTokenException;
 import com.bit.jwtauthservice.exceptions.samepassword.SamePasswordException;
 import com.bit.jwtauthservice.exceptions.tokennotfound.TokenNotFoundException;
 import com.bit.jwtauthservice.exceptions.usernotfound.UserNotFoundException;
+import com.bit.jwtauthservice.repository.RefreshTokenRepository;
 import com.bit.jwtauthservice.repository.ResetPasswordTokenRepository;
 import com.bit.jwtauthservice.repository.TokenRepository;
 import com.bit.jwtauthservice.repository.UserRepository;
 import com.bit.jwtauthservice.service.AuthService;
 import com.bit.jwtauthservice.service.EmailService;
 import com.bit.jwtauthservice.service.JwtService;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.bit.jwtauthservice.service.RefreshTokenService;
+import com.bit.jwtauthservice.utils.TokenStateChanger;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
@@ -40,7 +39,6 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 
-import java.io.IOException;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -60,6 +58,9 @@ public class AuthServiceImpl implements AuthService {
     private final HttpServletRequest request;
     private final TokenRepository tokenRepository;
     private final LogoutHandler logoutHandler;
+    private final RefreshTokenService refreshTokenService;
+    private final RefreshTokenRepository refreshTokenRepository;
+    private final TokenStateChanger tokenStateChanger;
     private static final String USER_NOT_FOUND = "User not found";
 
     /**
@@ -82,6 +83,8 @@ public class AuthServiceImpl implements AuthService {
     public LoginRes login(LoginReq loginReq) {
         logger.info("Attempting to authenticate user: {}", loginReq.getUserCode());
 
+        RefreshToken refreshToken;
+
         User user = userRepository.findByUserCode(loginReq.getUserCode())
                 .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND));
 
@@ -94,17 +97,24 @@ public class AuthServiceImpl implements AuthService {
         }
 
         var jwtToken = jwtService.generateToken(user);
-        var refreshToken = jwtService.generateRefreshToken(user);
 
-        revokeAllUserTokens(user);
-        saveUserToken(user, jwtToken);
+        refreshToken = refreshTokenRepository.findByUserId(user.getId());
+
+        if (refreshToken != null){
+            refreshTokenRepository.delete(refreshToken);
+        }
+
+        refreshToken = refreshTokenService.createRefreshToken(user);
+
+        tokenStateChanger.revokeAllUserTokens(user);
+        tokenStateChanger.saveUserToken(user, jwtToken);
 
         logger.info("User '{}' authenticated successfully.", loginReq.getUserCode());
 
         return LoginRes
                 .builder()
                 .accessToken(jwtToken)
-                .refreshToken(refreshToken)
+                .refreshToken(refreshToken.getToken())
                 .build();
     }
 
@@ -231,45 +241,6 @@ public class AuthServiceImpl implements AuthService {
     }
 
     /**
-     * Refreshes the access token using the provided refresh token.
-     *
-     * @param request  The HTTP request object containing the refresh token.
-     * @param response The HTTP response object for sending the new access and refresh tokens.
-     * @throws IOException                 If an I/O error occurs while writing to the response output stream.
-     * @throws InvalidRefreshTokenException If the provided refresh token is invalid.
-     */
-    @Override
-    public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        logger.info("Initiating token refresh process.");
-
-        final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
-        final String refreshToken = authHeader.substring(7);
-        final String userCode = jwtService.extractUsername(refreshToken);
-
-        if (userCode != null) {
-            var user = userRepository.findByUserCode(userCode)
-                    .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND));
-
-            if (jwtService.isTokenValid(refreshToken, user)) {
-                var accessToken = jwtService.generateToken(user);
-                revokeAllUserTokens(user);
-                saveUserToken(user, accessToken);
-                var authResponse = LoginRes.builder()
-                        .accessToken(accessToken)
-                        .refreshToken(refreshToken)
-                        .build();
-                new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
-
-                logger.info("Token refresh process completed successfully.");
-            }
-            else{
-                logger.error("Invalid refresh token");
-                throw new InvalidRefreshTokenException("Invalid refresh token");
-            }
-        }
-    }
-
-    /**
      * Validates the JWT token's validity.
      *
      * @param jwt The JWT token to validate.
@@ -285,41 +256,5 @@ public class AuthServiceImpl implements AuthService {
                 .subscribeOn(Schedulers.boundedElastic())
                 .map(token -> !token.isExpired() && !token.isRevoked())
                 .doOnSuccess(validity -> logger.info("Token validation result: {}", validity));
-    }
-
-    /**
-     * Saves the JWT token for the user in the database.
-     *
-     * @param user     The user for whom the token is generated.
-     * @param jwtToken The JWT token to save.
-     */
-    private void saveUserToken(User user, String jwtToken) {
-        var token = Token.builder()
-                .user(user)
-                .jwtToken(jwtToken)
-                .revoked(false)
-                .expired(false).build();
-
-        tokenRepository.save(token);
-    }
-
-    /**
-     * Revokes all tokens associated with the user in the database.
-     *
-     * @param user The user for whom to revoke tokens.
-     */
-    private void revokeAllUserTokens(User user){
-        var validUserTokens = tokenRepository.findAllValidTokensByUser(user.getId());
-
-        if (validUserTokens.isEmpty()) {
-            return;
-        }
-
-        validUserTokens.forEach(t -> {
-            t.setExpired(true);
-            t.setRevoked(true);
-        });
-
-        tokenRepository.saveAll(validUserTokens);
     }
 }
