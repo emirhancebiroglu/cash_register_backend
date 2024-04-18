@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 
 import java.util.Set;
 
+/**
+ * Data transfer object for updating user information used in Kafka messaging.
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

@@ -9,12 +9,22 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
+/**
+ * Implementation of the CustomUserDetailsService interface providing custom user details retrieval functionality.
+ * This service class retrieves user details based on the user code provided and is used for authentication purposes.
+ */
 @Service
 @RequiredArgsConstructor
 public class CustomUserDetailsServiceImpl implements CustomUserDetailsService {
     private final UserRepository userRepository;
     private static final Logger logger = LoggerFactory.getLogger(CustomUserDetailsServiceImpl.class);
 
+    /**
+     * Retrieves the user details based on the user code provided.
+     *
+     * @return An implementation of the UserDetailsService interface.
+     * @throws UserNotFoundException If the user with the provided user code is not found.
+     */
     @Override
     public UserDetailsService userDetailsService() {
         return userCode -> {

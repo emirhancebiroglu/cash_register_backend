@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
+/**
+ * Entity class representing a reset password token.
+ */
 @Entity
 @Table(name = "_resetpasswordtoken", schema = "user-credentials")
 @NoArgsConstructor

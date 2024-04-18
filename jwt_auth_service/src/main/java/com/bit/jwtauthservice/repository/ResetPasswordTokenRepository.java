@@ -8,5 +8,11 @@ import java.util.Optional;
 
 @Repository
 public interface ResetPasswordTokenRepository extends JpaRepository<ResetPasswordToken, Long> {
+    /**
+     * Retrieves a reset password token by its token value.
+     *
+     * @param token The token value.
+     * @return An optional containing the reset password token, or empty if not found.
+     */
     Optional<ResetPasswordToken> findByToken(String token);
 }

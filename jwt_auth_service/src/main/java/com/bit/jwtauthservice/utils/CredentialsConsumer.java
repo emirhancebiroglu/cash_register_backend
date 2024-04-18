@@ -13,6 +13,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
+/**
+ * Kafka consumer responsible for handling user-related messages received from Kafka topics.
+ */
 @Component
 @RequiredArgsConstructor
 public class CredentialsConsumer {
@@ -20,6 +23,11 @@ public class CredentialsConsumer {
     private static final Logger logger = LoggerFactory.getLogger(CredentialsConsumer.class);
     private static final String USER_NOT_FOUND_MESSAGE = "User not found!";
 
+    /**
+     * Listens for user credentials messages from the Kafka topic "user-credentials" and synchronizes the user credentials.
+     *
+     * @param userCredentials The user credentials DTO containing the user information.
+     */
     @KafkaListener(topics = "user-credentials", groupId = "users")
     public void listen(UserCredentialsDTO userCredentials) {
         User user = new User(
@@ -35,6 +43,11 @@ public class CredentialsConsumer {
         logger.info("User credentials synchronized successfully: {}", user.getUserCode());
     }
 
+    /**
+     * Listens for user safe deletion messages from the Kafka topic "user-deletion" and updates the deletion status of the user.
+     *
+     * @param userSafeDeletionDTO The user safe deletion DTO containing the user ID and deletion status.
+     */
     @KafkaListener(topics = "user-deletion", groupId = "users")
     public void listen(UserSafeDeletionDTO userSafeDeletionDTO) {
         User user = userRepository.findById(userSafeDeletionDTO.getId()).orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MESSAGE));
@@ -45,6 +58,11 @@ public class CredentialsConsumer {
         logger.info("User deletion status updated successfully: {}", user.getUserCode());
     }
 
+    /**
+     * Listens for user update messages from the Kafka topic "user-update" and updates the user details.
+     *
+     * @param userUpdateDTO The user update DTO containing the updated user information.
+     */
     @KafkaListener(topics = "user-update", groupId = "users")
     public void listen(UserUpdateDTO userUpdateDTO) {
         User user = userRepository.findById(userUpdateDTO.getId()).orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MESSAGE));
@@ -57,6 +75,11 @@ public class CredentialsConsumer {
         logger.info("User details updated successfully: {}", user.getUserCode());
     }
 
+    /**
+     * Listens for user reactivate messages from the Kafka topic "user-reactivate" and updates the user reactivation status.
+     *
+     * @param userReactivateDTO The user reactivate DTO containing the user ID, new password, and reactivation status.
+     */
     @KafkaListener(topics = "user-reactivate", groupId = "users")
     public void listen(UserReactivateDTO userReactivateDTO) {
         User user = userRepository.findById(userReactivateDTO.getId()).orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MESSAGE));

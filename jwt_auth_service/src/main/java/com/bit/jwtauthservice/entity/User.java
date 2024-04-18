@@ -15,6 +15,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Entity class representing a user.
+ */
 @Entity
 @Table(schema = "user-credentials", name = "_users")
 @NoArgsConstructor

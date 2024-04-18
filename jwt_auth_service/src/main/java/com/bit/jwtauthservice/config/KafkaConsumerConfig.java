@@ -15,6 +15,10 @@ import org.springframework.kafka.support.serializer.JsonDeserializer;
 import java.util.HashMap;
 import java.util.Map;
 
+
+/**
+ * Configuration class for Kafka consumer settings.
+ */
 @Configuration
 public class KafkaConsumerConfig {
     private static final Logger logger = LoggerFactory.getLogger(KafkaConsumerConfig.class);
@@ -22,6 +26,10 @@ public class KafkaConsumerConfig {
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
 
+    /**
+     * Bean method for creating Kafka consumer factory.
+     * @return ConsumerFactory object
+     */
     @Bean
     public ConsumerFactory<String, Object> consumerFactory() {
         logger.info("Creating Kafka consumer factory...");
@@ -41,6 +49,10 @@ public class KafkaConsumerConfig {
         return new DefaultKafkaConsumerFactory<>(configProps);
     }
 
+    /**
+     * Bean method for creating Kafka listener container factory.
+     * @return ConcurrentKafkaListenerContainerFactory object
+     */
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory() {
         logger.info("Creating Kafka listener container factory...");

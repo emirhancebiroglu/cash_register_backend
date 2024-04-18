@@ -6,6 +6,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Entity class representing a JWT token.
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

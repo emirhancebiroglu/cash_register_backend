@@ -13,6 +13,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Configuration class for initializing roles.
+ */
 @Configuration
 @AllArgsConstructor
 @Transactional
@@ -22,11 +25,18 @@ public class RoleInitializationConfig implements CommandLineRunner {
     private static final Logger logger = LoggerFactory.getLogger(RoleInitializationConfig.class);
     private static final List<String> ROLE_NAMES = Arrays.asList("ROLE_ADMIN", "ROLE_CASHIER", "ROLE_STORE_MANAGER");
 
+    /**
+     * Method to run the role initialization process.
+     * @param args Command line arguments
+     */
     @Override
     public void run(String... args){
         initializeRoles();
     }
 
+    /**
+     * Method to initialize roles.
+     */
     protected void initializeRoles() {
         for(String roleName : ROLE_NAMES){
             if(roleRepository.findByName(roleName).isEmpty()){

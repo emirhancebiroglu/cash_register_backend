@@ -11,12 +11,21 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 
+/**
+ * Configuration class for security settings.
+ */
 @Configuration
 @RequiredArgsConstructor
 public class SecurityConfig {
   private final LogoutHandler logoutHandler;
   private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
 
+  /**
+   * Method to configure the security filter chain.
+   * @param http HttpSecurity object
+   * @return SecurityFilterChain object
+   * @throws Exception if an error occurs during configuration
+   */
   @Bean
   SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
     logger.info("Configuring security filter chain...");

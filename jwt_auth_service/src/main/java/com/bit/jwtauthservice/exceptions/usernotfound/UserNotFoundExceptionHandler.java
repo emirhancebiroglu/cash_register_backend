@@ -10,6 +10,12 @@ import java.time.LocalDateTime;
 
 @ControllerAdvice
 public class UserNotFoundExceptionHandler {
+    /**
+     * Handles UserNotFoundException and returns an HTTP response with error details.
+     *
+     * @param ex the UserNotFoundException
+     * @return ResponseEntity containing error details and HTTP status
+     */
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ErrorDetails> userNotFoundException(UserNotFoundException ex){
         ErrorDetails errorDetails = new ErrorDetails(

@@ -1,29 +1,50 @@
 version: '3.10'
 services:
-  api-gateway:
-    image: nginx:latest
-    container_name: api_gateway
-    restart: always
+  zookeper:
+    image: zookeeper:latest
+    container_name: zookeeper
     ports:
-      - protocol: tcp
-        target: 80
-        published: 8881
+      - "2181:2181"
     environment:
-      NGINX_PORT: 80
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      ZOOKEPER_CLIENT_PORT: 2181
+      ZOOKEPER_TICK_TIME: 2000
     networks:
       - spring-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.0.1
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_INTERNAL://kafka:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    networks:
+      - spring-network
+
+  api-gateway:
+    image: emirhancebiroglu/api-gateway:latest
+    container_name: api-gateway
+    restart: always
+    ports:
+      - "9191:9090"
+    expose:
+      - "9191"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY= TRACE
     depends_on:
-      - user-management-service
-      - jwt-auth-service
       - eureka-server
+    networks:
+      - spring-network
 
   eureka-server:
-    image: eureka_server:latest
-    build:
-      context: ./eureka-server
-      dockerfile: Dockerfile
+    image: emirhancebiroglu/eureka-server:latest
     container_name: eureka-server
     ports:
       - "8761:8761"
@@ -40,7 +61,7 @@ services:
       - POSTGRES_PASSWORD=2165
       - POSTGRES_SCHEMA=users
     ports:
-      - "5432:5432"
+      - "5431:5431"
     command: [ "postgres", "-c", "search_path=users" ]
     networks:
       - spring-network
@@ -48,12 +69,14 @@ services:
   jwt-auth-db:
     image: postgres:latest
     container_name: jwt-auth-db
-    restart: always
     environment:
       - POSTGRES_DB=jwt_auth_db
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=2165
       - POSTGRES_SCHEMA=user-credentials
+    expose:
+      - "5432"
+    restart: always
     ports:
       - "5432:5432"
     command: [ "postgres", "-c", "search_path=user-credentials" ]
@@ -75,12 +98,56 @@ services:
     networks:
       - spring-network
 
+  sales-db:
+    image: postgres:latest
+    container_name: sales-db
+    restart: always
+    environment:
+      - POSTGRES_DB=sales-db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=2165
+      - POSTGRES_SCHEMA=sales
+    ports:
+      - "5432:5432"
+    command: [ "postgres", "-c", "search_path=sales" ]
+    networks:
+      - spring-network
+
+  sales-reports-db:
+    image: postgres:latest
+    container_name: sales-reports-db
+    restart: always
+    environment:
+      - POSTGRES_DB=sales-reports-db
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=2165
+      - POSTGRES_SCHEMA=reports
+    ports:
+      - "5432:5432"
+    command: [ "postgres", "-c", "search_path=reports" ]
+    networks:
+      - spring-network
+
+  user-management-service:
+    image: emirhancebiroglu/user_management_service:latest
+    container_name: user-management-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    ports:
+      - "8081:8081"
+    depends_on:
+      - eureka-server
+      - user-management-db
+      - api-gateway
+      - kafka
+    networks:
+      - spring-network
+
   jwt-auth-service:
-    image: jwt_auth_service:latest
+    image: emirhancebiroglu/jwt_auth_service:latest
     container_name: jwt-auth-service
-    build:
-      context: ./jwt_auth_service
-      dockerfile: Dockerfile
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
     ports:
       - "8082:8082"
     networks:
@@ -88,34 +155,18 @@ services:
     depends_on:
       - eureka-server
       - jwt-auth-db
-
-  user-management-service:
-    image: user_management_service:latest
-    build:
-      context: ./user_management_service
-      dockerfile: Dockerfile
-    container_name: user-management-service
-    ports:
-      - "8081:8081"
-    networks:
-      - spring-network
-    depends_on:
-      - eureka-server
-      - user-management-db
+      - api-gateway
+      - kafka
 
   product-service:
     image: product-service:latest
-    build:
-      context: ./product-service
-      dockerfile: Dockerfile
     container_name: product-service
-    ports:
-      - "8083:8083"
-    networks:
-      - spring-network
     depends_on:
       - eureka-server
       - product-db
+      - api-gateway
+    networks:
+      - spring-network
 
 networks:
   spring-network:

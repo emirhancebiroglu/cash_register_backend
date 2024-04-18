@@ -10,6 +10,11 @@ import java.time.LocalDateTime;
 
 @ControllerAdvice
 public class InvalidResetTokenExceptionHandler {
+    /**
+     * Handles InvalidResetTokenException and returns an error response with appropriate details.
+     * @param ex the InvalidResetTokenException
+     * @return ResponseEntity containing the error details
+     */
     @ExceptionHandler(InvalidResetTokenException.class)
     public ResponseEntity<ErrorDetails> invalidResetTokenExceptionHandler(InvalidResetTokenException ex) {
         ErrorDetails errorDetails = new ErrorDetails(

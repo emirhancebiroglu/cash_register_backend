@@ -8,8 +8,16 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.time.LocalDateTime;
 
+/**
+ * Controller advice to handle PasswordMismatchException and provide appropriate error response.
+ */
 @ControllerAdvice
 public class PasswordMismatchExceptionHandler {
+    /**
+     * Handles PasswordMismatchException and returns a ResponseEntity with an error message and status code.
+     * @param ex the PasswordMismatchException
+     * @return ResponseEntity containing error details
+     */
     @ExceptionHandler(PasswordMismatchException.class)
     public ResponseEntity<ErrorDetails> passwordMismatchExceptionHandler(PasswordMismatchException ex) {
         ErrorDetails errorDetails = new ErrorDetails(

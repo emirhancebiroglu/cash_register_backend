@@ -9,13 +9,28 @@ import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
 
+/**
+ * Validator for password constraints based on the Passay library.
+ */
 @Component
 public class PasswordConstraintValidator implements ConstraintValidator<ValidPassword, String> {
+    /**
+     * Initializes the validator.
+     *
+     * @param constraintAnnotation The annotation to initialize.
+     */
     @Override
     public void initialize(ValidPassword constraintAnnotation) {
         ConstraintValidator.super.initialize(constraintAnnotation);
     }
 
+    /**
+     * Validates the password against specified constraints.
+     *
+     * @param password The password to validate.
+     * @param context  The context in which the constraint is evaluated.
+     * @return true if the password is valid, false otherwise.
+     */
     @SneakyThrows
     @Override
     public boolean isValid(String password, ConstraintValidatorContext context) {

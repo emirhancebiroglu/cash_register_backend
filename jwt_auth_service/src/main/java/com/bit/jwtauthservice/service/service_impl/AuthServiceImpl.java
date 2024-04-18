@@ -44,6 +44,11 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.util.UUID;
 
+/**
+ * Implementation of the AuthService interface providing authentication and authorization functionality.
+ * This service class handles user authentication, password management, token generation and validation,
+ * and related operations.
+ */
 @Service
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
@@ -57,11 +62,22 @@ public class AuthServiceImpl implements AuthService {
     private final LogoutHandler logoutHandler;
     private static final String USER_NOT_FOUND = "User not found";
 
+    /**
+     * Body of the email to be sent for password reset link.
+     */
     @Value("${password.reset.link.body}")
     private String resetLinkBody;
 
     private final Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
 
+    /**
+     * Authenticates a user based on the provided login credentials.
+     *
+     * @param loginReq The login request containing user credentials.
+     * @return LoginRes object containing access and refresh tokens upon successful authentication.
+     * @throws UserNotFoundException    If the user with the given user code is not found.
+     * @throws BadCredentialsException  If the provided password is incorrect.
+     */
     @Override
     public LoginRes login(LoginReq loginReq) {
         logger.info("Attempting to authenticate user: {}", loginReq.getUserCode());
@@ -92,6 +108,12 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
+    /**
+     * Sends the forgotten user code to the specified email address.
+     *
+     * @param forgotUserCodeReq The request containing the email address for sending the user code.
+     * @throws UserNotFoundException If the user with the given email address is not found.
+     */
     @Override
     public void forgotUserCode(ForgotUserCodeReq forgotUserCodeReq) {
         logger.info("Sending forgotten user code to '{}'", forgotUserCodeReq.getEmail());
@@ -104,6 +126,12 @@ public class AuthServiceImpl implements AuthService {
         logger.info("User code sent.");
     }
 
+    /**
+     * Initiates the process for resetting the user's password.
+     *
+     * @param forgotPasswordReq The request containing the email address for sending the password reset link.
+     * @throws UserNotFoundException If the user with the given email address is not found.
+     */
     @Override
     public void forgotPassword(ForgotPasswordReq forgotPasswordReq) {
         logger.info("Preparing the password reset link...");
@@ -127,6 +155,16 @@ public class AuthServiceImpl implements AuthService {
         logger.info("Password reset email sent.");
     }
 
+    /**
+     * Resets the password for the user using the provided token and new password.
+     *
+     * @param token             The token used for password reset.
+     * @param resetPasswordReq The request containing the new password and confirmation.
+     * @throws InvalidResetTokenException If the reset token is invalid or expired.
+     * @throws PasswordMismatchException If the new password and confirmation do not match.
+     * @throws SamePasswordException     If the new password is the same as the old password.
+     * @throws UserNotFoundException    If the user associated with the reset token is not found.
+     */
     @Override
     public void resetPassword(String token, ResetPasswordReq resetPasswordReq) {
         logger.info("Password resetting process is on...");
@@ -158,6 +196,14 @@ public class AuthServiceImpl implements AuthService {
         logger.info("Password reset successfully");
     }
 
+    /**
+     * Changes the password for the authenticated user.
+     *
+     * @param changePasswordReq The request containing the old and new passwords for password change.
+     * @throws IncorrectOldPasswordException If the old password provided is incorrect.
+     * @throws ConfirmPasswordException      If the new and confirmation passwords do not match.
+     * @throws UserNotFoundException        If the authenticated user is not found.
+     */
     @Override
     public void changePassword(ChangePasswordReq changePasswordReq) {
         logger.info("Changing the password...");
@@ -184,6 +230,14 @@ public class AuthServiceImpl implements AuthService {
         logger.info("Password changed successfully");
     }
 
+    /**
+     * Refreshes the access token using the provided refresh token.
+     *
+     * @param request  The HTTP request object containing the refresh token.
+     * @param response The HTTP response object for sending the new access and refresh tokens.
+     * @throws IOException                 If an I/O error occurs while writing to the response output stream.
+     * @throws InvalidRefreshTokenException If the provided refresh token is invalid.
+     */
     @Override
     public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
         logger.info("Initiating token refresh process.");
@@ -215,6 +269,13 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
+    /**
+     * Validates the JWT token's validity.
+     *
+     * @param jwt The JWT token to validate.
+     * @return A Mono emitting a boolean value indicating the token's validity.
+     * @throws TokenNotFoundException If the token is not found in the database.
+     */
     @Override
     public Mono<Boolean> validateToken(String jwt) {
         logger.info("Validating token: {}", jwt);
@@ -226,6 +287,12 @@ public class AuthServiceImpl implements AuthService {
                 .doOnSuccess(validity -> logger.info("Token validation result: {}", validity));
     }
 
+    /**
+     * Saves the JWT token for the user in the database.
+     *
+     * @param user     The user for whom the token is generated.
+     * @param jwtToken The JWT token to save.
+     */
     private void saveUserToken(User user, String jwtToken) {
         var token = Token.builder()
                 .user(user)
@@ -236,6 +303,11 @@ public class AuthServiceImpl implements AuthService {
         tokenRepository.save(token);
     }
 
+    /**
+     * Revokes all tokens associated with the user in the database.
+     *
+     * @param user The user for whom to revoke tokens.
+     */
     private void revokeAllUserTokens(User user){
         var validUserTokens = tokenRepository.findAllValidTokensByUser(user.getId());
 

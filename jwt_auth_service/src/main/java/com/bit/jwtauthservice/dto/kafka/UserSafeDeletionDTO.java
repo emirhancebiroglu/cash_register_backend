@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Data transfer object for safely deleting user used in Kafka messaging.
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

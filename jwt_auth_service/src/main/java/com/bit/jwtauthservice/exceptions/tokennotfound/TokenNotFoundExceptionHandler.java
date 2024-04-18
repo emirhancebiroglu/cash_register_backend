@@ -10,6 +10,12 @@ import java.time.LocalDateTime;
 
 @ControllerAdvice
 public class TokenNotFoundExceptionHandler {
+    /**
+     * Handle TokenNotFoundException and return an error response.
+     *
+     * @param ex The TokenNotFoundException to handle
+     * @return ResponseEntity containing error details and HTTP status code
+     */
     @ExceptionHandler(TokenNotFoundException.class)
     public ResponseEntity<ErrorDetails> handleTokenNotFoundException(TokenNotFoundException ex){
         ErrorDetails errorDetails = new ErrorDetails(

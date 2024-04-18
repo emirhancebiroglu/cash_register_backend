@@ -12,12 +12,23 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.stereotype.Service;
 
+/**
+ * Implementation of the LogoutHandler interface responsible for handling logout requests.
+ * This service class revokes the JWT token stored in the database upon logout.
+ */
 @Service
 @RequiredArgsConstructor
 public class LogoutServiceImpl implements LogoutHandler {
     private final TokenRepository tokenRepository;
     private static final Logger logger = LogManager.getLogger(LogoutServiceImpl.class);
 
+    /**
+     * Handles logout requests by revoking the JWT token stored in the database and clearing the security context.
+     *
+     * @param request        The HTTP servlet request.
+     * @param response       The HTTP servlet response.
+     * @param authentication The authentication object representing the current user's authentication.
+     */
     @Override
     public void logout(HttpServletRequest request,
                        HttpServletResponse response,

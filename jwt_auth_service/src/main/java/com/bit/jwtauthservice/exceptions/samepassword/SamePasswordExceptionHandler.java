@@ -10,6 +10,12 @@ import java.time.LocalDateTime;
 
 @ControllerAdvice
 public class SamePasswordExceptionHandler {
+    /**
+     * Handles SamePasswordException and returns an HTTP response with the appropriate error details.
+     *
+     * @param ex the SamePasswordException
+     * @return ResponseEntity containing the error details
+     */
     @ExceptionHandler(SamePasswordException.class)
     public ResponseEntity<ErrorDetails> samePasswordException(SamePasswordException ex) {
         ErrorDetails errorDetails = new ErrorDetails(
