@@ -15,11 +15,20 @@ import org.springframework.kafka.support.serializer.JsonSerializer;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Configuration class for setting up Kafka producer.
+ */
 @Configuration
 public class KafkaProducerConfig {
     private static final Logger logger = LoggerFactory.getLogger(KafkaProducerConfig.class);
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
+
+    /**
+     * Creates a Kafka Producer factory.
+     *
+     * @return ProducerFactory instance configured with the provided properties.
+     */
     @Bean
     public ProducerFactory<String, Object> producerFactory() {
         Map<String, Object> configProps = new HashMap<>();
@@ -35,11 +44,22 @@ public class KafkaProducerConfig {
 
         return new DefaultKafkaProducerFactory<>(configProps);
     }
+
+    /**
+     * Creates a KafkaTemplate for sending messages to Kafka topics.
+     *
+     * @return KafkaTemplate instance configured with the ProducerFactory.
+     */
     @Bean
     public KafkaTemplate<String, Object> kafkaTemplate() {
         return new KafkaTemplate<>(producerFactory());
     }
 
+    /**
+     * Logs the Kafka producer configuration.
+     *
+     * @param configProps The Kafka producer configuration properties.
+     */
     private void logProducerConfiguration(Map<String, Object> configProps) {
         configProps.forEach((key, value) -> logger.info("Kafka Producer Config - {}: {}", key, value));
     }

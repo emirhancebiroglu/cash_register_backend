@@ -6,6 +6,9 @@ import lombok.NoArgsConstructor;
 
 import java.util.Set;
 
+/**
+ * DTO class for updating user information.
+ */
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter

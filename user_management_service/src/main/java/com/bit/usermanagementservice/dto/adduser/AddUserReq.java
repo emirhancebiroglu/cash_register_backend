@@ -7,6 +7,9 @@ import lombok.NonNull;
 
 import java.util.Set;
 
+/**
+ * Request DTO class for adding a new user.
+ */
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter

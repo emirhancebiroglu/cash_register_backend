@@ -6,6 +6,9 @@ import lombok.Getter;
 
 import java.util.Set;
 
+/**
+ * DTO class for updating user information via Kafka.
+ */
 @Getter
 @AllArgsConstructor
 public class UserUpdateDTO {

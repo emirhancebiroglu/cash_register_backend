@@ -10,6 +10,9 @@ import org.springframework.mail.javamail.JavaMailSenderImpl;
 
 import java.util.Properties;
 
+/**
+ * Configuration class for setting up email functionality using JavaMailSender.
+ */
 @Configuration
 public class EmailConfig {
     private static final Logger logger = LoggerFactory.getLogger(EmailConfig.class);
@@ -26,6 +29,11 @@ public class EmailConfig {
     @Value("${spring.mail.password}")
     private String password;
 
+    /**
+     * Creates a JavaMailSender bean for sending emails.
+     *
+     * @return JavaMailSender instance configured with the provided properties.
+     */
     @Bean
     public JavaMailSender javaMailSender() {
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();

@@ -266,25 +266,9 @@ class UserServiceTest {
 
         when(userRepository.findByisDeletedFalse(any(PageRequest.class))).thenReturn(userPage);
 
-        List<UserDTO> userDTOList = userService.getUsers(0, 10);
+        List<UserDTO> userDTOList = userService.getUsers(0, 10, false);
 
         verify(userRepository, times(1)).findByisDeletedFalse(any(PageRequest.class));
-        assertEquals(2, userDTOList.size());
-        assertEquals("John", userDTOList.get(0).getFirstName());
-        assertEquals("Doe", userDTOList.get(0).getLastName());
-        assertEquals("Alice", userDTOList.get(1).getFirstName());
-        assertEquals("Smith", userDTOList.get(1).getLastName());
-    }
-
-    @Test
-    void testGetDeletedUsers() {
-        Page<User> userPage = new PageImpl<>(userList);
-
-        when(userRepository.findByisDeletedTrue(any(PageRequest.class))).thenReturn(userPage);
-
-        List<UserDTO> userDTOList = userService.getDeletedUsers(0, 10);
-
-        verify(userRepository, times(1)).findByisDeletedTrue(any(PageRequest.class));
         assertEquals(2, userDTOList.size());
         assertEquals("John", userDTOList.get(0).getFirstName());
         assertEquals("Doe", userDTOList.get(0).getLastName());

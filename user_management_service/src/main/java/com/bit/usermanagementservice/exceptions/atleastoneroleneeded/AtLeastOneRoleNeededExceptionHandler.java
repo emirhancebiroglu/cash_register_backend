@@ -8,8 +8,17 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.time.LocalDateTime;
 
+/**
+ * Controller advice to handle AtLeastOneRoleNeededException.
+ */
 @ControllerAdvice
 public class AtLeastOneRoleNeededExceptionHandler {
+    /**
+     * Handles AtLeastOneRoleNeededException and returns an appropriate response entity.
+     *
+     * @param ex The exception to handle.
+     * @return ResponseEntity containing error details and HTTP status code.
+     */
     @ExceptionHandler(AtLeastOneRoleNeededException.class)
     public ResponseEntity<ErrorDetails> handleInvalidEmailException(AtLeastOneRoleNeededException ex) {
         ErrorDetails errorDetails = new ErrorDetails(

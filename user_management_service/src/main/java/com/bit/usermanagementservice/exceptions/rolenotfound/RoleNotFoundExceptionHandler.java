@@ -8,8 +8,16 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.time.LocalDateTime;
 
+/**
+ * Controller advice to handle RoleNotFoundExceptions globally.
+ */
 @ControllerAdvice
 public class RoleNotFoundExceptionHandler {
+    /**
+     * Handles RoleNotFoundException and returns an appropriate ResponseEntity.
+     * @param ex The RoleNotFoundException instance.
+     * @return ResponseEntity containing error details and HTTP status.
+     */
     @ExceptionHandler(RoleNotFoundException.class)
     public ResponseEntity<ErrorDetails> roleNotFoundException(RoleNotFoundException ex){
         ErrorDetails errorDetails = new ErrorDetails(

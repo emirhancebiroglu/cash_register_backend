@@ -15,6 +15,9 @@ import lombok.AllArgsConstructor;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Configuration class for initializing roles.
+ */
 @Configuration
 @AllArgsConstructor
 @Transactional
@@ -25,11 +28,17 @@ public class RoleInitializationConfig implements CommandLineRunner {
 
     private static final List<String> ROLE_NAMES = Arrays.asList("ROLE_ADMIN", "ROLE_CASHIER", "ROLE_STORE_MANAGER");
 
+    /**
+     * Runs the initialization process for roles.
+     */
     @Override
     public void run(String... args){
         initializeRoles();
     }
 
+    /**
+     * Initializes roles if they do not already exist.
+     */
     protected void initializeRoles() {
         for(String roleName : ROLE_NAMES){
             if(roleRepository.findByName(roleName).isEmpty()){

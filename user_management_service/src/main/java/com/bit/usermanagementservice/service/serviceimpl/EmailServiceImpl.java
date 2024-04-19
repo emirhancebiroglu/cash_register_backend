@@ -12,6 +12,11 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 
+/**
+ * The EmailServiceImpl class is an implementation of the EmailService interface.
+ * It provides methods to send emails using JavaMailSender and Thymeleaf template engine.
+ * This class is responsible for sending various types of emails including user registration and notification emails.
+ */
 @Service
 @RequiredArgsConstructor
 public class EmailServiceImpl implements EmailService {
@@ -19,6 +24,17 @@ public class EmailServiceImpl implements EmailService {
     private final TemplateEngine templateEngine;
     private static final Logger logger = LoggerFactory.getLogger(EmailServiceImpl.class);
 
+    /**
+     * Sends an email with user details including user code and password.
+     *
+     * @param to the recipient email address.
+     * @param subject the subject of the email.
+     * @param templateName the name of the email template to use.
+     * @param userCode the user code to include in the email.
+     * @param userPassword the user password to include in the email.
+     * @param firstName the first name of the user.
+     * @param lastName the last name of the user.
+     */
     @Override
     public void sendEmail(String to, String subject, String templateName, String userCode, String userPassword,
                           String firstName, String lastName){
@@ -31,6 +47,16 @@ public class EmailServiceImpl implements EmailService {
         setHelper(to, subject, templateName, context);
     }
 
+    /**
+     * Sends an email with user details including user code.
+     *
+     * @param to the recipient email address.
+     * @param subject the subject of the email.
+     * @param templateName the name of the email template to use.
+     * @param userCode the user code to include in the email.
+     * @param firstName the first name of the user.
+     * @param lastName the last name of the user.
+     */
     @Override
     public void sendEmail(String to, String subject, String templateName,
                           String userCode, String firstName, String lastName) {
@@ -42,6 +68,15 @@ public class EmailServiceImpl implements EmailService {
         setHelper(to, subject, templateName, context);
     }
 
+    /**
+     * Sends an email with user details.
+     *
+     * @param to the recipient email address.
+     * @param subject the subject of the email.
+     * @param templateName the name of the email template to use.
+     * @param firstName the first name of the user.
+     * @param lastName the last name of the user.
+     */
     @Override
     public void sendEmail(String to, String subject, String templateName, String firstName, String lastName) {
         Context context = new Context();

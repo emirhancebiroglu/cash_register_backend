@@ -6,6 +6,9 @@ import lombok.Getter;
 
 import java.util.Set;
 
+/**
+ * DTO class for sending user credentials data via Kafka.
+ */
 @Getter
 @AllArgsConstructor
 public class UserCredentialsDTO {

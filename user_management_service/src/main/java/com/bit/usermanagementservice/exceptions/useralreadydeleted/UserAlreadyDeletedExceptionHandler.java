@@ -8,8 +8,16 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.time.LocalDateTime;
 
+/**
+ * Controller advice to handle UserAlreadyDeletedException.
+ */
 @ControllerAdvice
 public class UserAlreadyDeletedExceptionHandler {
+    /**
+     * Handles UserAlreadyDeletedException and returns an appropriate response entity.
+     * @param ex The exception to handle.
+     * @return ResponseEntity containing error details and HTTP status code.
+     */
     @ExceptionHandler(UserAlreadyDeletedException.class)
     public ResponseEntity<ErrorDetails> handleInvalidEmailException(UserAlreadyDeletedException ex) {
         ErrorDetails errorDetails = new ErrorDetails(
@@ -19,13 +27,6 @@ public class UserAlreadyDeletedExceptionHandler {
                 HttpStatus.CONFLICT.name()
         );
 
-        errorDetails.setErrorMessage(ex.getMessage());
-        errorDetails.setStatus(HttpStatus.CONFLICT.name());
-        errorDetails.setStatusCode(HttpStatus.CONFLICT.value());
-        errorDetails.setTimeStamp(LocalDateTime.now());
-
         return new ResponseEntity<>(errorDetails, HttpStatus.CONFLICT);
     }
-
-
 }

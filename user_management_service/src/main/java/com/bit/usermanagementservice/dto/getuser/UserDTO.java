@@ -8,6 +8,9 @@ import lombok.NonNull;
 
 import java.util.Set;
 
+/**
+ * DTO class for representing user data.
+ */
 @NoArgsConstructor
 @AllArgsConstructor
 @Getter

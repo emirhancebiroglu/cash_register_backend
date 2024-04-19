@@ -8,8 +8,18 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.time.LocalDateTime;
 
+/**
+ * The UserAlreadyExistsExceptionHandler class provides exception handling for UserAlreadyExistsException.
+ * It is responsible for generating appropriate error responses when UserAlreadyExistsException occurs.
+ */
 @ControllerAdvice
 public class UserAlreadyExistsExceptionHandler {
+    /**
+     * Handles UserAlreadyExistsException and generates an appropriate error response.
+     *
+     * @param ex the UserAlreadyExistsException to be handled.
+     * @return a ResponseEntity containing the error details and HTTP status code.
+     */
     @ExceptionHandler(UserAlreadyExistsException.class)
     public ResponseEntity<ErrorDetails> userAlreadyExistsException(UserAlreadyExistsException ex){
         ErrorDetails errorDetails = new ErrorDetails(

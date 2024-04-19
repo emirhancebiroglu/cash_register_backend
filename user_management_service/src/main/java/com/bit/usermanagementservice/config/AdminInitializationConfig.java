@@ -20,6 +20,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * Configuration class for initializing the admin user.
+ */
 @Configuration
 @RequiredArgsConstructor
 @Order(2)
@@ -31,11 +34,19 @@ public class AdminInitializationConfig implements CommandLineRunner {
     private static final Logger logger = LoggerFactory.getLogger(AdminInitializationConfig.class);
     private static final String ADMIN_STRING = "admin";
 
+    /**
+     * Runs the initialization process when the application starts.
+     */
     @Override
     public void run(String... args){
         initializeAdmin();
     }
 
+    /**
+     * Initializes the admin user if necessary.
+     *
+     * @throws RoleNotFoundException if the admin role is not found in the repository.
+     */
     public void initializeAdmin() throws RoleNotFoundException{
         Role adminRole = roleRepository.findByName("ROLE_ADMIN")
                 .orElseThrow(() -> new RoleNotFoundException("ROLE_ADMIN not found"));
@@ -47,6 +58,12 @@ public class AdminInitializationConfig implements CommandLineRunner {
         }
     }
 
+    /**
+     * Checks if admin initialization is required based on the presence of an admin user in the repository.
+     *
+     * @param adminRole the admin role to check against.
+     * @return true if admin initialization is required, false otherwise.
+     */
     private boolean isAdminInitializationRequired(Role adminRole) {
         Set<Role> roles = new HashSet<>();
         roles.add(adminRole);
@@ -54,6 +71,12 @@ public class AdminInitializationConfig implements CommandLineRunner {
 
         return usersWithAdminRole.isEmpty() || usersWithAdminRole.stream().allMatch(User::isDeleted);
     }
+
+    /**
+     * Creates the admin user if it does not already exist.
+     *
+     * @param adminRole the admin role to assign to the admin user.
+     */
     private void createAdminUser(Role adminRole) {
         Optional<User> initialAdmin = userRepository.findByUserCode(ADMIN_STRING);
 
@@ -82,6 +105,11 @@ public class AdminInitializationConfig implements CommandLineRunner {
         }
     }
 
+    /**
+     * Sends the admin user's credentials to the authentication service.
+     *
+     * @param adminUser the admin user whose credentials are to be sent.
+     */
     private void sendCredentialsToAuthService(User adminUser) {
         UserCredentialsDTO userCredentialsDTO = new UserCredentialsDTO(
                 adminUser.getId(),
@@ -95,6 +123,12 @@ public class AdminInitializationConfig implements CommandLineRunner {
         credentialsProducer.sendMessage("user-credentials" ,userCredentialsDTO);
         logger.info("User credentials sent to the authentication service.");
     }
+
+    /**
+     * Sends the deletion information of the admin user to the authentication service.
+     *
+     * @param initialAdmin an optional containing the admin user's information.
+     */
     private void sendDeletionInfoToAuthService(Optional<User> initialAdmin){
         if (initialAdmin.isEmpty())
             return;

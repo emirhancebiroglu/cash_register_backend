@@ -81,17 +81,8 @@ class AdminControllerTest {
         int pageNo = 0;
         int pageSize = 15;
         List<UserDTO> userList = Collections.emptyList();
-        when(userService.getUsers(pageNo, pageSize)).thenReturn(userList);
-        assertEquals(userList, adminController.getUsers(pageNo, pageSize));
-    }
-
-    @Test
-    void testGetDeletedUsers() {
-        int pageNo = 0;
-        int pageSize = 15;
-        List<UserDTO> userList = Collections.emptyList();
-        when(userService.getDeletedUsers(pageNo, pageSize)).thenReturn(userList);
-        assertEquals(userList, adminController.getDeletedUsers(pageNo, pageSize));
+        when(userService.getUsers(pageNo, pageSize, false)).thenReturn(userList);
+        assertEquals(userList, adminController.getUsers(pageNo, pageSize, false));
     }
 
     @Test

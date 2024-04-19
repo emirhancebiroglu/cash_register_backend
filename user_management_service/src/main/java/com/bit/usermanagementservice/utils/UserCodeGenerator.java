@@ -8,6 +8,11 @@ import java.security.SecureRandom;
 import java.util.Set;
 import java.util.TreeSet;
 
+/**
+ * The UserCodeGenerator class is responsible for generating user codes.
+ * It creates user codes based on user roles and ID, along with random digits.
+ * This class assumes that user roles are sorted alphabetically.
+ */
 @Component
 public class UserCodeGenerator {
     private static final Logger logger = LoggerFactory.getLogger(UserCodeGenerator.class);
@@ -17,6 +22,13 @@ public class UserCodeGenerator {
     private static final int RANDOM_DIGIT_LENGTH = 6;
     private static final String DIGITS = "0123456789";
 
+    /**
+     * Creates a user code based on the user's roles and ID, along with random digits.
+     *
+     * @param roles the roles associated with the user.
+     * @param userId the user's ID.
+     * @return the generated user code.
+     */
     public String createUserCode(Set<String> roles, Long userId){
         logger.info("Creating user code");
 
@@ -48,6 +60,11 @@ public class UserCodeGenerator {
         return userCode.toString();
     }
 
+    /**
+     * Generates a string of random digits.
+     *
+     * @return the generated random digits.
+     */
     private String generateRandomDigits() {
         StringBuilder randomDigits = new StringBuilder();
         SecureRandom random = new SecureRandom();

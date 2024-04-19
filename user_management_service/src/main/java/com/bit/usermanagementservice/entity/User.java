@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Entity class representing a user.
+ */
 @Entity
 @Table(schema = "users", name = "_users")
 @NoArgsConstructor
@@ -40,6 +43,15 @@ public class User {
   @Column(name = "is_deleted")
   private boolean isDeleted;
 
+  /**
+   * Constructor with parameters.
+   * @param firstName The first name of the user.
+   * @param lastName The last name of the user.
+   * @param email The email of the user.
+   * @param userCode The user code of the user.
+   * @param password The password of the user.
+   * @param roles The roles assigned to the user.
+   */
   public User(String firstName, String lastName, String email,
               String userCode, String password, Set<Role> roles){
     this.firstName = firstName;

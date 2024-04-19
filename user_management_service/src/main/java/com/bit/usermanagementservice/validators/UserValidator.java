@@ -9,12 +9,25 @@ import org.springframework.stereotype.Component;
 
 import java.util.Set;
 
+/**
+ * The UserValidator class is responsible for validating user data.
+ * It validates user email, first name, last name, and role information.
+ * It uses EmailValidator and NameValidator for email and name validation, respectively.
+ */
 @Component
 @RequiredArgsConstructor
 public class UserValidator {
     private final EmailValidator emailValidator;
     private final NameValidator nameValidator;
 
+    /**
+     * Validates user data including email, first name, last name, and roles.
+     *
+     * @param addUserReq the request containing user data to validate.
+     * @throws InvalidEmailException if the email is invalid.
+     * @throws InvalidNameException if the first name or last name is invalid.
+     * @throws AtLeastOneRoleNeededException if no roles are specified.
+     */
     public void validateUserData(AddUserReq addUserReq){
         validateEmail(addUserReq.getEmail());
         validateFirstName(addUserReq.getFirstName());
@@ -22,24 +35,48 @@ public class UserValidator {
         validateRoles(addUserReq.getRoles());
     }
 
+    /**
+     * Validates an email address.
+     *
+     * @param email the email address to validate.
+     * @throws InvalidEmailException if the email is invalid.
+     */
     public void validateEmail(String email) {
         if (!emailValidator.isValidEmail(email)){
             throw new InvalidEmailException("Invalid email: " + email);
         }
     }
 
+    /**
+     * Validates a first name.
+     *
+     * @param firstName the first name to validate.
+     * @throws InvalidNameException if the first name is invalid.
+     */
     public void validateFirstName(String firstName){
         if (!nameValidator.validateFirstName(firstName)){
             throw new InvalidNameException("Invalid first name: " + firstName);
         }
     }
 
+    /**
+     * Validates a last name.
+     *
+     * @param lastName the last name to validate.
+     * @throws InvalidNameException if the last name is invalid.
+     */
     public void validateLastName(String lastName){
         if (!nameValidator.validateLastName(lastName)){
             throw new InvalidNameException("Invalid last name: " + lastName);
         }
     }
 
+    /**
+     * Validates user roles.
+     *
+     * @param roleNames the set of role names to validate.
+     * @throws AtLeastOneRoleNeededException if no roles are specified.
+     */
     public void validateRoles(Set<String> roleNames){
         if (roleNames  == null || roleNames .isEmpty()){
             throw new AtLeastOneRoleNeededException("At least one role must be specified");

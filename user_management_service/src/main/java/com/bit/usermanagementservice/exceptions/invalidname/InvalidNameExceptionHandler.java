@@ -8,8 +8,18 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.time.LocalDateTime;
 
+/**
+ * The InvalidNameExceptionHandler class provides exception handling for InvalidNameException.
+ * It is responsible for generating appropriate error responses when InvalidNameException occurs.
+ */
 @ControllerAdvice
 public class InvalidNameExceptionHandler {
+    /**
+     * Handles InvalidNameException and generates an appropriate error response.
+     *
+     * @param ex the InvalidNameException to be handled.
+     * @return a ResponseEntity containing the error details and HTTP status code.
+     */
     @ExceptionHandler(InvalidNameException.class)
     public ResponseEntity<ErrorDetails> handleInvalidEmailException(InvalidNameException ex) {
         ErrorDetails errorDetails = new ErrorDetails(
@@ -21,6 +31,4 @@ public class InvalidNameExceptionHandler {
 
         return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
     }
-
-
 }
