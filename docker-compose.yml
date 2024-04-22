@@ -74,8 +74,6 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=2165
       - POSTGRES_SCHEMA=user-credentials
-    expose:
-      - "5432"
     restart: always
     ports:
       - "5432:5432"
@@ -93,7 +91,7 @@ services:
       - POSTGRES_PASSWORD=2165
       - POSTGRES_SCHEMA=products
     ports:
-      - "5432:5432"
+      - "5433:5433"
     command: [ "postgres", "-c", "search_path=products" ]
     networks:
       - spring-network
@@ -159,8 +157,10 @@ services:
       - kafka
 
   product-service:
-    image: product-service:latest
+    image: emirhancebiroglu/product-service:latest
     container_name: product-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
     depends_on:
       - eureka-server
       - product-db
