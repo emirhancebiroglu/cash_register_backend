@@ -30,7 +30,7 @@ public interface ProductService {
      * @param pageSize  the size of each page
      * @return a list of product DTOs
      */
-    List<ProductDTO> getProductsByNullBarcodeWithFilter(String letter, Integer pageNo, Integer pageSize);
+    List<ProductDTO> getProductsWithSpecificLetters(String letter, Integer pageNo, Integer pageSize);
 
     /**
      * Searches for products by code.

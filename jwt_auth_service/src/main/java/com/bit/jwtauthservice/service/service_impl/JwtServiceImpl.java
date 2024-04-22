@@ -1,11 +1,15 @@
 package com.bit.jwtauthservice.service.service_impl;
 
+import com.bit.jwtauthservice.entity.User;
+import com.bit.jwtauthservice.exceptions.usernotfound.UserNotFoundException;
+import com.bit.jwtauthservice.repository.UserRepository;
 import com.bit.jwtauthservice.service.JwtService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,7 +29,10 @@ import static java.util.Map.entry;
  * This service class is responsible for generating tokens, extracting claims, and validating tokens.
  */
 @Service
+@RequiredArgsConstructor
 public class JwtServiceImpl implements JwtService {
+  private final UserRepository userRepository;
+
   @Value("${jwt.secret-key}")
   private String jwtSecretKey;
 
@@ -58,11 +65,15 @@ public class JwtServiceImpl implements JwtService {
   public String generateToken(UserDetails userDetails) {
     logger.info("Generating token for user: {}", userDetails.getUsername());
 
+    String userCode = userDetails.getUsername();
+    User user = userRepository.findByUserCode(userCode)
+            .orElseThrow(() -> new UserNotFoundException("User not found"));
+
     Map<String, Object> claims = Map.ofEntries(
             entry("authorities", userDetails.getAuthorities().stream()
                     .map(GrantedAuthority::getAuthority)
                     .toList()),
-            entry("tokenType", "access")
+            entry("userId", user.getId())
     );
 
     String token = buildToken(claims, userDetails, jwtExpiration);

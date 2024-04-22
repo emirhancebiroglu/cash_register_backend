@@ -6,6 +6,7 @@ import com.bit.productservice.dto.addproduct.AddProductReq;
 import com.bit.productservice.dto.updateproduct.UpdateProductReq;
 import com.bit.productservice.entity.Image;
 import com.bit.productservice.entity.Product;
+import com.bit.productservice.exceptions.invalidsearchtype.InvalidSearchTypeException;
 import com.bit.productservice.exceptions.negativefield.NegativeFieldException;
 import com.bit.productservice.exceptions.nulloremptyfield.NullOrEmptyFieldException;
 import com.bit.productservice.exceptions.productalreadydeleted.ProductAlreadyDeletedException;
@@ -45,6 +46,7 @@ public class ProductServiceImpl implements ProductService {
     private final ImageRepository imageRepository;
     private final ProductValidator productValidator;
     private static final Logger logger = LoggerFactory.getLogger(ProductServiceImpl.class);
+    private static final String PRODUCT_NOT_FOUND = "Product not found";
 
     @Override
     public List<ProductDTO> getProducts() {
@@ -65,12 +67,18 @@ public class ProductServiceImpl implements ProductService {
         logger.info("Fetching products by {} {}", searchType, searchTerm);
 
         Page<Product> pagingProduct;
-        if ("productCode".equalsIgnoreCase(searchType)) {
+        if (searchType == null) {
+            pagingProduct = productRepository.findByBarcodeStartingWith(searchTerm, PageRequest.of(pageNo, pageSize, Sort.by("name").ascending()));
+            if (pagingProduct.isEmpty()) {
+                pagingProduct = productRepository.findByProductCodeStartingWith(searchTerm, PageRequest.of(pageNo, pageSize, Sort.by("name").ascending()));
+            }
+        }
+        else if ("productCode".equalsIgnoreCase(searchType)) {
             pagingProduct = productRepository.findByProductCodeStartingWith(searchTerm, PageRequest.of(pageNo, pageSize, Sort.by("name").ascending()));
         } else if ("barcode".equalsIgnoreCase(searchType)) {
             pagingProduct = productRepository.findByBarcodeStartingWith(searchTerm, PageRequest.of(pageNo, pageSize, Sort.by("name").ascending()));
         } else {
-            throw new IllegalArgumentException("Invalid search type. Use 'productCode' or 'barcode'.");
+            throw new InvalidSearchTypeException("Invalid search type. Use 'productCode' or 'barcode'.");
         }
 
         logger.info("Products fetched successfully");
@@ -82,7 +90,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public List<ProductDTO> getProductsByNullBarcodeWithFilter(String letter, Integer pageNo, Integer pageSize) {
+    public List<ProductDTO> getProductsWithSpecificLetters(String letter, Integer pageNo, Integer pageSize) {
         Specification<Product> specification = (root, query, criteriaBuilder) -> {
             switch (letter) {
                 case "A" -> {
@@ -196,6 +204,10 @@ public class ProductServiceImpl implements ProductService {
         Product product = getProductById(productId);
         productValidator.validateProduct(null, updateProductReq);
 
+        if (product.isDeleted()){
+            throw new ProductNotFoundException(PRODUCT_NOT_FOUND);
+        }
+
         Image image = product.getImage();
 
         if (multipartFile != null){
@@ -294,7 +306,7 @@ public class ProductServiceImpl implements ProductService {
             }
 
             if (product == null) {
-                throw new ProductNotFoundException("Product not found");
+                throw new ProductNotFoundException(PRODUCT_NOT_FOUND);
             }
 
             int newStock;
@@ -434,7 +446,7 @@ public class ProductServiceImpl implements ProductService {
         logger.info("Fetching product with ID {}", productId);
 
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException("Product not found"));
+                .orElseThrow(() -> new ProductNotFoundException(PRODUCT_NOT_FOUND));
 
         logger.info("Product fetched successfully with ID {}", productId);
 

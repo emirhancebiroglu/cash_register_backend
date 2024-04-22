@@ -168,6 +168,7 @@
                         <exclude>com/bit/productservice/exceptions/productalreadyinfavorite/ProductAlreadyInFavoriteExceptionHandler.class</exclude>
                         <exclude>com/bit/productservice/exceptions/productwithsamename/ProductWithSameNameExceptionHandler.class</exclude>
                         <exclude>com/bit/productservice/exceptions/productwithsameproductcode/ProductWithSameProductCodeExceptionHandler.class</exclude>
+                        <exclude>com/bit/productservice/exceptions/invalidsearchtype/InvalidSearchTypeExceptionHandler.class</exclude>
                         <exclude>com/bit/productservice/exceptions/ErrorDetails.class</exclude>
                         <exclude>com/bit/productservice/ProductServiceApplication.class</exclude>
                     </excludes>

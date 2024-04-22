@@ -65,6 +65,7 @@ class ProductServiceTest {
     private String searchTerm;
     private Integer pageNo;
     private Integer pageSize;
+    private Page<Product> dummyPage;
 
     @BeforeEach
     void setUp() {
@@ -98,6 +99,8 @@ class ProductServiceTest {
         searchTerm = "123";
         pageNo = 0;
         pageSize = 10;
+
+        dummyPage = mock(Page.class);
     }
 
     @Test
@@ -122,7 +125,7 @@ class ProductServiceTest {
         when(productRepository.findAll(any(Specification.class), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(product)));
 
-        List<ProductDTO> productDTOList = productService.getProductsByNullBarcodeWithFilter("A", 0, 10);
+        List<ProductDTO> productDTOList = productService.getProductsWithSpecificLetters("A", 0, 10);
 
         verify(productRepository).findAll(any(Specification.class), any(Pageable.class));
 
@@ -363,7 +366,6 @@ class ProductServiceTest {
     void searchProductByCode_ProductCode_Success() {
         searchType = "productCode";
 
-        Page<Product> dummyPage = mock(Page.class);
         when(productRepository.findByProductCodeStartingWith(eq(searchTerm), any(PageRequest.class)))
                 .thenReturn(dummyPage);
 
@@ -377,7 +379,6 @@ class ProductServiceTest {
         String searchType = "barcode";
         String searchTerm = "123";
 
-        Page<Product> dummyPage = mock(Page.class);
         when(productRepository.findByBarcodeStartingWith(eq(searchTerm), any(PageRequest.class)))
                 .thenReturn(dummyPage);
 
@@ -394,5 +395,49 @@ class ProductServiceTest {
                 () -> productService.searchProductByCode(searchType, searchTerm, pageNo, pageSize));
 
         verifyNoInteractions(productRepository);
+    }
+
+    @Test
+    void searchProductByCode_NullSearchType_Barcode_Success() {
+        String searchTerm = "123";
+
+        when(productRepository.findByBarcodeStartingWith(eq(searchTerm), any(PageRequest.class)))
+                .thenReturn(dummyPage);
+
+        productService.searchProductByCode(null, searchTerm, pageNo, pageSize);
+
+        verify(productRepository).findByBarcodeStartingWith(eq(searchTerm), any(PageRequest.class));
+    }
+
+    @Test
+    void searchProductByCode_NullSearchType_ProductCode_EmptyBarcode_Success() {
+        String searchTerm = "ABC";
+
+        when(productRepository.findByBarcodeStartingWith(eq(searchTerm), any(PageRequest.class)))
+                .thenReturn(Page.empty());
+        when(productRepository.findByProductCodeStartingWith(eq(searchTerm), any(PageRequest.class)))
+                .thenReturn(dummyPage);
+
+        productService.searchProductByCode(null, searchTerm, pageNo, pageSize);
+
+        verify(productRepository).findByBarcodeStartingWith(eq(searchTerm), any(PageRequest.class));
+        verify(productRepository).findByProductCodeStartingWith(eq(searchTerm), any(PageRequest.class));
+    }
+
+    @Test
+    void searchProductByCode_NullSearchType_ProductCode_NonEmptyBarcode_Success() {
+        String searchTerm = "ABC";
+
+        Page<Product> barcodePage = mock(Page.class);
+        Page<Product> productCodePage = mock(Page.class);
+        when(productRepository.findByBarcodeStartingWith(eq(searchTerm), any(PageRequest.class)))
+                .thenReturn(barcodePage);
+        when(productRepository.findByProductCodeStartingWith(eq(searchTerm), any(PageRequest.class)))
+                .thenReturn(productCodePage);
+
+        productService.searchProductByCode(null, searchTerm, pageNo, pageSize);
+
+        verify(productRepository).findByBarcodeStartingWith(eq(searchTerm), any(PageRequest.class));
+        verify(productRepository, never()).findByProductCodeStartingWith(eq(searchTerm), any(PageRequest.class));
     }
 }

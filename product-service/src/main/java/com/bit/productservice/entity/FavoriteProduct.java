@@ -21,8 +21,8 @@ public class FavoriteProduct {
     @Column(name = "id", nullable = false, unique = true)
     private UUID id;
 
-    @Column(name = "user-code", nullable = false)
-    private String userCode;
+    @Column(name = "user-id", nullable = false)
+    private Long userId;
 
     @Column(name = "product-id", nullable = false)
     private String productId;
@@ -30,11 +30,11 @@ public class FavoriteProduct {
     /**
      * Constructor for creating a FavoriteProduct instance.
      *
-     * @param userCode  The code of the user who favorited the product.
+     * @param userId  The id of the user who favorited the product.
      * @param productId The ID of the favorited product.
      */
-    public FavoriteProduct(String userCode, String productId) {
-        this.userCode = userCode;
+    public FavoriteProduct(Long userId, String productId) {
+        this.userId = userId;
         this.productId = productId;
     }
 }

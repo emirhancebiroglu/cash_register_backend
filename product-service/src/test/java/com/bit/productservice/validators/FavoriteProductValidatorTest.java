@@ -27,7 +27,7 @@ class FavoriteProductValidatorTest {
     private FavoriteProductValidator favoriteProductValidator;
 
     private final String productId = "123456789";
-    private final String userCode = "user123";
+    private final Long userId = 1L;
 
     @Test
     void validateFavoriteProduct_productExists_productIsFavorite() {
@@ -44,25 +44,25 @@ class FavoriteProductValidatorTest {
         assertThrows(ProductNotFoundException.class, () -> favoriteProductValidator.isProductExist(productRepository, productId));
 
         verify(productRepository, times(1)).getProductById(productId);
-        verify(favoriteProductRepository, never()).existsByUserCodeAndProductId(userCode, productId);
+        verify(favoriteProductRepository, never()).existsByUserIdAndProductId(userId, productId);
     }
 
     @Test
     void validateFavoriteProduct_productDoesNotExistAndIsntFavorite_throwsProductIsNotFavoriteException() {
-        when(favoriteProductRepository.existsByUserCodeAndProductId(userCode, productId)).thenReturn(false);
+        when(favoriteProductRepository.existsByUserIdAndProductId(userId, productId)).thenReturn(false);
 
-        assertThrows(ProductIsNotFavoriteException.class, () -> favoriteProductValidator.isProductNotFavorite(productId, userCode, favoriteProductRepository));
+        assertThrows(ProductIsNotFavoriteException.class, () -> favoriteProductValidator.isProductNotFavorite(productId, userId, favoriteProductRepository));
 
-        verify(favoriteProductRepository, times(1)).existsByUserCodeAndProductId(userCode, productId);
+        verify(favoriteProductRepository, times(1)).existsByUserIdAndProductId(userId, productId);
     }
 
     @Test
     void validateFavoriteProduct_productIsAlreadyFavorite_throwsProductAlreadyInFavoriteException() {
-        when(favoriteProductRepository.existsByUserCodeAndProductId(userCode, productId)).thenReturn(true);
+        when(favoriteProductRepository.existsByUserIdAndProductId(userId, productId)).thenReturn(true);
 
         assertThrows(ProductAlreadyInFavoriteException.class,
-                () -> favoriteProductValidator.isProductFavorite(productId, userCode, favoriteProductRepository));
+                () -> favoriteProductValidator.isProductFavorite(productId, userId, favoriteProductRepository));
 
-        verify(favoriteProductRepository, times(1)).existsByUserCodeAndProductId(userCode, productId);
+        verify(favoriteProductRepository, times(1)).existsByUserIdAndProductId(userId, productId);
     }
 }

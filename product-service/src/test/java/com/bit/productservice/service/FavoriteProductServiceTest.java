@@ -58,7 +58,7 @@ class FavoriteProductServiceTest {
     @Test
     void addProductToFavorites_ValidProduct_Success() {
         when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
-        when(jwtUtil.extractUsername(token)).thenReturn("testUser");
+        when(jwtUtil.extractUserId(token)).thenReturn(1L);
         String productId = "123";
         when(productRepository.existsById(productId)).thenReturn(true);
 
@@ -84,14 +84,14 @@ class FavoriteProductServiceTest {
     @Test
     void removeProductFromFavorites_ValidProduct_Success() {
         when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
-        when(jwtUtil.extractUsername(token)).thenReturn("testUser");
+        when(jwtUtil.extractUserId(token)).thenReturn(1L);
         String productId = "123";
 
-        when(favoriteProductRepository.existsByUserCodeAndProductId("testUser", productId)).thenReturn(true);
+        when(favoriteProductRepository.existsByUserIdAndProductId(1L, productId)).thenReturn(true);
 
         favoriteProductService.removeProductFromFavorites(productId);
 
-        verify(favoriteProductRepository, times(1)).deleteByUserCodeAndProductId("testUser", productId);
+        verify(favoriteProductRepository, times(1)).deleteByUserIdAndProductId(1L, productId);
     }
 
     @Test
@@ -99,15 +99,16 @@ class FavoriteProductServiceTest {
         String productId = "456";
 
         when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
-        when(jwtUtil.extractUsername(token)).thenReturn("testUser");
+        when(jwtUtil.extractUserId(token)).thenReturn(1L);
+
 
         doThrow(ProductIsNotFavoriteException.class)
                 .when(favoriteProductValidator)
-                .isProductNotFavorite(productId, "testUser", favoriteProductRepository);
+                .isProductNotFavorite(productId, 1L, favoriteProductRepository);
 
         assertThrows(ProductIsNotFavoriteException.class, () -> favoriteProductService.removeProductFromFavorites(productId));
 
-        verify(favoriteProductRepository, never()).deleteByUserCodeAndProductId(anyString(), anyString());
+        verify(favoriteProductRepository, never()).deleteByUserIdAndProductId(anyLong(), anyString());
     }
 
     @Test
@@ -115,7 +116,8 @@ class FavoriteProductServiceTest {
         String productId = "456";
 
         when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
-        when(jwtUtil.extractUsername(token)).thenReturn("testUser");
+        when(jwtUtil.extractUserId(token)).thenReturn(1L);
+
 
         doThrow(ProductNotFoundException.class)
                 .when(favoriteProductValidator)
@@ -125,7 +127,7 @@ class FavoriteProductServiceTest {
 
         assertThrows(ProductNotFoundException.class, () -> favoriteProductService.removeProductFromFavorites(productId));
 
-        verify(favoriteProductRepository, never()).deleteByUserCodeAndProductId(anyString(), anyString());
+        verify(favoriteProductRepository, never()).deleteByUserIdAndProductId(anyLong(), anyString());
     }
 
     @Test
@@ -133,10 +135,10 @@ class FavoriteProductServiceTest {
         PageRequest pageRequest = PageRequest.of(0, 10);
 
         when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
-        when(jwtUtil.extractUsername(token)).thenReturn("testUser");
+        when(jwtUtil.extractUserId(token)).thenReturn(1L);
 
         Page<FavoriteProduct> favoriteProductPage = mock(Page.class);
-        when(favoriteProductRepository.findByUserCode("testUser", pageRequest)).thenReturn(favoriteProductPage);
+        when(favoriteProductRepository.findByUserId(1L, pageRequest)).thenReturn(favoriteProductPage);
 
         FavoriteProduct favoriteProduct = new FavoriteProduct();
         favoriteProduct.setProductId("456");

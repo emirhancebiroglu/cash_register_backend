@@ -44,8 +44,8 @@ public class ProductController {
      * @param pageSize    The size of each page for pagination (default: 15).
      * @return List of ProductDTO objects representing matching products.
      */
-    @GetMapping("/search-products-by-product-code")
-    public List<ProductDTO> searchProductByCode(@RequestParam String searchType,
+    @GetMapping("/search-products-by-code")
+    public List<ProductDTO> searchProductByCode(@RequestParam(required = false) String searchType,
                                                        @RequestParam String searchTerm,
                                                        @RequestParam(defaultValue = "0") Integer pageNo,
                                                        @RequestParam(defaultValue = "15") Integer pageSize) {
@@ -60,12 +60,12 @@ public class ProductController {
      * @param pageSize The size of each page for pagination (default: 15).
      * @return List of ProductDTO objects representing filtered products.
      */
-    @GetMapping("/get-products-with-filter-and-pagination")
-    public List<ProductDTO> getProductsByFilterAndPagination(
+    @GetMapping("/get-products-with-specific-letters")
+    public List<ProductDTO> getProductsWithSpecificLetters(
             @RequestParam String letter,
             @RequestParam(defaultValue = "0") Integer pageNo,
             @RequestParam(defaultValue = "15") Integer pageSize) {
-        return productService.getProductsByNullBarcodeWithFilter(letter, pageNo, pageSize);
+        return productService.getProductsWithSpecificLetters(letter, pageNo, pageSize);
     }
 
     /**

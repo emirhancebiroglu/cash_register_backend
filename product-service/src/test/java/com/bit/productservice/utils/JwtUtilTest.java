@@ -33,16 +33,19 @@ class JwtUtilTest {
 
     @Test
     void extractUsername_ValidToken_ReturnsUsername() {
+        long userId = 123L;
         byte[] keyBytes= Decoders.BASE64.decode(jwtSecret);
         String token = Jwts
                 .builder()
-                .setClaims(null)
                 .setSubject("testUser")
+                .claim("userId", userId)
                 .setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + 60000000))
                 .signWith(Keys.hmacShaKeyFor(keyBytes), SignatureAlgorithm.HS256)
                 .compact();
 
-        assertEquals("testUser", jwtUtil.extractUsername(token));
+        Long extractedUserId = jwtUtil.extractUserId(token);
+
+        assertEquals(userId, extractedUserId);
     }
 }

@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
+import javax.naming.directory.InvalidSearchFilterException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,12 +51,12 @@ class ProductControllerTest {
     @Test
     void getProductsByFilterAndPagination() {
         List<ProductDTO> productList = new ArrayList<>();
-        when(productService.getProductsByNullBarcodeWithFilter(anyString(), anyInt(), anyInt())).thenReturn(productList);
+        when(productService.getProductsWithSpecificLetters(anyString(), anyInt(), anyInt())).thenReturn(productList);
 
-        List<ProductDTO> response = productController.getProductsByFilterAndPagination("A", 0, 15);
+        List<ProductDTO> response = productController.getProductsWithSpecificLetters("A", 0, 15);
 
         assertEquals(productList, response);
-        verify(productService, times(1)).getProductsByNullBarcodeWithFilter("A", 0, 15);
+        verify(productService, times(1)).getProductsWithSpecificLetters("A", 0, 15);
     }
 
     @Test
@@ -111,7 +112,7 @@ class ProductControllerTest {
     }
 
     @Test
-    void searchProductByProductCode() {
+    void searchProductByProductCode() throws InvalidSearchFilterException {
         List<ProductDTO> productList = new ArrayList<>();
         when(productService.searchProductByCode(anyString(), anyString(), anyInt(), anyInt())).thenReturn(productList);
 

@@ -31,41 +31,41 @@ public class FavoriteProductServiceImpl implements FavoriteProductService {
 
     @Override
     public void addProductToFavorites(String productId) {
-        logger.info("Adding product with ID {} to favorites for user {}", productId, getUserCode(request));
+        logger.info("Adding product with ID {} to favorites for user {}", productId, getUserId(request));
 
         favoriteProductValidator.isProductExist(productRepository, productId);
-        favoriteProductValidator.isProductFavorite(productId, getUserCode(request), favoriteProductRepository);
+        favoriteProductValidator.isProductFavorite(productId, getUserId(request), favoriteProductRepository);
 
-        favoriteProductRepository.save(new FavoriteProduct(getUserCode(request), productId));
+        favoriteProductRepository.save(new FavoriteProduct(getUserId(request), productId));
 
-        logger.info("Favorite product saved successfully for user {}", getUserCode(request));
+        logger.info("Favorite product saved successfully for user {}", getUserId(request));
     }
 
     @Override
     public void removeProductFromFavorites(String productId) {
-        logger.info("Removing product with ID {} from favorites for user {}", productId, getUserCode(request));
+        logger.info("Removing product with ID {} from favorites for user {}", productId, getUserId(request));
 
         favoriteProductValidator.isProductExist(productRepository, productId);
-        favoriteProductValidator.isProductNotFavorite(productId, getUserCode(request), favoriteProductRepository);
+        favoriteProductValidator.isProductNotFavorite(productId, getUserId(request), favoriteProductRepository);
 
-        favoriteProductRepository.deleteByUserCodeAndProductId(getUserCode(request), productId);
+        favoriteProductRepository.deleteByUserIdAndProductId(getUserId(request), productId);
 
-        logger.info("Product removed with ID {} from favorites for user {}", productId, getUserCode(request));
+        logger.info("Product removed with ID {} from favorites for user {}", productId, getUserId(request));
     }
 
     @Override
     public List<ProductDTO> listFavoriteProductsForCurrentUser(Integer pageNo, Integer pageSize) {
         Pageable pageable = PageRequest.of(pageNo, pageSize);
 
-        logger.info("Retrieving favorite products for user {}", getUserCode(request));
+        logger.info("Retrieving favorite products for user {}", getUserId(request));
 
-        Page<FavoriteProduct> favoriteProductsPage = favoriteProductRepository.findByUserCode(getUserCode(request), pageable);
+        Page<FavoriteProduct> favoriteProductsPage = favoriteProductRepository.findByUserId(getUserId(request), pageable);
         List<Product> favoriteProducts = favoriteProductsPage.getContent().stream()
                 .map(favoriteProduct -> productRepository.getProductById(favoriteProduct.getProductId()))
                 .filter(product -> !product.isDeleted())
                 .toList();
 
-        logger.info("Favorite products retrieved successfully for user {}", getUserCode(request));
+        logger.info("Favorite products retrieved successfully for user {}", getUserId(request));
 
         return favoriteProducts.stream()
                 .map(this::convertProductToDTO)
@@ -84,12 +84,12 @@ public class FavoriteProductServiceImpl implements FavoriteProductService {
         );
     }
 
-    private String getUserCode(HttpServletRequest request){
+    private Long getUserId(HttpServletRequest request){
         String authHeader = request.getHeader("Authorization");
         String token;
         if (authHeader != null && authHeader.startsWith("Bearer ")){
             token = authHeader.substring(7);
-            return jwtUtil.extractUsername(token);
+            return jwtUtil.extractUserId(token);
         }
 
         return null;

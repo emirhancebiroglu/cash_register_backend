@@ -59,6 +59,10 @@ public class ProductValidator {
             errors.add("Image field is required");
         }
 
+        if (neitherCodeNorBarcodeProvided(addProductReq)) {
+            throw new NoCodeProvidedException("Either barcode or product code should be provided");
+        }
+
         return errors;
     }
 
@@ -79,7 +83,7 @@ public class ProductValidator {
      * @param addProductReq    the AddProductReq object
      * @param updateProductReq the UpdateProductReq object
      */
-    private void validateProductName(AddProductReq addProductReq, UpdateProductReq updateProductReq) {
+    public void validateProductName(AddProductReq addProductReq, UpdateProductReq updateProductReq) {
         if ((updateProductReq != null && productRepository.existsByName(updateProductReq.getName())) ||
                 (addProductReq != null && productRepository.existsByName(addProductReq.getName()))) {
             throw new ProductWithSameNameException("A product with the same name already exists");
@@ -95,10 +99,6 @@ public class ProductValidator {
     private void validateProductCodeAndBarcode(AddProductReq addProductReq, UpdateProductReq updateProductReq) {
         if (bothCodeAndBarcodeProvided(updateProductReq, addProductReq)) {
             throw new BothCodeTypeProvidedException("Either barcode or product code should be provided, not both");
-        }
-
-        if (neitherCodeNorBarcodeProvided(updateProductReq, addProductReq)) {
-            throw new NoCodeProvidedException("Either barcode or product code should be provided");
         }
 
         if (duplicateProductCodeExists(updateProductReq, addProductReq)) {
@@ -125,13 +125,11 @@ public class ProductValidator {
     /**
      * Checks if neither product code nor barcode are provided.
      *
-     * @param updateProductReq the UpdateProductReq object
      * @param addProductReq    the AddProductReq object
      * @return true if neither product code nor barcode are provided, false otherwise
      */
-    private boolean neitherCodeNorBarcodeProvided(UpdateProductReq updateProductReq, AddProductReq addProductReq) {
-        return (updateProductReq == null || (isBlank(updateProductReq.getProductCode()) && isBlank(updateProductReq.getBarcode()))) &&
-                (addProductReq == null || (isBlank(addProductReq.getProductCode()) && isBlank(addProductReq.getBarcode())));
+    private boolean neitherCodeNorBarcodeProvided(AddProductReq addProductReq) {
+        return (addProductReq == null || (isBlank(addProductReq.getProductCode()) && isBlank(addProductReq.getBarcode())));
     }
 
     /**
