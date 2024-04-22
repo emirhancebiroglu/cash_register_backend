@@ -8,8 +8,17 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.time.LocalDateTime;
 
+/**
+ * Global exception handler for ProductNotFoundException.
+ */
 @ControllerAdvice
 public class ProductNotFoundExceptionHandler {
+    /**
+     * Handles ProductNotFoundException and returns an appropriate ResponseEntity.
+     *
+     * @param ex The ProductNotFoundException to handle.
+     * @return A ResponseEntity containing error details and HTTP status code.
+     */
     @ExceptionHandler(ProductNotFoundException.class)
     public ResponseEntity<ErrorDetails> handleProductNotFoundException(ProductNotFoundException ex){
         ErrorDetails errorDetails = new ErrorDetails(

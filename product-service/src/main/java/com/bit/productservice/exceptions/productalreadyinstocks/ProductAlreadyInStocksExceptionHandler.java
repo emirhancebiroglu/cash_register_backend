@@ -8,8 +8,17 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.time.LocalDateTime;
 
+/**
+ * Global exception handler for ProductAlreadyInStocksException.
+ */
 @ControllerAdvice
 public class ProductAlreadyInStocksExceptionHandler {
+    /**
+     * Handles ProductAlreadyInStocksException and returns an appropriate ResponseEntity.
+     *
+     * @param ex The ProductAlreadyInStocksException to handle.
+     * @return A ResponseEntity containing error details and HTTP status code.
+     */
     @ExceptionHandler(ProductAlreadyInStocksException.class)
     public ResponseEntity<ErrorDetails> handleProductAlreadyInStocksException(ProductAlreadyInStocksException ex){
         ErrorDetails errorDetails = new ErrorDetails(

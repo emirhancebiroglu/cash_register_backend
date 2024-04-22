@@ -8,8 +8,17 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.time.LocalDateTime;
 
+/**
+ * Global exception handler for ProductAlreadyDeletedException.
+ */
 @ControllerAdvice
 public class ProductAlreadyDeletedExceptionHandler {
+    /**
+     * Handles ProductAlreadyDeletedException and returns an appropriate ResponseEntity.
+     *
+     * @param ex The ProductAlreadyDeletedException to handle.
+     * @return A ResponseEntity containing error details and HTTP status code.
+     */
     @ExceptionHandler(ProductAlreadyDeletedException.class)
     public ResponseEntity<ErrorDetails> handleProductAlreadyDeletedException(ProductAlreadyDeletedException ex){
         ErrorDetails errorDetails = new ErrorDetails(

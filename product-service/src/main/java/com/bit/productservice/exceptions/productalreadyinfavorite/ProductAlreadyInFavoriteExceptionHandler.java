@@ -8,8 +8,17 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.time.LocalDateTime;
 
+/**
+ * Global exception handler for ProductAlreadyInFavoriteException.
+ */
 @ControllerAdvice
 public class ProductAlreadyInFavoriteExceptionHandler {
+    /**
+     * Handles ProductAlreadyInFavoriteException and returns an appropriate ResponseEntity.
+     *
+     * @param ex The ProductAlreadyInFavoriteException to handle.
+     * @return A ResponseEntity containing error details and HTTP status code.
+     */
     @ExceptionHandler(ProductAlreadyInFavoriteException.class)
     public ResponseEntity<ErrorDetails> handleProductAlreadyInFavoriteException(ProductAlreadyInFavoriteException ex){
         ErrorDetails errorDetails = new ErrorDetails(

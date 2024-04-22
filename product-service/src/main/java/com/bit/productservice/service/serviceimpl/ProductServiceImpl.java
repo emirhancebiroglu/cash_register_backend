@@ -34,6 +34,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Service implementation for managing products.
+ */
 @Service
 @RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
@@ -317,6 +320,12 @@ public class ProductServiceImpl implements ProductService {
         }
     }
 
+    /**
+     * Converts a Product entity into a ProductDTO.
+     *
+     * @param product The Product entity to be converted.
+     * @return The corresponding ProductDTO.
+     */
     private ProductDTO convertToDTO(Product product) {
         String code = product.getProductCode() != null ? product.getProductCode() : product.getBarcode();
         return new ProductDTO(
@@ -328,6 +337,14 @@ public class ProductServiceImpl implements ProductService {
         );
     }
 
+    /**
+     * Uploads an image to the cloud storage service and saves image information to the repository.
+     *
+     * @param file The image file to be uploaded.
+     * @param id   The ID of the image.
+     * @return The uploaded Image entity.
+     * @throws IOException If an I/O error occurs during the upload process.
+     */
     private Image uploadImage(MultipartFile file, String id) throws IOException {
         var result = cloudinaryService.upload(file);
 
@@ -345,6 +362,14 @@ public class ProductServiceImpl implements ProductService {
         return image;
     }
 
+    /**
+     * Builds a Product entity based on the provided information.
+     *
+     * @param id            The ID of the product.
+     * @param addProductReq The request object containing product details.
+     * @param image         The image associated with the product.
+     * @return The built Product entity.
+     */
     private Product buildProduct(String id, AddProductReq addProductReq, Image image) {
         logger.info("Building product with ID {}", id);
 
@@ -366,6 +391,12 @@ public class ProductServiceImpl implements ProductService {
         return product;
     }
 
+    /**
+     * Updates the details of a Product entity.
+     *
+     * @param product          The Product entity to be updated.
+     * @param updateProductReq The request object containing updated product details.
+     */
     private void updateProductDetails(Product product, UpdateProductReq updateProductReq){
         if (updateProductReq.getBarcode() != null){
             product.setBarcode(updateProductReq.getBarcode());
@@ -399,6 +430,13 @@ public class ProductServiceImpl implements ProductService {
         logger.info("Product details updated successfully for product ID {}", product.getId());
     }
 
+    /**
+     * Retrieves a Product entity by its ID.
+     *
+     * @param productId The ID of the product to be retrieved.
+     * @return The retrieved Product entity.
+     * @throws ProductNotFoundException If the product with the specified ID is not found.
+     */
     private Product getProductById(String productId) {
         logger.info("Fetching product with ID {}", productId);
 

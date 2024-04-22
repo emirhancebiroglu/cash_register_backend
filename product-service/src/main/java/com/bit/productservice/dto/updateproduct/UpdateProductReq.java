@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * DTO class representing a request to update an existing product.
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

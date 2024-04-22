@@ -8,8 +8,17 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.time.LocalDateTime;
 
+/**
+ * Global exception handler for ProductWithSameProductCodeException.
+ */
 @ControllerAdvice
 public class ProductWithSameProductCodeExceptionHandler {
+    /**
+     * Handles ProductWithSameProductCodeException and returns an appropriate ResponseEntity.
+     *
+     * @param ex The ProductWithSameProductCodeException to handle.
+     * @return A ResponseEntity containing error details and HTTP status code.
+     */
     @ExceptionHandler(ProductWithSameProductCodeException.class)
     public ResponseEntity<ErrorDetails> handleProductWithSameProductCodeException(ProductWithSameProductCodeException ex){
         ErrorDetails errorDetails = new ErrorDetails(

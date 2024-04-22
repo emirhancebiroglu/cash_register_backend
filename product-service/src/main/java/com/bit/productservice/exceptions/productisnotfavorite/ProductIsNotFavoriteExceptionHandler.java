@@ -8,8 +8,17 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.time.LocalDateTime;
 
+/**
+ * Global exception handler for ProductIsNotFavoriteException.
+ */
 @ControllerAdvice
 public class ProductIsNotFavoriteExceptionHandler {
+    /**
+     * Handles ProductIsNotFavoriteException and returns an appropriate ResponseEntity.
+     *
+     * @param ex The ProductIsNotFavoriteException to handle.
+     * @return A ResponseEntity containing error details and HTTP status code.
+     */
     @ExceptionHandler(ProductIsNotFavoriteException.class)
     public ResponseEntity<ErrorDetails> handleProductIsNotFavoriteException(ProductIsNotFavoriteException ex){
         ErrorDetails errorDetails = new ErrorDetails(

@@ -8,8 +8,17 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.time.LocalDateTime;
 
+/**
+ * Global exception handler for BothCodeTypeProvidedException.
+ */
 @ControllerAdvice
 public class BothCodeTypeProvidedExceptionHandler {
+    /**
+     * Handles BothCodeTypeProvidedException and returns an appropriate ResponseEntity.
+     *
+     * @param ex The BothCodeTypeProvidedException to handle.
+     * @return A ResponseEntity containing error details and HTTP status code.
+     */
     @ExceptionHandler(BothCodeTypeProvidedException.class)
     public ResponseEntity<ErrorDetails> handleBothCodeTypeProvidedException(BothCodeTypeProvidedException ex){
         ErrorDetails errorDetails = new ErrorDetails(

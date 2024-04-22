@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 
+/**
+ * Entity class representing a product.
+ */
 @Entity
 @Data
 @AllArgsConstructor
@@ -51,6 +54,20 @@ public class Product {
     @Column(name = "lastUpdateDate")
     private LocalDate lastUpdateDate;
 
+    /**
+     * Constructor with parameters.
+     *
+     * @param id           The ID of the product.
+     * @param barcode      The barcode of the product.
+     * @param productCode  The product code of the product.
+     * @param name         The name of the product.
+     * @param price        The price of the product.
+     * @param image        The image of the product.
+     * @param category     The category of the product.
+     * @param stockAmount  The stock amount of the product.
+     * @param creationDate The creation date of the product.
+     * @param inStock      Whether the product is in stock or not.
+     */
     public Product(String id, String barcode, String productCode, String name, Double price,
                    Image image, String category, Integer stockAmount, LocalDate creationDate, boolean inStock) {
         this.id = id;

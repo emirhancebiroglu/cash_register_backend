@@ -8,8 +8,17 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.time.LocalDateTime;
 
+/**
+ * Global exception handler for NullOrEmptyFieldException.
+ */
 @ControllerAdvice
 public class NullOrEmptyFieldExceptionHandler {
+    /**
+     * Handles NullOrEmptyFieldException and returns an appropriate ResponseEntity.
+     *
+     * @param ex The NullOrEmptyFieldException to handle.
+     * @return A ResponseEntity containing error details and HTTP status code.
+     */
     @ExceptionHandler(NullOrEmptyFieldException.class)
     public ResponseEntity<ErrorDetails> handleNullOrEmptyFieldException(NullOrEmptyFieldException ex){
         ErrorDetails errorDetails = new ErrorDetails(

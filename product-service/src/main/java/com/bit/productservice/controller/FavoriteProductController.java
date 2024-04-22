@@ -9,18 +9,33 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Controller class responsible for managing favorite products.
+ */
 @RestController
 @RequestMapping("api/products/favorites")
 @RequiredArgsConstructor
 public class FavoriteProductController {
     private final FavoriteProductService favoriteProductService;
 
+    /**
+     * Endpoint to add a product to favorites.
+     *
+     * @param productId The ID of the product to be added to favorites.
+     * @return ResponseEntity indicating the success of the operation.
+     */
     @PostMapping("/add/{productId}")
     public ResponseEntity<String> addProductToFavorites(@PathVariable String productId) {
         favoriteProductService.addProductToFavorites(productId);
         return ResponseEntity.ok("Product added to favorites successfully!");
     }
 
+    /**
+     * Endpoint to remove a product from favorites.
+     *
+     * @param productId The ID of the product to be removed from favorites.
+     * @return ResponseEntity indicating the success of the operation.
+     */
     @DeleteMapping("/remove/{productId}")
     @Transactional
     public ResponseEntity<String> removeProductFromFavorites(@PathVariable String productId) {
@@ -28,6 +43,13 @@ public class FavoriteProductController {
         return ResponseEntity.ok("Product removed from favorites successfully!");
     }
 
+    /**
+     * Endpoint to list favorite products for the current user.
+     *
+     * @param pageNo   The page number for pagination (default: 0).
+     * @param pageSize The size of each page for pagination (default: 15).
+     * @return A list of ProductDTO objects representing favorite products.
+     */
     @GetMapping("/list")
     public List<ProductDTO> listFavoriteProductsForCurrentUser(@RequestParam(defaultValue = "0") Integer pageNo,
                                                                @RequestParam(defaultValue = "15") Integer pageSize) {

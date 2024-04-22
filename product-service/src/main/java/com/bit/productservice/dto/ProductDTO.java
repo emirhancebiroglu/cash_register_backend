@@ -3,6 +3,9 @@ package com.bit.productservice.dto;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+/**
+ * DTO class representing a product.
+ */
 @Data
 @AllArgsConstructor
 public class ProductDTO {

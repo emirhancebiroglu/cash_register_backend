@@ -8,8 +8,17 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.time.LocalDateTime;
 
+/**
+ * Global exception handler for NoCodeProvidedException.
+ */
 @ControllerAdvice
 public class NoCodeProvidedExceptionHandler {
+    /**
+     * Handles NoCodeProvidedException and returns an appropriate ResponseEntity.
+     *
+     * @param ex The NoCodeProvidedException to handle.
+     * @return A ResponseEntity containing error details and HTTP status code.
+     */
     @ExceptionHandler(NoCodeProvidedException.class)
     public ResponseEntity<ErrorDetails> handleNoCodeProvidedException(NoCodeProvidedException ex){
         ErrorDetails errorDetails = new ErrorDetails(
