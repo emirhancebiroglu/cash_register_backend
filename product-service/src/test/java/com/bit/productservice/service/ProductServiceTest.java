@@ -21,9 +21,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
@@ -38,7 +36,6 @@ import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 
@@ -59,104 +56,71 @@ class ProductServiceTest {
     @InjectMocks
     private ProductServiceImpl productService;
 
+    private Image image;
+    private Product product;
+    private AddProductReq addProductReq;
+    private UpdateProductReq updateProductReq;
+    private String productId;
+    private String searchType;
+    private String searchTerm;
+    private Integer pageNo;
+    private Integer pageSize;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+
+        productId = "testProductId";
+
+        image = new Image();
+        image.setImageUrl("example.com");
+
+        product = new Product();
+        product.setId(productId);
+        product.setName("Apple");
+        product.setDeleted(false);
+        product.setImage(image);
+
+        addProductReq = new AddProductReq();
+        addProductReq.setName("Apple");
+        addProductReq.setPrice(100.00);
+        addProductReq.setStockAmount(100);
+        addProductReq.setCategory("Fruits");
+
+        updateProductReq = new UpdateProductReq();
+        updateProductReq.setBarcode("123");
+        updateProductReq.setName("Updated Apple");
+        updateProductReq.setPrice(150.00);
+        updateProductReq.setStockAmount(150);
+        updateProductReq.setCategory("Updated Fruits");
+
+        searchType = "barcode";
+        searchTerm = "123";
+        pageNo = 0;
+        pageSize = 10;
     }
 
     @Test
     void getProducts_ReturnsNonDeletedProducts() {
-        Image image = new Image();
-        image.setImageUrl("example.com");
-
-        Product product1 = new Product();
-        product1.setName("Product 1");
-        product1.setDeleted(false);
-        product1.setImage(image);
-
         Product product2 = new Product();
         product2.setName("Product 2");
         product2.setDeleted(true);
         product2.setImage(image);
 
-        when(productRepository.findAll(any(Sort.class))).thenReturn(Arrays.asList(product1, product2));
+        when(productRepository.findAll(any(Sort.class))).thenReturn(Arrays.asList(product, product2));
 
         List<ProductDTO> productDTOList = productService.getProducts();
 
         verify(productRepository).findAll(any(Sort.class));
 
         assertEquals(1, productDTOList.size());
-        assertEquals("Product 1", productDTOList.get(0).getName());
-    }
-
-    @Test
-    void searchProductByProductCode_ReturnsMatchingProducts() {
-        Image image = new Image();
-        image.setImageUrl("example.com");
-
-        Product product1 = new Product();
-        product1.setName("Product 1");
-        product1.setDeleted(false);
-        product1.setImage(image);
-        product1.setProductCode("123");
-
-        Product product2 = new Product();
-        product2.setName("Product 2");
-        product2.setDeleted(true);
-        product2.setImage(image);
-        product2.setProductCode("456");
-
-        when(productRepository.findByProductCodeStartingWith(eq("123"), any(Pageable.class)))
-                .thenReturn(new PageImpl<>(Collections.singletonList(product1)));
-
-        List<ProductDTO> productDTOList = productService.searchProductByProductCode("123", 0, 10);
-
-        verify(productRepository).findByProductCodeStartingWith(eq("123"), any(Pageable.class));
-
-        assertEquals(1, productDTOList.size());
-        assertEquals("Product 1", productDTOList.get(0).getName());
-    }
-
-    @Test
-    void searchProductByBarcode_ReturnsMatchingProducts() {
-        Image image = new Image();
-        image.setImageUrl("example.com");
-
-        Product product1 = new Product();
-        product1.setName("Product 1");
-        product1.setDeleted(false);
-        product1.setImage(image);
-        product1.setBarcode("123");
-
-        Product product2 = new Product();
-        product2.setName("Product 2");
-        product2.setDeleted(true);
-        product2.setImage(image);
-        product2.setBarcode("456");
-
-        when(productRepository.findByBarcodeStartingWith(eq("123"), any(Pageable.class)))
-                .thenReturn(new PageImpl<>(Collections.singletonList(product1)));
-
-        List<ProductDTO> productDTOList = productService.searchProductByBarcode("123", 0, 10);
-
-        verify(productRepository).findByBarcodeStartingWith(eq("123"), any(Pageable.class));
-
-        assertEquals(1, productDTOList.size());
-        assertEquals("Product 1", productDTOList.get(0).getName());
+        assertEquals("Apple", productDTOList.get(0).getName());
     }
 
     @Test
     void getProductsByNullBarcodeWithFilter_ReturnsFilteredProducts() {
-        Image image = new Image();
-        image.setImageUrl("example.com");
-
-        Product product1 = new Product();
-        product1.setName("Apple");
-        product1.setDeleted(false);
-        product1.setImage(image);
-
         when(productRepository.findAll(any(Specification.class), any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of(product1)));
+                .thenReturn(new PageImpl<>(List.of(product)));
 
         List<ProductDTO> productDTOList = productService.getProductsByNullBarcodeWithFilter("A", 0, 10);
 
@@ -169,12 +133,6 @@ class ProductServiceTest {
 
     @Test
     void addProduct_Success() throws IOException {
-        AddProductReq addProductReq = new AddProductReq();
-        addProductReq.setName("Apple");
-        addProductReq.setPrice(100.00);
-        addProductReq.setStockAmount(100);
-        addProductReq.setCategory("Fruits");
-
         MockMultipartFile file = new MockMultipartFile("file", "image.jpg", "image/jpeg", new byte[0]);
 
         when(productValidator.validateAddProductReq(addProductReq, file)).thenReturn(Collections.emptyList());
@@ -187,11 +145,7 @@ class ProductServiceTest {
 
     @Test
     void addProduct_NegativeFieldErrors() {
-        AddProductReq addProductReq = new AddProductReq();
-        addProductReq.setName("Apple");
         addProductReq.setPrice(-100.00);
-        addProductReq.setStockAmount(100);
-        addProductReq.setCategory("Fruits");
 
         MockMultipartFile file = new MockMultipartFile("file", "image.jpg", "image/jpeg", new byte[0]);
 
@@ -205,11 +159,7 @@ class ProductServiceTest {
 
     @Test
     void addProduct_NullOrEmptyFieldErrors(){
-        AddProductReq addProductReq = new AddProductReq();
         addProductReq.setName("");
-        addProductReq.setPrice(100.00);
-        addProductReq.setStockAmount(100);
-        addProductReq.setCategory("Fruits");
 
         MockMultipartFile file = new MockMultipartFile("file", "image.jpg", "image/jpeg", new byte[0]);
 
@@ -223,14 +173,6 @@ class ProductServiceTest {
 
     @Test
     void updateProduct_Success_WithoutImage() throws IOException {
-        String productId = "testProductId";
-        UpdateProductReq updateProductReq = new UpdateProductReq();
-        updateProductReq.setBarcode("123");
-        updateProductReq.setName("Updated Apple");
-        updateProductReq.setPrice(150.00);
-        updateProductReq.setStockAmount(150);
-        updateProductReq.setCategory("Updated Fruits");
-
         Product dummyProduct = new Product();
         dummyProduct.setId(productId);
 
@@ -251,8 +193,6 @@ class ProductServiceTest {
 
     @Test
     void updateProduct_Fails_NegativePriceField(){
-        String productId = "testProductId";
-        UpdateProductReq updateProductReq = new UpdateProductReq();
         updateProductReq.setPrice(-150.00);
 
         Product dummyProduct = new Product();
@@ -265,8 +205,6 @@ class ProductServiceTest {
 
     @Test
     void updateProduct_Fails_NegativeStockAmountField(){
-        String productId = "testProductId";
-        UpdateProductReq updateProductReq = new UpdateProductReq();
         updateProductReq.setStockAmount(-150);
 
         Product dummyProduct = new Product();
@@ -279,14 +217,6 @@ class ProductServiceTest {
 
     @Test
     void updateProduct_Success_WitImage() throws IOException {
-        String productId = "testProductId";
-        UpdateProductReq updateProductReq = new UpdateProductReq();
-        updateProductReq.setProductCode("123");
-        updateProductReq.setName("Updated Apple");
-        updateProductReq.setPrice(150.00);
-        updateProductReq.setStockAmount(150);
-        updateProductReq.setCategory("Updated Fruits");
-
         byte[] fileContent = Files.readAllBytes(Paths.get("D:\\Desktop\\upload\\apple.jpg"));
         MultipartFile file = new MockMultipartFile("file", "test.jpg", "image/jpeg", fileContent);
 
@@ -320,24 +250,19 @@ class ProductServiceTest {
 
     @Test
     void deleteProduct_Success() {
-        Product dummyProduct = new Product();
-        dummyProduct.setId("test");
+        when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
 
-        when(productRepository.findById(dummyProduct.getId())).thenReturn(Optional.of(dummyProduct));
+        productService.deleteProduct(product.getId());
 
-        productService.deleteProduct(dummyProduct.getId());
+        verify(productRepository).findById(product.getId());
+        verify(productRepository).save(product);
 
-        verify(productRepository).findById(dummyProduct.getId());
-        verify(productRepository).save(dummyProduct);
-
-        assertTrue(dummyProduct.isDeleted());
-        assertEquals(LocalDate.now(), dummyProduct.getLastUpdateDate());
+        assertTrue(product.isDeleted());
+        assertEquals(LocalDate.now(), product.getLastUpdateDate());
     }
 
     @Test
     void deleteProduct_ProductNotFound() {
-        String productId = "nonExistentProductId";
-
         when(productRepository.getProductById(productId)).thenReturn(null);
 
         assertThrows(ProductNotFoundException.class, () -> productService.deleteProduct(productId));
@@ -345,10 +270,6 @@ class ProductServiceTest {
 
     @Test
     void testDeleteProduct_ProductAlreadyDeleted() {
-        String productId = "123";
-
-        Product product = new Product();
-        product.setId(productId);
         product.setDeleted(true);
 
         when(productRepository.findById(productId)).thenReturn(Optional.of(product));
@@ -362,25 +283,21 @@ class ProductServiceTest {
 
     @Test
     void reAddProduct_Success() {
-        Product dummyProduct = new Product();
-        dummyProduct.setId("test");
-        dummyProduct.setDeleted(true);
+        product.setDeleted(true);
 
-        when(productRepository.findById(dummyProduct.getId())).thenReturn(Optional.of(dummyProduct));
+        when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
 
-        productService.reAddProduct(dummyProduct.getId());
+        productService.reAddProduct(product.getId());
 
-        verify(productRepository).findById(dummyProduct.getId());
-        verify(productRepository).save(dummyProduct);
+        verify(productRepository).findById(product.getId());
+        verify(productRepository).save(product);
 
-        assertFalse(dummyProduct.isDeleted());
-        assertEquals(LocalDate.now(), dummyProduct.getLastUpdateDate());
+        assertFalse(product.isDeleted());
+        assertEquals(LocalDate.now(), product.getLastUpdateDate());
     }
 
     @Test
     void reAddProduct_ProductNotFound() {
-        String productId = "nonExistentProductId";
-
         when(productRepository.getProductById(productId)).thenReturn(null);
 
         assertThrows(ProductNotFoundException.class, () -> productService.reAddProduct(productId));
@@ -388,10 +305,6 @@ class ProductServiceTest {
 
     @Test
     void testReAddProduct_ProductAlreadyInStocks() {
-        String productId = "123";
-
-        Product product = new Product();
-        product.setId(productId);
         product.setDeleted(false);
 
         when(productRepository.findById(productId)).thenReturn(Optional.of(product));
@@ -406,9 +319,7 @@ class ProductServiceTest {
     @Test
     void testCheckProduct() {
         String code = "ABC123";
-        Product product = new Product();
         product.setBarcode("ABC123");
-        product.setName("Test Product");
         product.setPrice(10.0);
         product.setStockAmount(5);
 
@@ -419,7 +330,7 @@ class ProductServiceTest {
         StepVerifier.create(productInfoMono)
                 .expectNextMatches(productInfo ->
                         productInfo.isExists() &&
-                                productInfo.getName().equals("Test Product") &&
+                                productInfo.getName().equals("Apple") &&
                                 productInfo.getPrice() == 10.0 &&
                                 productInfo.getStockAmount() == 5)
                 .expectComplete()
@@ -432,20 +343,56 @@ class ProductServiceTest {
         productsIdWithQuantity.put("ABC123", 5);
         productsIdWithQuantity.put("DEF456", 10);
 
-        Product product1 = new Product();
-        product1.setProductCode("ABC123");
-        product1.setStockAmount(10);
+        product.setProductCode("ABC123");
+        product.setStockAmount(10);
 
         Product product2 = new Product();
         product2.setBarcode("DEF456");
         product2.setStockAmount(15);
 
-        when(productRepository.findByProductCode("ABC123")).thenReturn(product1);
+        when(productRepository.findByProductCode("ABC123")).thenReturn(product);
         when(productRepository.findByBarcode("DEF456")).thenReturn(product2);
 
         productService.updateStocks(productsIdWithQuantity, true);
 
-        verify(productRepository, times(1)).save(product1);
+        verify(productRepository, times(1)).save(product);
         verify(productRepository, times(1)).save(product2);
+    }
+
+    @Test
+    void searchProductByCode_ProductCode_Success() {
+        searchType = "productCode";
+
+        Page<Product> dummyPage = mock(Page.class);
+        when(productRepository.findByProductCodeStartingWith(eq(searchTerm), any(PageRequest.class)))
+                .thenReturn(dummyPage);
+
+        productService.searchProductByCode(searchType, searchTerm, pageNo, pageSize);
+
+        verify(productRepository).findByProductCodeStartingWith(eq(searchTerm), any(PageRequest.class));
+    }
+
+    @Test
+    void searchProductByCode_Barcode_Success() {
+        String searchType = "barcode";
+        String searchTerm = "123";
+
+        Page<Product> dummyPage = mock(Page.class);
+        when(productRepository.findByBarcodeStartingWith(eq(searchTerm), any(PageRequest.class)))
+                .thenReturn(dummyPage);
+
+        productService.searchProductByCode(searchType, searchTerm, pageNo, pageSize);
+
+        verify(productRepository).findByBarcodeStartingWith(eq(searchTerm), any(PageRequest.class));
+    }
+
+    @Test
+    void searchProductByCode_InvalidSearchType_Exception() {
+        String searchType = "invalidType";
+
+        assertThrows(IllegalArgumentException.class,
+                () -> productService.searchProductByCode(searchType, searchTerm, pageNo, pageSize));
+
+        verifyNoInteractions(productRepository);
     }
 }

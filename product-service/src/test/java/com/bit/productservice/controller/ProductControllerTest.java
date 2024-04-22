@@ -1,6 +1,8 @@
 package com.bit.productservice.controller;
 
 import com.bit.productservice.dto.ProductDTO;
+import com.bit.productservice.dto.ProductInfo;
+import com.bit.productservice.dto.UpdateStockRequest;
 import com.bit.productservice.dto.addproduct.AddProductReq;
 import com.bit.productservice.dto.updateproduct.UpdateProductReq;
 import com.bit.productservice.service.ProductService;
@@ -11,10 +13,13 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import reactor.core.publisher.Mono;
+import reactor.test.StepVerifier;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
@@ -40,28 +45,6 @@ class ProductControllerTest {
 
         assertEquals(productList, response);
         verify(productService, times(1)).getProducts();
-    }
-
-    @Test
-    void searchProductByProductCode() {
-        List<ProductDTO> productList = new ArrayList<>();
-        when(productService.searchProductByProductCode(anyString(), anyInt(), anyInt())).thenReturn(productList);
-
-        List<ProductDTO> response = productController.searchProductByProductCode("123", 0, 15);
-
-        assertEquals(productList, response);
-        verify(productService, times(1)).searchProductByProductCode("123", 0, 15);
-    }
-
-    @Test
-    void searchProductByBarcode() {
-        List<ProductDTO> productList = new ArrayList<>();
-        when(productService.searchProductByBarcode(anyString(), anyInt(), anyInt())).thenReturn(productList);
-
-        List<ProductDTO> response = productController.searchProductByBarcode("123", 0, 15);
-
-        assertEquals(productList, response);
-        verify(productService, times(1)).searchProductByBarcode("123", 0, 15);
     }
 
     @Test
@@ -125,5 +108,41 @@ class ProductControllerTest {
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Product re-added successfully", response.getBody());
         verify(productService, times(1)).reAddProduct(productId);
+    }
+
+    @Test
+    void searchProductByProductCode() {
+        List<ProductDTO> productList = new ArrayList<>();
+        when(productService.searchProductByCode(anyString(), anyString(), anyInt(), anyInt())).thenReturn(productList);
+
+        List<ProductDTO> response = productController.searchProductByCode("productCode", "searchTerm", 0, 15);
+
+        assertEquals(productList, response);
+        verify(productService, times(1)).searchProductByCode("productCode", "searchTerm", 0, 15);
+    }
+
+    @Test
+    void checkProduct() {
+        ProductInfo productInfo = new ProductInfo(true, "Product Name", 10.0, 100);
+        when(productService.checkProduct(anyString())).thenReturn(Mono.just(productInfo));
+
+        Mono<ProductInfo> response = productController.checkProduct("productCode");
+
+        StepVerifier.create(response)
+                .expectNextMatches(info -> info.isExists() && info.getName().equals("Product Name") && info.getPrice() == 10.0 && info.getStockAmount() == 100)
+                .verifyComplete();
+
+        verify(productService, times(1)).checkProduct("productCode");
+    }
+
+    @Test
+    void updateStocks() {
+        UpdateStockRequest request = new UpdateStockRequest();
+        request.setProductsIdWithQuantity(Map.of("productId1", 10, "productId2", 20));
+        request.setShouldDecrease(true);
+
+        productController.updateStocks(request);
+
+        verify(productService, times(1)).updateStocks(request.getProductsIdWithQuantity(), request.isShouldDecrease());
     }
 }

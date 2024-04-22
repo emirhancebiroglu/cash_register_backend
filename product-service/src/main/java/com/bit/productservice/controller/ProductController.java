@@ -38,16 +38,18 @@ public class ProductController {
     /**
      * Endpoint to search for products by product code.
      *
-     * @param productCode The code of the product to search for.
+     * @param searchType The search type (barcode or productCode).
+     * @param searchTerm the term includes code to search a specific product.
      * @param pageNo      The page number for pagination (default: 0).
      * @param pageSize    The size of each page for pagination (default: 15).
      * @return List of ProductDTO objects representing matching products.
      */
     @GetMapping("/search-products-by-product-code")
-    public List<ProductDTO> searchProductByProductCode(@RequestParam String productCode,
+    public List<ProductDTO> searchProductByCode(@RequestParam String searchType,
+                                                       @RequestParam String searchTerm,
                                                        @RequestParam(defaultValue = "0") Integer pageNo,
                                                        @RequestParam(defaultValue = "15") Integer pageSize) {
-        return productService.searchProductByProductCode(productCode, pageNo, pageSize);
+        return productService.searchProductByCode(searchType, searchTerm, pageNo, pageSize);
     }
 
     /**
@@ -64,22 +66,6 @@ public class ProductController {
             @RequestParam(defaultValue = "0") Integer pageNo,
             @RequestParam(defaultValue = "15") Integer pageSize) {
         return productService.getProductsByNullBarcodeWithFilter(letter, pageNo, pageSize);
-    }
-
-    /**
-     * Endpoint to search for products by barcode.
-     *
-     * @param barcode  The barcode of the product to search for.
-     * @param pageNo   The page number for pagination (default: 0).
-     * @param pageSize The size of each page for pagination (default: 15).
-     * @return List of ProductDTO objects representing matching products.
-     */
-    @GetMapping("/search-products-by-barcode")
-    public List<ProductDTO> searchProductByBarcode(
-            @RequestParam String barcode,
-            @RequestParam(defaultValue = "0") Integer pageNo,
-            @RequestParam(defaultValue = "15") Integer pageSize) {
-        return productService.searchProductByBarcode(barcode, pageNo, pageSize);
     }
 
     /**

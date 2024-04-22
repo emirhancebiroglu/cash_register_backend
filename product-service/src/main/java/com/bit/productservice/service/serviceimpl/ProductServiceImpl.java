@@ -61,26 +61,19 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public List<ProductDTO> searchProductByProductCode(String productCode ,Integer pageNo, Integer pageSize) {
-        logger.info("Fetching product with code {} ", productCode);
+    public List<ProductDTO> searchProductByCode(String searchType, String searchTerm, Integer pageNo, Integer pageSize) {
+        logger.info("Fetching products by {} {}", searchType, searchTerm);
 
-        Page<Product> pagingProduct = productRepository.findByProductCodeStartingWith(productCode, PageRequest.of(pageNo, pageSize, Sort.by("name").ascending()));
+        Page<Product> pagingProduct;
+        if ("productCode".equalsIgnoreCase(searchType)) {
+            pagingProduct = productRepository.findByProductCodeStartingWith(searchTerm, PageRequest.of(pageNo, pageSize, Sort.by("name").ascending()));
+        } else if ("barcode".equalsIgnoreCase(searchType)) {
+            pagingProduct = productRepository.findByBarcodeStartingWith(searchTerm, PageRequest.of(pageNo, pageSize, Sort.by("name").ascending()));
+        } else {
+            throw new IllegalArgumentException("Invalid search type. Use 'productCode' or 'barcode'.");
+        }
 
-        logger.info("Product fetched successfully");
-
-        return pagingProduct.stream()
-                .filter(product -> !product.isDeleted())
-                .map(this::convertToDTO)
-                .toList();
-    }
-
-    @Override
-    public List<ProductDTO> searchProductByBarcode(String barcode, Integer pageNo, Integer pageSize) {
-        logger.info("Fetching product with code {} ", barcode);
-
-        Page<Product> pagingProduct = productRepository.findByBarcodeStartingWith(barcode, PageRequest.of(pageNo, pageSize, Sort.by("name").ascending()));
-
-        logger.info("Product fetched successfully");
+        logger.info("Products fetched successfully");
 
         return pagingProduct.stream()
                 .filter(product -> !product.isDeleted())

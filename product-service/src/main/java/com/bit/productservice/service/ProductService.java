@@ -33,24 +33,15 @@ public interface ProductService {
     List<ProductDTO> getProductsByNullBarcodeWithFilter(String letter, Integer pageNo, Integer pageSize);
 
     /**
-     * Searches for products by product code.
+     * Searches for products by code.
      *
-     * @param productCode the product code to search for
-     * @param pageNo      the page number
-     * @param pageSize    the size of each page
-     * @return a list of product DTOs
+     * @param searchType The search type (barcode or productCode).
+     * @param searchTerm the term includes code to search a specific product.
+     * @param pageNo      the page number.
+     * @param pageSize    the size of each page.
+     * @return a list of product DTOs.
      */
-    List<ProductDTO> searchProductByProductCode(String productCode, Integer pageNo, Integer pageSize);
-
-    /**
-     * Searches for products by barcode.
-     *
-     * @param barcode   the barcode to search for
-     * @param pageNo    the page number
-     * @param pageSize  the size of each page
-     * @return a list of product DTOs
-     */
-    List<ProductDTO> searchProductByBarcode(String barcode, Integer pageNo, Integer pageSize);
+    List<ProductDTO> searchProductByCode(String searchType, String searchTerm, Integer pageNo, Integer pageSize);
 
     /**
      * Adds a product.
