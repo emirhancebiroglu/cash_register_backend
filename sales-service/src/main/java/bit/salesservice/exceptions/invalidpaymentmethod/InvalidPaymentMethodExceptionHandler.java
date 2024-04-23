@@ -8,8 +8,17 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.time.LocalDateTime;
 
+/**
+ * Global exception handler for InvalidPaymentMethodException.
+ */
 @ControllerAdvice
 public class InvalidPaymentMethodExceptionHandler {
+    /**
+     * Handles InvalidPaymentMethodException and returns an appropriate ResponseEntity with error details.
+     *
+     * @param ex The InvalidPaymentMethodException to handle.
+     * @return A ResponseEntity containing error details and HTTP status code.
+     */
     @ExceptionHandler(InvalidPaymentMethodException.class)
     public ResponseEntity<ErrorDetails> handleInvalidPaymentMethodExceptionHandler(InvalidPaymentMethodException ex){
         ErrorDetails errorDetails = new ErrorDetails(

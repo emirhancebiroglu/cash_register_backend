@@ -5,6 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Entity class representing a product in the shopping bag.
+ */
 @Entity
 @Table(name = "shopping_bag", schema = "sales")
 @Data

@@ -5,6 +5,9 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * DTO class representing a request to list campaigns.
+ */
 @Data
 public class ListCampaignsReq {
     private String name;

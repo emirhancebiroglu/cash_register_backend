@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * DTO class representing product information.
+ */
 @Data
 @RequiredArgsConstructor
 @AllArgsConstructor

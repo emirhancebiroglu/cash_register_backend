@@ -9,6 +9,9 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * DTO class representing a sale report for Kafka messaging.
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -22,5 +25,4 @@ public class SaleReportDTO {
     private LocalDateTime completedDate;
     private LocalDateTime cancelledDate;
     private Double returnedMoney;
-
 }

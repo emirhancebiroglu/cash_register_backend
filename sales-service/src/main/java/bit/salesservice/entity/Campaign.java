@@ -8,6 +8,9 @@ import lombok.RequiredArgsConstructor;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Represents a campaign entity in the sales system.
+ */
 @Entity
 @Data
 @AllArgsConstructor

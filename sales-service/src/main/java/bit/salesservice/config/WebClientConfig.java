@@ -9,6 +9,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.client.WebClient;
 
+/**
+ * Configuration class for WebClient setup.
+ */
 @Configuration
 @RequiredArgsConstructor
 public class WebClientConfig {
@@ -17,12 +20,22 @@ public class WebClientConfig {
     @Value("${product.service.base.url}")
     private String productServiceBaseUrl;
 
+    /**
+     * Creates a load-balanced WebClient builder bean.
+     *
+     * @return the WebClient builder
+     */
     @Bean
     @LoadBalanced
     public WebClient.Builder webClientBuilder(){
         return WebClient.builder();
     }
 
+    /**
+     * Creates a configured WebClient bean.
+     *
+     * @return the configured WebClient
+     */
     @Bean
     public WebClient webClient(){
         logger.debug("Creating WebClient instance.");

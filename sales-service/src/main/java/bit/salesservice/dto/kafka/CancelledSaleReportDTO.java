@@ -6,6 +6,9 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
+/**
+ * DTO class representing a cancelled sale report for Kafka messaging.
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

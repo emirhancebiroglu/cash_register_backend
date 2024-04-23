@@ -8,8 +8,17 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.time.LocalDateTime;
 
+/**
+ * Global exception handler for InvalidDurationDaysException.
+ */
 @ControllerAdvice
 public class InvalidDurationDaysExceptionHandler {
+    /**
+     * Handles InvalidDurationDaysException and returns an appropriate ResponseEntity with error details.
+     *
+     * @param ex The InvalidDurationDaysException to handle.
+     * @return A ResponseEntity containing error details and HTTP status code.
+     */
     @ExceptionHandler(InvalidDurationDaysException.class)
     public ResponseEntity<ErrorDetails> handleInvalidDurationDaysException(InvalidDurationDaysException ex){
         ErrorDetails errorDetails = new ErrorDetails(

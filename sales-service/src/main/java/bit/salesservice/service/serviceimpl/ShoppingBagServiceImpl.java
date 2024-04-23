@@ -268,7 +268,7 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
     private Double unApplyCampaignsAndUpdatePrice(Product product, double total, Integer quantity) {
         Campaign campaign = campaignRepository.findFirstByCodesContaining(product.getCode());
 
-        if (campaign == null || campaign.isInactive()) {
+        if (campaign == null) {
             return product.getCheckout().getTotalPrice() - total;
         }
 

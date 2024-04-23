@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * DTO class representing information about a returned product for Kafka messaging.
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

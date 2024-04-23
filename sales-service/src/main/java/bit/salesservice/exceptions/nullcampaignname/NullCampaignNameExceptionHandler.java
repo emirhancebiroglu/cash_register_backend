@@ -8,8 +8,17 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.time.LocalDateTime;
 
+/**
+ * Global exception handler for NullCampaignNameException.
+ */
 @ControllerAdvice
 public class NullCampaignNameExceptionHandler {
+    /**
+     * Handles NullCampaignNameException and returns an appropriate ResponseEntity with error details.
+     *
+     * @param ex The NullCampaignNameException to handle.
+     * @return A ResponseEntity containing error details and HTTP status code.
+     */
     @ExceptionHandler(NullCampaignNameException.class)
     public ResponseEntity<ErrorDetails> handleNullCampaignNameExceptionHandler(NullCampaignNameException ex){
         ErrorDetails errorDetails = new ErrorDetails(

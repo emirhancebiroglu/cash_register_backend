@@ -9,6 +9,9 @@ import lombok.ToString;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Represents a checkout entity in the sales system.
+ */
 @Entity
 @Table(name = "checkout", schema = "sales")
 @Data

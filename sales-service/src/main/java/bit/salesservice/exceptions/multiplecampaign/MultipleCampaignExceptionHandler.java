@@ -8,8 +8,17 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.time.LocalDateTime;
 
+/**
+ * Global exception handler for MultipleCampaignException.
+ */
 @ControllerAdvice
 public class MultipleCampaignExceptionHandler {
+    /**
+     * Handles MultipleCampaignException and returns an appropriate ResponseEntity with error details.
+     *
+     * @param ex The MultipleCampaignException to handle.
+     * @return A ResponseEntity containing error details and HTTP status code.
+     */
     @ExceptionHandler(MultipleCampaignException.class)
     public ResponseEntity<ErrorDetails> handleMultipleCampaignExceptionHandler(MultipleCampaignException ex){
         ErrorDetails errorDetails = new ErrorDetails(

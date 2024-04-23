@@ -276,7 +276,7 @@ public class ProductServiceImpl implements ProductService {
                 product = productRepository.findByProductCode(code);
             }
 
-            boolean exists = product != null;
+            boolean exists = product != null && !product.isDeleted();
             double price = exists ? product.getPrice() : 0.0;
             int stockAmount = exists ? product.getStockAmount() : 0;
             String name = exists ? product.getName() : "";
