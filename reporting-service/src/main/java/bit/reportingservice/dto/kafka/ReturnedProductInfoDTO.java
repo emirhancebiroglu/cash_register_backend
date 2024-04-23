@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Data Transfer Object (DTO) representing information about a returned product.
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

@@ -8,10 +8,21 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.time.LocalDateTime;
 
+/**
+ * This class handles the CampaignNotFoundException by creating an ErrorDetails object and returning a ResponseEntity with the error details.
+ */
 @ControllerAdvice
 public class CampaignNotFoundExceptionHandler {
+
+    /**
+     * This method is an exception handler for CampaignNotFoundException. It creates an ErrorDetails object with the appropriate status code, timestamp, error message, and status name.
+     * Then, it returns a ResponseEntity containing the ErrorDetails object with the specified HTTP status NOT_FOUND.
+     *
+     * @param ex The CampaignNotFoundException that triggered this handler.
+     * @return A ResponseEntity containing the ErrorDetails object with the specified HTTP status NOT_FOUND.
+     */
     @ExceptionHandler(CampaignNotFoundException.class)
-    public ResponseEntity<ErrorDetails> handleCampaignNotFoundExceptionHandler(CampaignNotFoundException ex){
+    public ResponseEntity<ErrorDetails> handleCampaignNotFoundExceptionHandler(CampaignNotFoundException ex) {
         ErrorDetails errorDetails = new ErrorDetails(
                 HttpStatus.NOT_FOUND.value(),
                 LocalDateTime.now(),

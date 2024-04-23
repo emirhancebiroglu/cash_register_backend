@@ -27,6 +27,13 @@ public class ReceiptGenerator {
     private final CampaignRepository campaignRepository;
     private static final String SEPARATOR = "---------------------------------------------------------------------------";
 
+    /**
+     * Generates a PDF receipt for a given {@link SaleReport}.
+     *
+     * @param saleReport The {@link SaleReport} for which the receipt is to be generated.
+     * @return A byte array containing the generated PDF receipt.
+     * @throws IOException If an error occurs while creating the PDF document.
+     */
     public byte[] generate(SaleReport saleReport) throws IOException {
         DecimalFormat decimalFormat = new DecimalFormat("#.##");
 

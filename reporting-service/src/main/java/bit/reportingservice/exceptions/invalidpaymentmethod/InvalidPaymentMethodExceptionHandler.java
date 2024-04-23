@@ -8,8 +8,16 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import java.time.LocalDateTime;
 
+/**
+ * Controller advice to handle exceptions of type InvalidPaymentMethodException.
+ */
 @ControllerAdvice
 public class InvalidPaymentMethodExceptionHandler {
+    /**
+     * Handles InvalidPaymentMethodException and returns an appropriate response entity.
+     * @param ex The exception to handle.
+     * @return ResponseEntity containing error details.
+     */
     @ExceptionHandler(InvalidPaymentMethodException.class)
     public ResponseEntity<ErrorDetails> handleInvalidPaymentMethodExceptionHandler(InvalidPaymentMethodException ex){
         ErrorDetails errorDetails = new ErrorDetails(

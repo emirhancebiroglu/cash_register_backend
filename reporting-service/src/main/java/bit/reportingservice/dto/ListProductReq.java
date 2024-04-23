@@ -4,6 +4,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * Request DTO representing a product in a report.
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

@@ -9,6 +9,9 @@ import lombok.ToString;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Entity class representing a sale report.
+ */
 @Entity
 @Table(name = "sale_report", schema = "reports")
 @Data

@@ -5,6 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Entity class representing a campaign.
+ */
 @Entity
 @Data
 @AllArgsConstructor

@@ -31,6 +31,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * This class provides the implementation for the ReportingService interface.
+ * It handles the operations related to sale reports, products, campaigns, and receipts.
+ */
 @Service
 @RequiredArgsConstructor
 public class ReportingServiceImpl implements ReportingService {
@@ -40,6 +44,11 @@ public class ReportingServiceImpl implements ReportingService {
     private final ReceiptGenerator receiptGenerator;
     private static final Logger logger = LoggerFactory.getLogger(ReportingServiceImpl.class);
 
+    /**
+     * This method saves a sale report. It maps the provided SaleReportDTO to a SaleReport object and saves it using the saleReportRepository.
+     *
+     * @param saleReportDTO The SaleReportDTO containing the details of the sale report to be saved.
+     */
     @Override
     public void saveSaleReport(SaleReportDTO saleReportDTO) {
         logger.info("Saving sale report...");
@@ -51,6 +60,11 @@ public class ReportingServiceImpl implements ReportingService {
         logger.info("Sale report saved");
     }
 
+    /**
+     * This method saves a cancelled state of a sale report. It retrieves the sale report by its ID, sets its cancelled status, cancelled date, returned money, and total price to 0, and saves it using the saleReportRepository.
+     *
+     * @param cancelledSaleReportDTO The CancelledSaleReportDTO containing the details of the sale report to be cancelled.
+     */
     @Override
     public void saveCancelledStateOfSaleReport(CancelledSaleReportDTO cancelledSaleReportDTO) {
         logger.info("Saving cancelled sale report...");
@@ -74,6 +88,11 @@ public class ReportingServiceImpl implements ReportingService {
         logger.info("Cancelled sale report saved");
     }
 
+    /**
+     * This method updates a product and its associated sale report. It retrieves the product by its ID, updates its returned status, quantity, returned quantity, and sale report's returned money and total price, and saves both the product and the sale report using the respective repositories.
+     *
+     * @param returnedProductInfoDTO The ReturnedProductInfoDTO containing the details of the product and sale report to be updated.
+     */
     @Override
     public void updateProductAndSaleReport(ReturnedProductInfoDTO returnedProductInfoDTO) {
         logger.info("Updating product and sale report...");
@@ -93,6 +112,16 @@ public class ReportingServiceImpl implements ReportingService {
         logger.info("Product and sale report updated");
     }
 
+    /**
+     * This method lists reports based on the provided parameters. It retrieves the reports based on the specified page, size, sorting criteria, and filtering options, and maps the retrieved reports to ListReportsReq objects before returning them.
+     *
+     * @param page The page number to retrieve the reports from.
+     * @param size The number of reports to retrieve per page.
+     * @param sortBy The sorting criteria to apply to the reports.
+     * @param filterBy The filtering options to apply to the reports.
+     * @param paymentMethod The payment method to filter the reports by.
+     * @return A list of ListReportsReq objects representing the retrieved reports, along with their associated products, total prices, payment methods, money taken, change, completed dates, cancelled dates, returned money, and cancellation status.
+     */
     @Override
     public List<ListReportsReq> listReports(int page, int size, String sortBy, String filterBy, String paymentMethod) {
             logger.info("Listing reports...");
@@ -106,6 +135,13 @@ public class ReportingServiceImpl implements ReportingService {
             return saleReportsPage.map(this::mapToListReportReq).getContent();
         }
 
+    /**
+     * This method generates a PDF receipt for a given sale report. It retrieves the sale report by its ID, generates the PDF receipt using the receiptGenerator, and returns the generated PDF byte array.
+     *
+     * @param reportId The ID of the sale report for which the PDF receipt needs to be generated.
+     * @return A byte array representing the generated PDF receipt.
+     * @throws IOException If an error occurs while generating the PDF receipt.
+     */
     @Override
     public byte[] generatePdfReceipt(Long reportId) throws IOException {
         logger.info("Generating pdf receipt...");
@@ -118,6 +154,11 @@ public class ReportingServiceImpl implements ReportingService {
         return receiptGenerator.generate(saleReport);
     }
 
+    /**
+     * This method saves a campaign. It retrieves the campaign by its name, and if it does not exist, creates a new campaign with the provided details. If the campaign already exists, it updates its needed quantity based on the provided details.
+     *
+     * @param campaignDTO The CampaignDTO containing the details of the campaign to be saved or updated.
+     */
     @Override
     public void saveCampaign(CampaignDTO campaignDTO) {
         logger.info("Saving campaign...");
@@ -144,6 +185,14 @@ public class ReportingServiceImpl implements ReportingService {
         logger.info("Campaign saved");
     }
 
+    /**
+     * This method filters reports based on the specified filtering options and payment method. It retrieves the reports based on the specified filtering options and payment method, and returns them as a Page object along with the provided Pageable object.
+     *
+     * @param filterBy The filtering options to apply to the reports.
+     * @param paymentMethod The payment method to filter the reports by.
+     * @param pageable The Pageable object containing the page number, size, and sorting criteria to apply to the reports.
+     * @return A Page object containing the filtered reports along with the provided Pageable object.
+     */
     private Page<SaleReport> filterReports(String filterBy, PaymentMethod paymentMethod, Pageable pageable) {
         if (filterBy == null) {
             return saleReportRepository.findAll(pageable);
@@ -156,6 +205,13 @@ public class ReportingServiceImpl implements ReportingService {
         };
     }
 
+    /**
+     * This method gets the sorting criteria based on the provided sorting option.
+     *
+     * @param sortBy The sorting option to apply to the reports.
+     * @return The Sort object containing the sorting criteria based on the provided sorting option.
+     * @throws InvalidSortException If the provided sorting option is unexpected.
+     */
     private Sort getSort(String sortBy) {
         return switch (sortBy) {
             case "COMPLETED_DATE_DESC" -> Sort.by(Sort.Direction.DESC, "completedDate");
@@ -164,6 +220,12 @@ public class ReportingServiceImpl implements ReportingService {
         };
     }
 
+    /**
+     * Maps a SaleReport object to a ListReportsReq object.
+     *
+     * @param saleReport The SaleReport object to be mapped.
+     * @return A ListReportsReq object containing the mapped data.
+     */
     private ListReportsReq mapToListReportReq(SaleReport saleReport) {
         return new ListReportsReq(
                 saleReport.getProducts().stream()
@@ -180,6 +242,12 @@ public class ReportingServiceImpl implements ReportingService {
         );
     }
 
+    /**
+     * Maps a Product object to a ListProductReq object.
+     *
+     * @param product The Product object to be mapped.
+     * @return A ListProductReq object containing the mapped data.
+     */
     private ListProductReq mapToListProductReq(Product product) {
         return new ListProductReq(
                 product.getCode(),
@@ -192,6 +260,11 @@ public class ReportingServiceImpl implements ReportingService {
         );
     }
 
+    /**
+     * Maps a SaleReportDTO to a SaleReport object and saves it using the saleReportRepository.
+     *
+     * @param saleReportDTO The SaleReportDTO containing the details of the sale report to be saved.
+     */
     private SaleReport mapToSaleReport(SaleReportDTO saleReportDTO) {
         SaleReport saleReport = new SaleReport();
 
@@ -218,6 +291,14 @@ public class ReportingServiceImpl implements ReportingService {
         return saleReport;
     }
 
+    /**
+     * This method retrieves a product based on the provided product details and the associated sale report.
+     *
+     * @param productDTO The ProductDTO containing the details of the product to be retrieved.
+     * @param saleReport The SaleReport object associated with the product.
+     * @return A Product object containing the mapped data.
+     * @throws InvalidPaymentMethodException If the provided payment method is unexpected.
+     */
     private static Product getProduct(ProductDTO productDTO, SaleReport saleReport) {
         Product product = new Product();
 
@@ -233,6 +314,16 @@ public class ReportingServiceImpl implements ReportingService {
         return product;
     }
 
+    /**
+     * This method retrieves a payment method based on the provided string.
+     * It checks if the provided string is null, and if so, it returns null.
+     * If the provided string is not null, it attempts to convert it to a PaymentMethod enum value using the {@code PaymentMethod.valueOf(String)} method.
+     * If the conversion is successful, it returns the corresponding PaymentMethod enum value.
+     * If the conversion fails due to an IllegalArgumentException, it throws an {@code InvalidPaymentMethodException} with the message "Invalid payment method".
+     * @param payment The string representing the payment method to be retrieved.
+     * @return The PaymentMethod enum value corresponding to the provided string, or null if the provided string is null.
+     * @throws InvalidPaymentMethodException If the conversion fails due to an IllegalArgumentException.
+     */
     private static PaymentMethod getPaymentMethod(String payment){
         if (payment == null) {
             return null;

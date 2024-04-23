@@ -5,6 +5,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * Entity class representing a product.
+ */
 @Entity
 @Table(name = "products", schema = "reports")
 @Data
