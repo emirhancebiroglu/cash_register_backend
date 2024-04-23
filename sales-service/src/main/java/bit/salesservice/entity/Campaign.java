@@ -40,7 +40,7 @@ public class Campaign {
     @Column(name = "updated_date", nullable = false)
     private LocalDateTime updatedDate;
 
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "ProductCampaigns", joinColumns = @JoinColumn(name = "campaign_id"))
     @Column(name = "code")
     private List<String> codes;

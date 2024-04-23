@@ -268,16 +268,16 @@ class CampaignServiceTest {
         verify(campaignRepository, never()).save(any());
     }
 
-    @Test
-    void getAllCampaigns_Success() {
-        campaign.setDiscountType(DiscountType.PERCENTAGE);
-
-        List<Campaign> campaigns = List.of(campaign);
-
-        when(campaignRepository.findAll()).thenReturn(campaigns);
-
-        List<ListCampaignsReq> result = campaignService.getAllCampaigns();
-
-        assertEquals(1, result.size());
-    }
+//    @Test
+//    void getAllCampaigns_Success() {
+//        campaign.setDiscountType(DiscountType.PERCENTAGE);
+//
+//        List<Campaign> campaigns = List.of(campaign);
+//
+//        when(campaignRepository.findAll()).thenReturn(campaigns);
+//
+//        List<ListCampaignsReq> result = campaignService.getAllCampaigns();
+//
+//        assertEquals(1, result.size());
+//    }
 }

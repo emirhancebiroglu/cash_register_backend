@@ -75,7 +75,17 @@ public class CampaignController {
      * @return ResponseEntity containing the list of campaigns
      */
     @GetMapping("/campaign/list")
-    public ResponseEntity<List<ListCampaignsReq>> getAllCampaigns() {
-        return ResponseEntity.status(HttpStatus.OK).body(campaignService.getAllCampaigns());
+    public ResponseEntity<List<ListCampaignsReq>> getCampaigns(
+            @RequestParam(name = "pageNo", defaultValue = "0") int pageNo,
+            @RequestParam(name = "pageSize", defaultValue = "10") int pageSize,
+            @RequestParam(name = "filterByDiscountType", required = false) String discountType,
+            @RequestParam(name = "filterByStatus", required = false) String status,
+            @RequestParam(name = "searchingTerm", required = false) String searchingTerm,
+            @RequestParam(name = "sortBy", required = false, defaultValue = "name") String sortBy,
+            @RequestParam(name = "sortOrder", required = false, defaultValue = "ASC") String sortOrder
+    ) {
+        List<ListCampaignsReq> campaignsPage = campaignService.getCampaigns(pageNo, pageSize, discountType, status, searchingTerm, sortBy, sortOrder);
+
+        return ResponseEntity.status(HttpStatus.OK).body(campaignsPage);
     }
 }

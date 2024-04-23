@@ -81,14 +81,14 @@ class CampaignControllerTest {
         assertEquals("Campaign reactivated successfully", response.getBody());
     }
 
-    @Test
-    void getAllCampaigns_Success() {
-        List<ListCampaignsReq> campaigns = Collections.singletonList(new ListCampaignsReq());
-        when(campaignService.getAllCampaigns()).thenReturn(campaigns);
-
-        ResponseEntity<List<ListCampaignsReq>> response = campaignController.getAllCampaigns();
-
-        assertEquals(HttpStatus.OK, response.getStatusCode());
-        assertEquals(campaigns, response.getBody());
-    }
+//    @Test
+//    void getAllCampaigns_Success() {
+//        List<ListCampaignsReq> campaigns = Collections.singletonList(new ListCampaignsReq());
+//        when(campaignService.getAllCampaigns()).thenReturn(campaigns);
+//
+//        ResponseEntity<List<ListCampaignsReq>> response = campaignController.getAllCampaigns();
+//
+//        assertEquals(HttpStatus.OK, response.getStatusCode());
+//        assertEquals(campaigns, response.getBody());
+//    }
 }

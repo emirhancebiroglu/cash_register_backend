@@ -24,6 +24,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Service implementation for managing checkout operations.
+ */
 @Service
 @RequiredArgsConstructor
 public class CheckoutServiceImpl implements CheckoutService {
@@ -80,6 +83,12 @@ public class CheckoutServiceImpl implements CheckoutService {
         logger.info("Checkout completed successfully");
     }
 
+    /**
+     * Validates and sets the checkout details based on the completion request.
+     *
+     * @param completeCheckoutReq the request containing checkout completion details
+     * @return the validated and updated checkout entity
+     */
     private Checkout validateAndSetCheckout(CompleteCheckoutReq completeCheckoutReq) {
         Checkout checkout = checkoutRepository.findFirstByOrderByIdDesc();
 
@@ -100,6 +109,12 @@ public class CheckoutServiceImpl implements CheckoutService {
         return checkout;
     }
 
+    /**
+     * Retrieves a map of product IDs with their corresponding quantities from the checkout.
+     *
+     * @param checkout the checkout from which to retrieve products
+     * @return a map of product IDs with quantities
+     */
     private static Map<String, Integer> getProductsIdWithQuantity(Checkout checkout) {
         Map<String, Integer> productsIdWithQuantity = new HashMap<>();
         for (Product product : checkout.getProducts()) {
@@ -107,6 +122,12 @@ public class CheckoutServiceImpl implements CheckoutService {
         }
         return productsIdWithQuantity;
     }
+
+    /**
+     * Sends the sale report to the reporting service.
+     *
+     * @param checkout the checkout containing sale details
+     */
     private void sendSaleReportToReportingService(Checkout checkout){
         List<ProductDTO> productDTOs = checkout.getProducts().stream()
                 .map(this::mapToProductDTO)
@@ -127,6 +148,12 @@ public class CheckoutServiceImpl implements CheckoutService {
         saleReportProducer.sendSaleReport("sale-report", saleReportDTO);
     }
 
+    /**
+     * Maps a product entity to a DTO for sale reporting.
+     *
+     * @param product the product to be mapped
+     * @return the mapped product DTO
+     */
     private ProductDTO mapToProductDTO(Product product) {
         return new ProductDTO(
                 product.getId(),
@@ -140,6 +167,14 @@ public class CheckoutServiceImpl implements CheckoutService {
         );
     }
 
+    /**
+     * Sends information about the cancelled sale report to the reporting service.
+     *
+     * @param id            the ID of the cancelled sale
+     * @param cancelled     true if the sale is cancelled, false otherwise
+     * @param cancelledDate the date when the sale was cancelled
+     * @param returnedMoney the amount of money returned for the cancelled sale
+     */
     private void sendCancelledSaleReportInfoToReportingService(Long id, boolean cancelled, LocalDateTime cancelledDate, Double returnedMoney) {
         CancelledSaleReportDTO cancelledSaleReportDTO = new CancelledSaleReportDTO(id, cancelled, cancelledDate, returnedMoney);
         saleReportProducer.sendCancelledSaleReport("cancelled-sale-report", cancelledSaleReportDTO);

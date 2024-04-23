@@ -11,12 +11,19 @@ import org.springframework.stereotype.Component;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Utility class for checking and updating the status of campaigns based on their expiration.
+ */
 @Component
 @RequiredArgsConstructor
 public class CampaignExpirationChecker {
     private final CampaignRepository campaignRepository;
     private static final Logger logger = LoggerFactory.getLogger(CampaignExpirationChecker.class);
 
+    /**
+     * Scheduled task to periodically check and update the status of campaigns based on their expiration.
+     * Runs every hour.
+     */
     @Scheduled(fixedRate = 3600000)
     public void checkAndUpdateCampaignStatus(){
 

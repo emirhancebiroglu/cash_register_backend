@@ -106,7 +106,7 @@ services:
       - POSTGRES_PASSWORD=2165
       - POSTGRES_SCHEMA=sales
     ports:
-      - "5432:5432"
+      - "5434:5434"
     command: [ "postgres", "-c", "search_path=sales" ]
     networks:
       - spring-network
@@ -161,10 +161,27 @@ services:
     container_name: product-service
     environment:
       - SPRING_PROFILES_ACTIVE=docker
+    ports:
+      - "8083:8083"
     depends_on:
       - eureka-server
       - product-db
       - api-gateway
+    networks:
+      - spring-network
+  
+  sales-service:
+    image: emirhancebiroglu/sales-service:latest
+    container_name: sales-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    ports:
+      - "8084:8084"
+    depends_on:
+      - eureka-server
+      - sales-db
+      - api-gateway
+      - kafka
     networks:
       - spring-network
 

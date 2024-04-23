@@ -11,6 +11,7 @@ import bit.salesservice.exceptions.campaignnotfound.CampaignNotFoundException;
 import bit.salesservice.exceptions.fixedamountdiscounttypewithprovidedquantity.FixedAmountDiscountTypeWithProvidedQuantityException;
 import bit.salesservice.exceptions.inactivecampaign.InactiveCampaignException;
 import bit.salesservice.exceptions.invaliddiscounttype.InvalidDiscountTypeException;
+import bit.salesservice.exceptions.invalidstatustype.InvalidStatusTypeException;
 import bit.salesservice.exceptions.productnotfound.ProductNotFoundException;
 import bit.salesservice.repository.CampaignRepository;
 import bit.salesservice.service.CampaignService;
@@ -19,17 +20,25 @@ import bit.salesservice.utils.ProductInfoHttpRequest;
 import bit.salesservice.validators.CampaignValidator;
 import lombok.RequiredArgsConstructor;
 import org.apache.http.HttpHeaders;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Service implementation for managing campaign operations.
+ */
 @Service
 @RequiredArgsConstructor
 public class CampaignServiceImpl implements CampaignService {
@@ -41,6 +50,8 @@ public class CampaignServiceImpl implements CampaignService {
     private final String jwtToken = HttpHeaders.AUTHORIZATION.substring(7);
 
     private static final String NOT_FOUND = "Campaign not found";
+    private static final String STATUS_ACTIVE = "active";
+    private static final String END_DATE = "endDate";
 
     @Override
     public void addCampaign(AddAndUpdateCampaignReq addAndUpdateCampaignReq) {
@@ -166,22 +177,103 @@ public class CampaignServiceImpl implements CampaignService {
     }
 
     @Override
-    public List<ListCampaignsReq> getAllCampaigns() {
-        logger.info("Getting all campaigns...");
+    public List<ListCampaignsReq> getCampaigns(int pageNo, int pageSize, String discountType, String status, String searchingTerm, String sortBy, String sortOrder) {
+        logger.info("Getting campaigns...");
 
-        List<Campaign> campaignList = campaignRepository.findAll();
-        List<ListCampaignsReq> listCampaignsReqList = new ArrayList<>();
+        Pageable pageable = applySort(pageNo, pageSize, sortBy, sortOrder);
 
-        for (Campaign campaign : campaignList) {
-            ListCampaignsReq listCampaignsReq = mapToCampaignReq(campaign);
-            listCampaignsReqList.add(listCampaignsReq);
+        Page<Campaign> campaignPage;
+
+        DiscountType parsedDiscountType = validateDiscountTypeAndStatus(discountType, status);
+
+        if (parsedDiscountType != null && status != null && searchingTerm != null) {
+            campaignPage = campaignRepository.findAllByDiscountTypeAndIsInactiveAndNameContaining(parsedDiscountType, !status.equals(STATUS_ACTIVE), searchingTerm, pageable);
+        } else if (parsedDiscountType != null && status != null) {
+            campaignPage = campaignRepository.findAllByDiscountTypeAndIsInactive(parsedDiscountType, !status.equals(STATUS_ACTIVE), pageable);
+        } else if (parsedDiscountType != null && searchingTerm != null) {
+            campaignPage = campaignRepository.findAllByDiscountTypeAndNameContaining(parsedDiscountType, searchingTerm, pageable);
+        } else if (status != null && searchingTerm != null) {
+            campaignPage = campaignRepository.findAllByisInactiveAndNameContaining(status.equals(STATUS_ACTIVE), searchingTerm, pageable);
+        } else if (parsedDiscountType != null) {
+            campaignPage = campaignRepository.findAllByDiscountType(parsedDiscountType, pageable);
+        } else if (status != null){
+            if (status.equals(STATUS_ACTIVE)){
+                campaignPage = campaignRepository.findAllByisInactive(false, pageable);
+            }
+            else{
+                campaignPage = campaignRepository.findAllByisInactive(true, pageable);
+            }
+        } else if (searchingTerm != null) {
+            campaignPage = campaignRepository.findByNameContaining(pageable, searchingTerm);
+        } else{
+            campaignPage = campaignRepository.findAll(pageable);
         }
 
-        logger.info("All campaigns retrieved successfully");
+        List<ListCampaignsReq> listCampaignsReqList = campaignPage.getContent().stream()
+                .map(this::mapToCampaignReq)
+                .toList();
+
+        logger.info("Campaigns retrieved successfully");
 
         return listCampaignsReqList;
     }
 
+    /**
+     * Applies sorting parameters to create a pageable object for query pagination.
+     *
+     * @param pageNo     the page number
+     * @param pageSize   the page size
+     * @param sortBy     the field to sort by
+     * @param sortOrder  the sort order (ASC or DESC)
+     * @return a pageable object for query pagination
+     */
+    @NotNull
+    private static Pageable applySort(int pageNo, int pageSize, String sortBy, String sortOrder) {
+        Pageable pageable;
+
+        if (sortBy.equalsIgnoreCase("name")) {
+            pageable = PageRequest.of(pageNo, pageSize, sortOrder.equalsIgnoreCase("ASC") ? Sort.by(Sort.Direction.ASC, "name") : Sort.by(Sort.Direction.DESC, "name"));
+        } else if (sortBy.equalsIgnoreCase(END_DATE)) {
+            pageable = PageRequest.of(pageNo, pageSize, sortOrder.equalsIgnoreCase("ASC") ? Sort.by(Sort.Direction.ASC, END_DATE) : Sort.by(Sort.Direction.DESC, END_DATE));
+        } else {
+            pageable = PageRequest.of(pageNo, pageSize, Sort.by(Sort.Direction.ASC, "name"));
+        }
+
+        return pageable;
+    }
+
+    /**
+     * Validates the discount type and status parameters.
+     *
+     * @param discountType the discount type
+     * @param status       the status
+     * @return the parsed discount type if valid, null otherwise
+     * @throws InvalidDiscountTypeException if an invalid discount type is provided
+     * @throws InvalidStatusTypeException   if an invalid status type is provided
+     */
+    @Nullable
+    private static DiscountType validateDiscountTypeAndStatus(String discountType, String status) {
+        DiscountType parsedDiscountType = null;
+
+        if (discountType != null){
+            try {
+                parsedDiscountType = DiscountType.valueOf(discountType.toUpperCase());
+            } catch (IllegalArgumentException ex) {
+                throw new InvalidDiscountTypeException("Invalid discount type: " + discountType);
+            }
+        }
+        if (status != null && (!status.equalsIgnoreCase(STATUS_ACTIVE) && !status.equalsIgnoreCase("inactive"))) {
+            throw new InvalidStatusTypeException("Invalid status type");
+        }
+        return parsedDiscountType;
+    }
+
+    /**
+     * Maps a Campaign entity to a ListCampaignsReq DTO.
+     *
+     * @param campaign the Campaign entity to be mapped
+     * @return a ListCampaignsReq DTO mapped from the Campaign entity
+     */
     private ListCampaignsReq mapToCampaignReq(Campaign campaign) {
         ListCampaignsReq listCampaignsReq = new ListCampaignsReq();
 
@@ -197,7 +289,14 @@ public class CampaignServiceImpl implements CampaignService {
         return listCampaignsReq;
     }
 
-        private static DiscountType getDiscountType(AddAndUpdateCampaignReq addAndUpdateCampaignReq) {
+    /**
+     * Retrieves the discount type from the provided request object.
+     *
+     * @param addAndUpdateCampaignReq the request object containing campaign details
+     * @return the discount type parsed from the request
+     * @throws InvalidDiscountTypeException if an invalid discount type is provided
+     */
+    private static DiscountType getDiscountType(AddAndUpdateCampaignReq addAndUpdateCampaignReq) {
         DiscountType discountType;
 
         try {
@@ -209,6 +308,13 @@ public class CampaignServiceImpl implements CampaignService {
         return discountType;
     }
 
+    /**
+     * Checks the availability of products associated with a campaign request.
+     *
+     * @param addAndUpdateCampaignReq the request containing campaign details
+     * @return a Mono<Void> indicating completion of the product availability check
+     * @throws ProductNotFoundException if a product is not found while checking availability
+     */
     private Mono<Void> checkIfProductsAvailable(AddAndUpdateCampaignReq addAndUpdateCampaignReq) {
         return Flux.fromIterable(addAndUpdateCampaignReq.getCodes())
                 .flatMap(code -> {
@@ -224,6 +330,13 @@ public class CampaignServiceImpl implements CampaignService {
                 .then();
     }
 
+    /**
+     * Maps a request object to a Campaign entity.
+     *
+     * @param addAndUpdateCampaignReq the request object containing campaign details
+     * @return a Campaign entity mapped from the request object
+     * @throws FixedAmountDiscountTypeWithProvidedQuantityException if a fixed amount discount type is provided with a quantity greater than 1
+     */
     private Campaign mapToCampaign(AddAndUpdateCampaignReq addAndUpdateCampaignReq) {
         DiscountType discountType = getDiscountType(addAndUpdateCampaignReq);
         Integer durationDays = addAndUpdateCampaignReq.getDurationDays();
@@ -251,6 +364,11 @@ public class CampaignServiceImpl implements CampaignService {
         return campaign;
     }
 
+    /**
+     * Sends campaign information to the reporting service.
+     *
+     * @param campaign the Campaign entity containing campaign information
+     */
     private void sendCampaignInfoToReportingService(Campaign campaign){
         CampaignDTO campaignDTO = new CampaignDTO(
                 campaign.getName(),

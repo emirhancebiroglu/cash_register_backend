@@ -30,6 +30,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Service implementation for managing shopping bag operations.
+ */
 @Service
 @RequiredArgsConstructor
 public class ShoppingBagServiceImpl implements ShoppingBagService {
@@ -208,6 +211,11 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
         logger.info("Product returned successfully");
     }
 
+    /**
+     * Retrieves the current checkout. If there is no existing checkout, a new one is created.
+     *
+     * @return the current checkout
+     */
     private Checkout getCurrentCheckout() {
         Checkout currentCheckout = checkoutRepository.findFirstByOrderByIdDesc();
         if (currentCheckout == null) {
@@ -220,6 +228,13 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
         return currentCheckout;
     }
 
+    /**
+     * Updates the total price of the checkout when adding a product.
+     *
+     * @param product  the product being added
+     * @param price    the price of the product
+     * @param quantity the quantity of the product being added
+     */
     private void updateCheckoutTotalForAddingProduct(Product product, double price, Integer quantity){
         Checkout checkout = product.getCheckout();
         checkout.setTotalPrice(applyCampaignsAndUpdatePrice(product, price * quantity, quantity));
@@ -227,6 +242,13 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
         checkoutRepository.save(checkout);
     }
 
+    /**
+     * Updates the total price of the checkout when removing or returning a product.
+     *
+     * @param product  the product being removed or returned
+     * @param price    the price of the product
+     * @param quantity the quantity of the product being removed or returned
+     */
     private void updateCheckoutTotalForRemovingOrReturningProduct(Product product, double price, Integer quantity){
         double newTotalPrice = unApplyCampaignsAndUpdatePrice(product, price * quantity, quantity);
 
@@ -239,6 +261,13 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
         checkoutRepository.save(checkout);
     }
 
+    /**
+     * Retrieves the stock amount for a given product.
+     *
+     * @param req          the request containing product details
+     * @param productInfo  information about the product
+     * @return the stock amount of the product
+     */
     private static int getStockAmount(AddAndListProductReq req, ProductInfo productInfo) {
         boolean exists = productInfo.isExists();
         int stockAmount = productInfo.getStockAmount();
@@ -253,6 +282,14 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
         return stockAmount;
     }
 
+    /**
+     * Applies campaigns and updates the total price when adding a product to the checkout.
+     *
+     * @param existingProduct the existing product in the checkout
+     * @param total           the total price before applying discounts
+     * @param quantity        the quantity of the product being added
+     * @return the updated total price after applying discounts
+     */
     private Double applyCampaignsAndUpdatePrice(Product existingProduct, double total, Integer quantity) {
         Campaign campaign = campaignRepository.findFirstByCodesContaining(existingProduct.getCode());
 
@@ -265,6 +302,14 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
         return existingProduct.getCheckout().getTotalPrice() + total - discountAmount;
     }
 
+    /**
+     * Unapplies campaigns and updates the total price when removing or returning a product from the checkout.
+     *
+     * @param product  the product being removed or returned
+     * @param total    the total price before unapplying discounts
+     * @param quantity the quantity of the product being removed or returned
+     * @return the updated total price after unapplying discounts
+     */
     private Double unApplyCampaignsAndUpdatePrice(Product product, double total, Integer quantity) {
         Campaign campaign = campaignRepository.findFirstByCodesContaining(product.getCode());
 
@@ -277,6 +322,14 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
         return product.getCheckout().getTotalPrice() - discountAmount;
     }
 
+    /**
+     * Calculates the discount amount while applying a campaign.
+     *
+     * @param campaign       the campaign being applied
+     * @param existingProduct the existing product in the checkout
+     * @param quantity        the quantity of the product being added
+     * @return the discount amount
+     */
     private double calculateDiscountAmountWhileApplyingCampaign(Campaign campaign, Product existingProduct, Integer quantity) {
         if (existingProduct.getQuantity() >= campaign.getNeededQuantity() && existingProduct.getAppliedCampaign() == null){
             existingProduct.setAppliedCampaign(campaign.getName());
@@ -304,6 +357,14 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
         return 0;
     }
 
+    /**
+     * Calculates the discount amount while unapplying a campaign.
+     *
+     * @param campaign       the campaign being unapplied
+     * @param existingProduct the existing product in the checkout
+     * @param quantity        the quantity of the product being removed or returned
+     * @return the discount amount
+     */
     private double calculateDiscountAmountWhileUnapplyingCampaign(Campaign campaign, Product existingProduct, Integer quantity) {
         double price = existingProduct.getPrice();
 
@@ -333,6 +394,16 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
         return price * quantity;
     }
 
+    /**
+     * Helper method for calculating discount amount.
+     *
+     * @param campaign                                 the campaign being applied or unapplied
+     * @param quantity                                 the quantity of the product
+     * @param numberOfProductsWithUnappliedCampaign    the number of products with unapplied campaigns
+     * @param numberOfTimesCampaignApplied             the number of times the campaign is applied
+     * @param price                                    the price of the product
+     * @return the discount amount
+     */
     private static double calculate(Campaign campaign, Integer quantity, int numberOfProductsWithUnappliedCampaign, int numberOfTimesCampaignApplied, double price) {
         double priceToDecrease = 0;
         int counter = 1;
@@ -357,6 +428,12 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
         return priceToDecrease;
     }
 
+    /**
+     * Checks if the product is available in stock.
+     *
+     * @param req         the request containing product details
+     * @param productInfo information about the product
+     */
     private void checkIfProductAvailable(AddAndListProductReq req, ProductInfo productInfo){
         int stockAmount = getStockAmount(req, productInfo);
         boolean exists = productInfo.isExists();
@@ -366,6 +443,11 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
         }
     }
 
+    /**
+     * Sends information about returned products to the reporting service.
+     *
+     * @param product the product being returned
+     */
     private void sendReturnedProductsInfoToReportingService(Product product) {
         ReturnedProductInfoDTO returnedProductInfoDTO = new ReturnedProductInfoDTO(
                 product.getId(),
@@ -378,6 +460,13 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
         saleReportProducer.sendReturnedProductInfoToReportingService("returned-product-info", returnedProductInfoDTO);
     }
 
+    /**
+     * Retrieves a map of product IDs with their corresponding quantities.
+     *
+     * @param id       the ID of the product
+     * @param quantity the quantity of the product
+     * @return a map of product IDs with quantities
+     */
     private Map<String, Integer> getProductsIdWithQuantity(Long id, Integer quantity) {
         Map<String, Integer> productIdWithQuantity = new HashMap<>();
 
