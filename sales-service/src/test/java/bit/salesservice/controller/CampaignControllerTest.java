@@ -11,8 +11,9 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.doNothing;
@@ -81,14 +82,24 @@ class CampaignControllerTest {
         assertEquals("Campaign reactivated successfully", response.getBody());
     }
 
-//    @Test
-//    void getAllCampaigns_Success() {
-//        List<ListCampaignsReq> campaigns = Collections.singletonList(new ListCampaignsReq());
-//        when(campaignService.getAllCampaigns()).thenReturn(campaigns);
-//
-//        ResponseEntity<List<ListCampaignsReq>> response = campaignController.getAllCampaigns();
-//
-//        assertEquals(HttpStatus.OK, response.getStatusCode());
-//        assertEquals(campaigns, response.getBody());
-//    }
+    @Test
+    void getCampaigns_Success() {
+        List<ListCampaignsReq> mockCampaigns = new ArrayList<>();
+        ListCampaignsReq campaign1 = new ListCampaignsReq();
+        campaign1.setName("Campaign 1");
+        mockCampaigns.add(campaign1);
+
+        ListCampaignsReq campaign2 = new ListCampaignsReq();
+        campaign2.setName("Campaign 2");
+        mockCampaigns.add(campaign2);
+
+        when(campaignService.getCampaigns(0, 10, null, null, null, "name", "ASC")).thenReturn(mockCampaigns);
+
+        ResponseEntity<List<ListCampaignsReq>> response = campaignController.getCampaigns(0, 10, null, null, null, "name", "ASC");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(2, Objects.requireNonNull(response.getBody()).size());
+        assertEquals("Campaign 1", response.getBody().get(0).getName());
+        assertEquals("Campaign 2", response.getBody().get(1).getName());
+    }
 }

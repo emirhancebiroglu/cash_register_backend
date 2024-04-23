@@ -4,13 +4,13 @@ import bit.salesservice.dto.AddAndUpdateCampaignReq;
 import bit.salesservice.dto.ListCampaignsReq;
 import bit.salesservice.dto.ProductInfo;
 import bit.salesservice.entity.Campaign;
-import bit.salesservice.entity.DiscountType;
 import bit.salesservice.exceptions.activecampaign.ActiveCampaignException;
 import bit.salesservice.exceptions.campaignalreadyexists.CampaignAlreadyExistsException;
 import bit.salesservice.exceptions.campaignnotfound.CampaignNotFoundException;
 import bit.salesservice.exceptions.fixedamountdiscounttypewithprovidedquantity.FixedAmountDiscountTypeWithProvidedQuantityException;
 import bit.salesservice.exceptions.inactivecampaign.InactiveCampaignException;
 import bit.salesservice.exceptions.invaliddiscounttype.InvalidDiscountTypeException;
+import bit.salesservice.exceptions.invalidstatustype.InvalidStatusTypeException;
 import bit.salesservice.exceptions.productnotfound.ProductNotFoundException;
 import bit.salesservice.repository.CampaignRepository;
 import bit.salesservice.service.serviceimpl.CampaignServiceImpl;
@@ -23,9 +23,14 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import reactor.core.publisher.Mono;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -54,6 +59,7 @@ class CampaignServiceTest {
     private Campaign campaign;
     private Long campaignId;
     private Mono<ProductInfo> mono;
+    private List<Campaign> campaigns;
 
     @BeforeEach
     public void setUp() {
@@ -65,6 +71,8 @@ class CampaignServiceTest {
         request.setDiscountType("PERCENTAGE");
         request.setDiscountAmount(10D);
         request.setDurationDays(7);
+
+        campaigns = new ArrayList<>();
 
         campaign = new Campaign();
         campaignId = 1L;
@@ -268,16 +276,20 @@ class CampaignServiceTest {
         verify(campaignRepository, never()).save(any());
     }
 
-//    @Test
-//    void getAllCampaigns_Success() {
-//        campaign.setDiscountType(DiscountType.PERCENTAGE);
-//
-//        List<Campaign> campaigns = List.of(campaign);
-//
-//        when(campaignRepository.findAll()).thenReturn(campaigns);
-//
-//        List<ListCampaignsReq> result = campaignService.getAllCampaigns();
-//
-//        assertEquals(1, result.size());
-//    }
+    @Test
+    void getCampaigns_SortedByNameAscending_Success() {
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "name"));
+        List<Campaign> pageContent = campaigns;
+        PageImpl<Campaign> page = new PageImpl<>(pageContent, pageable, pageContent.size());
+        when(campaignRepository.findAll(pageable)).thenReturn(page);
+
+        List<ListCampaignsReq> result = campaignService.getCampaigns(0, 10, null, null, null, "name", "ASC");
+
+        assertEquals(campaigns.size(), result.size());
+    }
+
+    @Test
+    void getCampaigns_InvalidStatusType_ThrowsInvalidStatusTypeException() {
+        assertThrows(InvalidStatusTypeException.class, () -> campaignService.getCampaigns(0, 10, null, "invalid", null, "name", "DESC"));
+    }
 }
