@@ -32,6 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
@@ -59,8 +60,9 @@ public class UserServiceImpl implements UserService {
     private final CredentialsProducer credentialsProducer;
     private final UserValidator userValidator;
     private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
-
+    private static final String DELETED = "deleted";
     private static final String FIRST_NAME = "firstName";
+
 
     /**
      * Adds a new user based on the provided user request.
@@ -226,73 +228,61 @@ public class UserServiceImpl implements UserService {
      * Retrieves a list of active or inactive users with pagination support.
      * This method fetches users from the database based on the provided page number and page size.
      *
-     * @param pageNo      The page number of the results to retrieve.
-     * @param pageSize    The number of users per page.
-     * @param deletedOnly Lists the users that have been deleted if true
+     * @param pageNo        The page number of the results to retrieve.
+     * @param pageSize      The number of users per page.
+     * @param status        Lists the users by their status (deleted or not)
+     * @param searchingTerm The search term to receive users by their names
+     * @param sortBy        Declares how to sort users
      * @return A list of UserDTO objects representing the users on the specified page.
      */
     @Override
-    public List<UserDTO> getUsers(int pageNo, int pageSize, boolean deletedOnly) {
+    public List<UserDTO> getUsers(int pageNo, int pageSize, String status, String searchingTerm, String sortBy, String sortOrder) {
         logger.info("Getting users...");
 
+        Pageable pageable = applySort(pageNo, pageSize, sortBy, sortOrder);
         Page<User> userPage;
 
-        if (deletedOnly){
-            userPage = userRepository.findByisDeletedTrue(
-                    PageRequest.of(pageNo, pageSize, Sort.by(FIRST_NAME).ascending()));
+        validateStatus(status);
+
+        if (status != null && searchingTerm != null){
+            userPage = userRepository.findAllByisDeletedAndFirstNameContainingIgnoreCase(status.equalsIgnoreCase(DELETED), searchingTerm, pageable);
+        }
+        else if(status != null){
+            userPage = userRepository.findAllByisDeleted(status.equalsIgnoreCase(DELETED), pageable);
+        }
+        else if(searchingTerm != null){
+            userPage = userRepository.findAllByFirstNameContainingIgnoreCase(searchingTerm, pageable);
         }
         else{
-            userPage = userRepository.findByisDeletedFalse(
-                    PageRequest.of(pageNo, pageSize, Sort.by(FIRST_NAME).ascending()));
+            userPage = userRepository.findAll(pageable);
         }
 
-        List<User> users = userPage.getContent();
+        List<UserDTO> listUserDTOList = userPage.getContent().stream()
+                .map(this::mapUserToDTO)
+                .toList();
 
         logger.info("Users fetched successfully");
 
-        return users.stream()
-                .map(this::mapUserToDTO)
-                .toList();
+        return listUserDTOList;
     }
 
-    /**
-     * Searches for users by their first name or last name with pagination support.
-     * This method searches for users in the database based on the provided name, which can be either a first name or a last name.
-     * If the name contains a space, it will be split into first name and last name for a more precise search.
-     *
-     * @param name     The name to search for. It can be a first name, a last name, or both separated by a space.
-     * @param pageNo   The page number of the search results to retrieve.
-     * @param pageSize The number of search results per page.
-     * @return A list of UserDTO objects representing the users found based on the search criteria and pagination.
-     */
-    @Override
-    public List<UserDTO> searchUserByName(String name, int pageNo, int pageSize) {
-        logger.info("Searching for users ...");
+    private void validateStatus(String status) {
+        if (status != null && (!status.equalsIgnoreCase(DELETED) && !status.equalsIgnoreCase("notDeleted"))) {
+            throw new IllegalArgumentException("Status of user can be either deleted or notDeleted");
+        }
+    }
 
-        var idx = name.indexOf(' ');
+    private Pageable applySort(int pageNo, int pageSize, String sortBy, String sortOrder) {
+        Pageable pageable;
 
-        if (idx > -1){
-            String firstNamePrefix = name.substring(0, idx);
-            String lastNamePrefix = name.substring(idx + 1);
-
-            Page<User> userPage = userRepository.findByFirstNameStartingWithIgnoreCaseAndLastNameStartingWithIgnoreCase(firstNamePrefix, lastNamePrefix, PageRequest.of(pageNo, pageSize, Sort.by(FIRST_NAME).ascending()));
-            List<User> users = userPage.getContent();
-
-            logger.info("Users found successfully");
-
-            return users.stream()
-                    .map(this::mapUserToDTO)
-                    .toList();
+        if (sortBy != null && sortBy.equals(FIRST_NAME)){
+            pageable = PageRequest.of(pageNo, pageSize, sortOrder.equalsIgnoreCase("ASC") ? Sort.by(Sort.Direction.ASC, FIRST_NAME) : Sort.by(Sort.Direction.DESC, FIRST_NAME));
+        }
+        else{
+            pageable = PageRequest.of(pageNo, pageSize);
         }
 
-        Page<User> userPage = userRepository.findByFirstNameStartingWithIgnoreCaseOrLastNameStartingWithIgnoreCase(name, name, PageRequest.of(pageNo, pageSize, Sort.by(FIRST_NAME).ascending()));
-        List<User> users = userPage.getContent();
-
-        logger.info("Users found successfully");
-
-        return users.stream()
-                .map(this::mapUserToDTO)
-                .toList();
+        return pageable;
     }
 
     /**

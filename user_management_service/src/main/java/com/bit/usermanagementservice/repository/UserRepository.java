@@ -51,39 +51,9 @@ public interface UserRepository extends JpaRepository<User, Long>{
    @Query("SELECT u FROM User u JOIN u.roles r WHERE r IN :roles")
    List<User> findByRoles(Collection<Role> roles);
 
-   /**
-    * Finds non-deleted users with pagination support.
-    *
-    * @param pageable the pagination information.
-    * @return a page of non-deleted users.
-    */
-   Page<User> findByisDeletedFalse(Pageable pageable);
+    Page<User> findAllByisDeletedAndFirstNameContainingIgnoreCase(boolean deleted, String searchingTerm, Pageable pageable);
 
-   /**
-    * Finds deleted users paginated.
-    *
-    * @param pageable pagination information.
-    * @return a page of deleted users.
-    */
-   Page<User> findByisDeletedTrue(Pageable pageable);
+   Page<User> findAllByisDeleted(boolean deleted, Pageable pageable);
 
-   /**
-    * Finds users whose first name starts with the given prefix and last name starts with the given prefix, ignoring case.
-    *
-    * @param firstNamePrefix the prefix of the first name.
-    * @param lastNamePrefix the prefix of the last name.
-    * @param pageable pagination information.
-    * @return a page of users with matching first and last name prefixes.
-    */
-   Page<User> findByFirstNameStartingWithIgnoreCaseAndLastNameStartingWithIgnoreCase(String firstNamePrefix, String lastNamePrefix, Pageable pageable);
-
-   /**
-    * Finds users whose first name starts with the given prefix or last name starts with the given prefix, ignoring case.
-    *
-    * @param firstNamePrefix the prefix of the first name.
-    * @param lastNamePrefix the prefix of the last name.
-    * @param pageable pagination information.
-    * @return a page of users with matching first name or last name prefixes.
-    */
-   Page<User> findByFirstNameStartingWithIgnoreCaseOrLastNameStartingWithIgnoreCase(String firstNamePrefix, String lastNamePrefix, Pageable pageable);
+   Page<User> findAllByFirstNameContainingIgnoreCase(String searchingTerm, Pageable pageable);
 }

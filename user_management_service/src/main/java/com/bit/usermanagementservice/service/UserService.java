@@ -42,22 +42,15 @@ public interface UserService {
     void reactivateUser(Long userId);
 
     /**
-     * Retrieves a list of users.
+     * Retrieves a list of active or inactive users with pagination support.
+     * This method fetches users from the database based on the provided page number and page size.
      *
-     * @param pageNo      the page number of the result set.
-     * @param pageSize    the size of each page in the result set.
-     * @param deletedOnly Lists the users that have been deleted if true
-     * @return a list of UserDTO objects representing users.
+     * @param pageNo        The page number of the results to retrieve.
+     * @param pageSize      The number of users per page.
+     * @param status        Lists the users by their status (deleted or not)
+     * @param searchingTerm The search term to receive users by their names
+     * @param sortBy        Declares how to sort users
+     * @return A list of UserDTO objects representing the users on the specified page.
      */
-    List<UserDTO> getUsers(int pageNo, int pageSize, boolean deletedOnly);
-
-    /**
-     * Searches for users by name.
-     *
-     * @param name the name to search for.
-     * @param pageNo the page number of the result set.
-     * @param pageSize the size of each page in the result set.
-     * @return a list of UserDTO objects representing users matching the name.
-     */
-    List<UserDTO> searchUserByName(String name, int pageNo, int pageSize);
+    List<UserDTO> getUsers(int pageNo, int pageSize, String status, String searchingTerm, String sortBy, String deletedOnly);
 }

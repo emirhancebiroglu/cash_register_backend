@@ -63,17 +63,10 @@ public class AdminController {
     @GetMapping("/get-users")
     public List<UserDTO> getUsers(@RequestParam(defaultValue = "0") int pageNo,
                                   @RequestParam(defaultValue = "15") int pageSize,
-                                  @RequestParam(defaultValue = "false") boolean deletedOnly){
-        return userService.getUsers(pageNo, pageSize, deletedOnly);
-    }
-
-    /**
-     * Endpoint for searching users by name.
-     */
-    @GetMapping("/search-user-by-name")
-    public List<UserDTO> searchUserByName(@RequestParam String name,
-                                          @RequestParam(defaultValue = "0") int pageNo,
-                                          @RequestParam(defaultValue = "15") int pageSize){
-        return userService.searchUserByName(name, pageNo, pageSize);
+                                  @RequestParam(required = false) String status,
+                                  @RequestParam(name = "searchingTerm", required = false) String searchingTerm,
+                                  @RequestParam(name = "sortBy", required = false) String sortBy,
+                                  @RequestParam(name = "sortOrder", required = false, defaultValue = "ASC") String sortOrder){
+        return userService.getUsers(pageNo, pageSize, status, searchingTerm, sortBy, sortOrder);
     }
 }
