@@ -14,6 +14,7 @@ import com.bit.usermanagementservice.entity.User;
 import com.bit.usermanagementservice.exceptions.atleastoneroleneeded.AtLeastOneRoleNeededException;
 import com.bit.usermanagementservice.exceptions.invalidemail.InvalidEmailException;
 import com.bit.usermanagementservice.exceptions.invalidname.InvalidNameException;
+import com.bit.usermanagementservice.exceptions.invalidstatustype.InvalidStatusTypeException;
 import com.bit.usermanagementservice.exceptions.rolenotfound.RoleNotFoundException;
 import com.bit.usermanagementservice.exceptions.useralreadyactive.UserAlreadyActiveException;
 import com.bit.usermanagementservice.exceptions.useralreadydeleted.UserAlreadyDeletedException;
@@ -266,12 +267,27 @@ public class UserServiceImpl implements UserService {
         return listUserDTOList;
     }
 
+    /**
+     * Validates the status of a user.
+     *
+     * @param status The status of the user to be validated.
+     * @throws IllegalArgumentException if the status is neither "deleted" nor "notDeleted".
+     */
     private void validateStatus(String status) {
         if (status != null && (!status.equalsIgnoreCase(DELETED) && !status.equalsIgnoreCase("notDeleted"))) {
-            throw new IllegalArgumentException("Status of user can be either deleted or notDeleted");
+            throw new InvalidStatusTypeException("Status of user can be either deleted or notDeleted");
         }
     }
 
+    /**
+     * Applies the sorting criteria to the pageable object.
+     *
+     * @param pageNo   The number of the page to be sorted.
+     * @param pageSize The size of the page to be sorted.
+     * @param sortBy   The field by which the page should be sorted.
+     * @param sortOrder The order in which the page should be sorted.
+     * @return          The pageable object with the applied sorting criteria.
+     */
     private Pageable applySort(int pageNo, int pageSize, String sortBy, String sortOrder) {
         Pageable pageable;
 

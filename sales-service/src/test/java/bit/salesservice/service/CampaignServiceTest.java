@@ -278,7 +278,7 @@ class CampaignServiceTest {
 
     @Test
     void getCampaigns_SortedByNameAscending_Success() {
-        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "name"));
+            Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "name"));
         List<Campaign> pageContent = campaigns;
         PageImpl<Campaign> page = new PageImpl<>(pageContent, pageable, pageContent.size());
         when(campaignRepository.findAll(pageable)).thenReturn(page);

@@ -51,9 +51,31 @@ public interface UserRepository extends JpaRepository<User, Long>{
    @Query("SELECT u FROM User u JOIN u.roles r WHERE r IN :roles")
    List<User> findByRoles(Collection<Role> roles);
 
-    Page<User> findAllByisDeletedAndFirstNameContainingIgnoreCase(boolean deleted, String searchingTerm, Pageable pageable);
+   /**
+    * Finds all users that are or not deleted and whose first name contains the specified term.
+    *
+    * @param deleted  a boolean indicating whether to include deleted users (false by default)
+    * @param searchingTerm the term to search for in the first name
+    * @param pageable  a Pageable object to define the pagination parameters
+    * @return a Page of users that meet the specified criteria
+    */
+   Page<User> findAllByisDeletedAndFirstNameContainingIgnoreCase(boolean deleted, String searchingTerm, Pageable pageable);
 
+   /**
+    * Finds all users that are or not deleted.
+    *
+    * @param deleted  a boolean indicating whether to include deleted users (false by default)
+    * @param pageable  a Pageable object to define the pagination parameters
+    * @return a Page of users that meet the specified criteria
+    */
    Page<User> findAllByisDeleted(boolean deleted, Pageable pageable);
 
+   /**
+    * Finds all users whose first name contains the specified term.
+    *
+    * @param searchingTerm the term to search for in the first name
+    * @param pageable  a Pageable object to define the pagination parameters
+    * @return a Page of users that meet the specified criteria
+    */
    Page<User> findAllByFirstNameContainingIgnoreCase(String searchingTerm, Pageable pageable);
 }
