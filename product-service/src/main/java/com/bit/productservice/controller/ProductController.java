@@ -2,6 +2,7 @@ package com.bit.productservice.controller;
 
 import com.bit.productservice.dto.ProductDTO;
 import com.bit.productservice.dto.ProductInfo;
+import com.bit.productservice.dto.SpecifyStockNumberReq;
 import com.bit.productservice.dto.UpdateStockRequest;
 import com.bit.productservice.dto.addproduct.AddProductReq;
 import com.bit.productservice.dto.updateproduct.UpdateProductReq;
@@ -31,41 +32,18 @@ public class ProductController {
      * @return List of ProductDTO objects representing products.
      */
     @GetMapping("/get-products")
-    public List<ProductDTO> getProducts() {
-        return productService.getProducts();
-    }
-
-    /**
-     * Endpoint to search for products by product code.
-     *
-     * @param searchType The search type (barcode or productCode).
-     * @param searchTerm the term includes code to search a specific product.
-     * @param pageNo      The page number for pagination (default: 0).
-     * @param pageSize    The size of each page for pagination (default: 15).
-     * @return List of ProductDTO objects representing matching products.
-     */
-    @GetMapping("/search-products-by-code")
-    public List<ProductDTO> searchProductByCode(@RequestParam(required = false) String searchType,
-                                                       @RequestParam String searchTerm,
-                                                       @RequestParam(defaultValue = "0") Integer pageNo,
-                                                       @RequestParam(defaultValue = "15") Integer pageSize) {
-        return productService.searchProductByCode(searchType, searchTerm, pageNo, pageSize);
-    }
-
-    /**
-     * Endpoint to retrieve products with filtering and pagination by a specific letter.
-     *
-     * @param letter   The starting letter for filtering products.
-     * @param pageNo   The page number for pagination (default: 0).
-     * @param pageSize The size of each page for pagination (default: 15).
-     * @return List of ProductDTO objects representing filtered products.
-     */
-    @GetMapping("/get-products-with-specific-letters")
-    public List<ProductDTO> getProductsWithSpecificLetters(
-            @RequestParam String letter,
-            @RequestParam(defaultValue = "0") Integer pageNo,
-            @RequestParam(defaultValue = "15") Integer pageSize) {
-        return productService.getProductsWithSpecificLetters(letter, pageNo, pageSize);
+    public ResponseEntity<List<ProductDTO>> getProducts(
+            @RequestParam(defaultValue = "0", required = false) Integer pageNo,
+            @RequestParam(defaultValue = "15", required = false) Integer pageSize,
+            @RequestParam(required = false) String searchTerm,
+            @RequestParam(required = false) String lettersToFilter,
+            @RequestParam(required = false) String existenceStatus,
+            @RequestParam(required = false) String stockStatus,
+            @RequestParam(name = "sortBy", required = false, defaultValue = "name") String sortBy,
+            @RequestParam(name = "sortOrder", required = false, defaultValue = "ASC") String sortOrder
+    ) {
+        List<ProductDTO> products = productService.getProducts(pageNo, pageSize, searchTerm, lettersToFilter, existenceStatus, stockStatus, sortBy, sortOrder);
+        return ResponseEntity.status(HttpStatus.OK).body(products);
     }
 
     /**
@@ -130,8 +108,8 @@ public class ProductController {
      * @return ResponseEntity indicating the status of the operation.
      */
     @PostMapping("/re-add-product/{productId}")
-    public ResponseEntity<String> reAddProduct(@PathVariable String productId){
-        productService.reAddProduct(productId);
+    public ResponseEntity<String> reAddProduct(@PathVariable String productId, @RequestBody SpecifyStockNumberReq specifyStockNumberReq){
+        productService.reAddProduct(productId, specifyStockNumberReq);
         return ResponseEntity.status(HttpStatus.OK).body("Product re-added successfully");
 
     }

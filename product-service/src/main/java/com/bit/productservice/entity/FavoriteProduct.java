@@ -24,17 +24,18 @@ public class FavoriteProduct {
     @Column(name = "user-id", nullable = false)
     private Long userId;
 
-    @Column(name = "product-id", nullable = false)
-    private String productId;
+    @OneToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "product-id", referencedColumnName = "id")
+    private Product product;
 
     /**
      * Constructor for creating a FavoriteProduct instance.
      *
      * @param userId  The id of the user who favorited the product.
-     * @param productId The ID of the favorited product.
+     * @param product The ID of the favorited product.
      */
-    public FavoriteProduct(Long userId, String productId) {
+    public FavoriteProduct(Long userId, Product product) {
         this.userId = userId;
-        this.productId = productId;
+        this.product = product;
     }
 }

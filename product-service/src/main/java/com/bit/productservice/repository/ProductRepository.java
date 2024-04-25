@@ -23,7 +23,7 @@ public interface ProductRepository extends JpaRepository<Product, String>, JpaSp
      * @param pageable pagination information
      * @return a page of products
      */
-    @NonNull Page<Product> findAll(@NonNull Specification spec, @NonNull Pageable pageable);
+    @NonNull Page<Product> findAll(@NonNull Specification<Product> spec, @NonNull Pageable pageable);
 
     /**
      * Retrieves a page of products whose barcode starts with the given value.

@@ -52,7 +52,11 @@ public class FavoriteProductController {
      */
     @GetMapping("/list")
     public List<ProductDTO> listFavoriteProductsForCurrentUser(@RequestParam(defaultValue = "0") Integer pageNo,
-                                                               @RequestParam(defaultValue = "15") Integer pageSize) {
-        return favoriteProductService.listFavoriteProductsForCurrentUser(pageNo, pageSize);
+                                                               @RequestParam(defaultValue = "15") Integer pageSize,
+                                                               @RequestParam(required = false) String searchTerm,
+                                                               @RequestParam(required = false) String stockStatus,
+                                                               @RequestParam(name = "sortBy", required = false, defaultValue = "name") String sortBy,
+                                                               @RequestParam(name = "sortOrder", required = false, defaultValue = "ASC") String sortOrder) {
+        return favoriteProductService.listFavoriteProductsForCurrentUser(pageNo, pageSize, searchTerm, stockStatus, sortBy, sortOrder);
     }
 }

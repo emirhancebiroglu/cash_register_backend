@@ -18,11 +18,15 @@ public interface FavoriteProductService {
     /**
      * Lists favorite products for the current user.
      *
-     * @param pageNo   the page number
-     * @param pageSize the size of each page
-     * @return a list of favorite products
+     * @param pageNo the page number to retrieve
+     * @param pageSize the number of products per page
+     * @param searchTerm the search term to filter products
+     * @param stockStatus the stock status to filter products (e.g., "IN_STOCK", "OUT_OF_STOCK")
+     * @param sortBy the field to sort the products by
+     * @param sortOrder the order to sort the products (e.g., "ASC", "DESC")
+     * @return a list of {@link ProductDTO} objects representing the favorite products
      */
-    List<ProductDTO> listFavoriteProductsForCurrentUser(Integer pageNo, Integer pageSize);
+    List<ProductDTO> listFavoriteProductsForCurrentUser(Integer pageNo, Integer pageSize, String searchTerm, String stockStatus, String sortBy, String sortOrder);
 
     /**
      * Removes a product from favorites.
