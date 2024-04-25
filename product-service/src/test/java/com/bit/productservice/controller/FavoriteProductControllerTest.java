@@ -10,6 +10,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -53,13 +54,20 @@ class FavoriteProductControllerTest {
     void testListFavoriteProductsForCurrentUser() {
         int pageNo = 0;
         int pageSize = 15;
+        String searchTerm = "search";
+        String stockStatus = "available";
+        String sortBy = "name";
+        String sortOrder = "ASC";
 
-        List<ProductDTO> productList = List.of(new ProductDTO("123", "Product", "image.jpg", 10.0, "Category"));
+        List<ProductDTO> productList = new ArrayList<>();
+        productList.add(new ProductDTO());
+        productList.add(new ProductDTO());
 
-        when(favoriteProductService.listFavoriteProductsForCurrentUser(pageNo, pageSize)).thenReturn(productList);
+        when(favoriteProductService.listFavoriteProductsForCurrentUser(pageNo, pageSize, searchTerm, stockStatus, sortBy, sortOrder))
+                .thenReturn(productList);
 
-        List<ProductDTO> response = favoriteProductController.listFavoriteProductsForCurrentUser(pageNo, pageSize);
+        favoriteProductController.listFavoriteProductsForCurrentUser(pageNo, pageSize, searchTerm, stockStatus, sortBy, sortOrder);
 
-        assertEquals(productList.size(), response.size());
+        verify(favoriteProductService, times(1)).listFavoriteProductsForCurrentUser(pageNo, pageSize, searchTerm, stockStatus, sortBy, sortOrder);
     }
 }

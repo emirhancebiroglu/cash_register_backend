@@ -3,6 +3,7 @@
     import com.bit.productservice.entity.FavoriteProduct;
     import org.springframework.data.domain.Page;
     import org.springframework.data.domain.Pageable;
+    import org.springframework.data.jpa.domain.Specification;
     import org.springframework.data.jpa.repository.JpaRepository;
     import org.springframework.stereotype.Repository;
 
@@ -12,15 +13,6 @@
      */
     @Repository
     public interface FavoriteProductRepository extends JpaRepository<FavoriteProduct, String> {
-        /**
-         * Finds favorite products by user code.
-         *
-         * @param userId The user code to search for.
-         * @param pageable Pagination information.
-         * @return A page of favorite products for the specified user code.
-         */
-        Page<FavoriteProduct> findByUserId(Long userId, Pageable pageable);
-
         /**
          * Checks if a favorite product exists for a given user code and product ID.
          *
@@ -37,4 +29,13 @@
          * @param productId The product ID.
          */
         void deleteByUserIdAndProductId(Long userId, String productId);
+
+        /**
+         * Finds all favorite products based on a given specification and pageable information.
+         *
+         * @param specification The specification to filter the favorite products.
+         * @param pageable     The pageable information to paginate the results.
+         * @return A page of favorite products that match the given specification and pageable information.
+         */
+        Page<FavoriteProduct> findAll(Specification<FavoriteProduct> specification, Pageable pageable);
     }

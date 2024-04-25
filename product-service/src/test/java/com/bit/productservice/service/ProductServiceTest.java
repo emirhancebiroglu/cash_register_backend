@@ -2,6 +2,7 @@ package com.bit.productservice.service;
 
 import com.bit.productservice.dto.ProductDTO;
 import com.bit.productservice.dto.ProductInfo;
+import com.bit.productservice.dto.SpecifyStockNumberReq;
 import com.bit.productservice.dto.addproduct.AddProductReq;
 import com.bit.productservice.dto.updateproduct.UpdateProductReq;
 import com.bit.productservice.entity.Image;
@@ -14,6 +15,7 @@ import com.bit.productservice.exceptions.productnotfound.ProductNotFoundExceptio
 import com.bit.productservice.repository.ImageRepository;
 import com.bit.productservice.repository.ProductRepository;
 import com.bit.productservice.service.serviceimpl.ProductServiceImpl;
+import com.bit.productservice.utils.SortApplier;
 import com.bit.productservice.validators.ProductValidator;
 import lombok.Getter;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,7 +23,10 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.data.domain.*;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
@@ -42,30 +47,23 @@ import static org.mockito.Mockito.*;
 class ProductServiceTest {
     @Mock
     private ProductRepository productRepository;
-
     @Mock
     private ProductValidator productValidator;
-
     @Getter
     @Mock
     private CloudinaryService cloudinaryService;
-
     @Mock
     private ImageRepository imageRepository;
-
+    @Mock
+    private SortApplier sortApplier;
     @InjectMocks
     private ProductServiceImpl productService;
 
-    private Image image;
     private Product product;
     private AddProductReq addProductReq;
     private UpdateProductReq updateProductReq;
     private String productId;
-    private String searchType;
-    private String searchTerm;
-    private Integer pageNo;
-    private Integer pageSize;
-    private Page<Product> dummyPage;
+    private SpecifyStockNumberReq specifyStockNumberReq;
 
     @BeforeEach
     void setUp() {
@@ -73,7 +71,7 @@ class ProductServiceTest {
 
         productId = "testProductId";
 
-        image = new Image();
+        Image image = new Image();
         image.setImageUrl("example.com");
 
         product = new Product();
@@ -95,43 +93,8 @@ class ProductServiceTest {
         updateProductReq.setStockAmount(150);
         updateProductReq.setCategory("Updated Fruits");
 
-        searchType = "barcode";
-        searchTerm = "123";
-        pageNo = 0;
-        pageSize = 10;
-
-        dummyPage = mock(Page.class);
-    }
-
-    @Test
-    void getProducts_ReturnsNonDeletedProducts() {
-        Product product2 = new Product();
-        product2.setName("Product 2");
-        product2.setDeleted(true);
-        product2.setImage(image);
-
-        when(productRepository.findAll(any(Sort.class))).thenReturn(Arrays.asList(product, product2));
-
-        List<ProductDTO> productDTOList = productService.getProducts();
-
-        verify(productRepository).findAll(any(Sort.class));
-
-        assertEquals(1, productDTOList.size());
-        assertEquals("Apple", productDTOList.get(0).getName());
-    }
-
-    @Test
-    void getProductsByNullBarcodeWithFilter_ReturnsFilteredProducts() {
-        when(productRepository.findAll(any(Specification.class), any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of(product)));
-
-        List<ProductDTO> productDTOList = productService.getProductsWithSpecificLetters("A", 0, 10);
-
-        verify(productRepository).findAll(any(Specification.class), any(Pageable.class));
-
-        assertEquals(1, productDTOList.size());
-        assertTrue(productDTOList.stream().allMatch(dto -> dto.getName().startsWith("A")));
-        assertFalse(productDTOList.stream().anyMatch(dto -> dto.getName().equals("Orange")));
+        specifyStockNumberReq = new SpecifyStockNumberReq();
+        specifyStockNumberReq.setStockNumber(50);
     }
 
     @Test
@@ -285,41 +248,6 @@ class ProductServiceTest {
     }
 
     @Test
-    void reAddProduct_Success() {
-        product.setDeleted(true);
-
-        when(productRepository.findById(product.getId())).thenReturn(Optional.of(product));
-
-        productService.reAddProduct(product.getId());
-
-        verify(productRepository).findById(product.getId());
-        verify(productRepository).save(product);
-
-        assertFalse(product.isDeleted());
-        assertEquals(LocalDate.now(), product.getLastUpdateDate());
-    }
-
-    @Test
-    void reAddProduct_ProductNotFound() {
-        when(productRepository.getProductById(productId)).thenReturn(null);
-
-        assertThrows(ProductNotFoundException.class, () -> productService.reAddProduct(productId));
-    }
-
-    @Test
-    void testReAddProduct_ProductAlreadyInStocks() {
-        product.setDeleted(false);
-
-        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
-
-        ProductAlreadyInStocksException exception = assertThrows(ProductAlreadyInStocksException.class, () -> productService.reAddProduct(productId));
-
-        assertEquals("Product already in stocks", exception.getMessage());
-
-        verify(productRepository, never()).save(any());
-    }
-
-    @Test
     void testCheckProduct() {
         String code = "ABC123";
         product.setBarcode("ABC123");
@@ -363,81 +291,52 @@ class ProductServiceTest {
     }
 
     @Test
-    void searchProductByCode_ProductCode_Success() {
-        searchType = "productCode";
+    void reAddProduct_Success() {
+        product.setDeleted(true);
 
-        when(productRepository.findByProductCodeStartingWith(eq(searchTerm), any(PageRequest.class)))
-                .thenReturn(dummyPage);
+        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
 
-        productService.searchProductByCode(searchType, searchTerm, pageNo, pageSize);
+        assertDoesNotThrow(() -> productService.reAddProduct(product.getId(), specifyStockNumberReq));
 
-        verify(productRepository).findByProductCodeStartingWith(eq(searchTerm), any(PageRequest.class));
+        assertFalse(product.isDeleted());
+        assertEquals(LocalDate.now(), product.getLastUpdateDate());
+        assertEquals(50, product.getStockAmount());
     }
 
     @Test
-    void searchProductByCode_Barcode_Success() {
-        String searchType = "barcode";
-        String searchTerm = "123";
+    void reAddProduct_NegativeStockNumber() {
+        specifyStockNumberReq.setStockNumber(-50);
 
-        when(productRepository.findByBarcodeStartingWith(eq(searchTerm), any(PageRequest.class)))
-                .thenReturn(dummyPage);
+        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
 
-        productService.searchProductByCode(searchType, searchTerm, pageNo, pageSize);
-
-        verify(productRepository).findByBarcodeStartingWith(eq(searchTerm), any(PageRequest.class));
+        assertThrows(NegativeFieldException.class, this::getReAddProduct);
     }
 
     @Test
-    void searchProductByCode_InvalidSearchType_Exception() {
-        String searchType = "invalidType";
+    void reAddProduct_ProductAlreadyInStocks() {
+        product.setDeleted(false);
 
-        assertThrows(IllegalArgumentException.class,
-                () -> productService.searchProductByCode(searchType, searchTerm, pageNo, pageSize));
+        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
 
-        verifyNoInteractions(productRepository);
+        assertThrows(ProductAlreadyInStocksException.class, this::getReAddProduct);
     }
 
     @Test
-    void searchProductByCode_NullSearchType_Barcode_Success() {
-        String searchTerm = "123";
+    void getProducts_Success() {
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "name"));
+        List<Product> pageContent = Collections.singletonList(product);
+        PageImpl<Product> page = new PageImpl<>(pageContent, pageable, pageContent.size());
 
-        when(productRepository.findByBarcodeStartingWith(eq(searchTerm), any(PageRequest.class)))
-                .thenReturn(dummyPage);
+        when(productRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(page);
 
-        productService.searchProductByCode(null, searchTerm, pageNo, pageSize);
+        when(sortApplier.applySortForProducts(0, 10, "name", "asc")).thenReturn(pageable);
 
-        verify(productRepository).findByBarcodeStartingWith(eq(searchTerm), any(PageRequest.class));
+        List<ProductDTO> products = productService.getProducts(0, 10, "a", null, null, null, "name", "asc");
+
+        assertEquals(pageContent.size(), products.size());
     }
 
-    @Test
-    void searchProductByCode_NullSearchType_ProductCode_EmptyBarcode_Success() {
-        String searchTerm = "ABC";
-
-        when(productRepository.findByBarcodeStartingWith(eq(searchTerm), any(PageRequest.class)))
-                .thenReturn(Page.empty());
-        when(productRepository.findByProductCodeStartingWith(eq(searchTerm), any(PageRequest.class)))
-                .thenReturn(dummyPage);
-
-        productService.searchProductByCode(null, searchTerm, pageNo, pageSize);
-
-        verify(productRepository).findByBarcodeStartingWith(eq(searchTerm), any(PageRequest.class));
-        verify(productRepository).findByProductCodeStartingWith(eq(searchTerm), any(PageRequest.class));
-    }
-
-    @Test
-    void searchProductByCode_NullSearchType_ProductCode_NonEmptyBarcode_Success() {
-        String searchTerm = "ABC";
-
-        Page<Product> barcodePage = mock(Page.class);
-        Page<Product> productCodePage = mock(Page.class);
-        when(productRepository.findByBarcodeStartingWith(eq(searchTerm), any(PageRequest.class)))
-                .thenReturn(barcodePage);
-        when(productRepository.findByProductCodeStartingWith(eq(searchTerm), any(PageRequest.class)))
-                .thenReturn(productCodePage);
-
-        productService.searchProductByCode(null, searchTerm, pageNo, pageSize);
-
-        verify(productRepository).findByBarcodeStartingWith(eq(searchTerm), any(PageRequest.class));
-        verify(productRepository, never()).findByProductCodeStartingWith(eq(searchTerm), any(PageRequest.class));
+    private void getReAddProduct() {
+        productService.reAddProduct(product.getId(), specifyStockNumberReq);
     }
 }

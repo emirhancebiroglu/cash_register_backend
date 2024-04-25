@@ -33,6 +33,10 @@ public class ProductValidator {
     public List<String> validateAddProductReq(AddProductReq addProductReq, MultipartFile file) {
         List<String> errors = new ArrayList<>();
 
+        if (neitherCodeNorBarcodeProvided(addProductReq)) {
+            throw new NoCodeProvidedException("Either barcode or product code should be provided");
+        }
+
         if (addProductReq.getName() == null || addProductReq.getName().isEmpty()) {
             errors.add("Name field is required");
         }
@@ -57,10 +61,6 @@ public class ProductValidator {
 
         if (file == null || file.isEmpty()) {
             errors.add("Image field is required");
-        }
-
-        if (neitherCodeNorBarcodeProvided(addProductReq)) {
-            throw new NoCodeProvidedException("Either barcode or product code should be provided");
         }
 
         return errors;
@@ -118,8 +118,8 @@ public class ProductValidator {
      * @return true if both product code and barcode are provided, false otherwise
      */
     private boolean bothCodeAndBarcodeProvided(UpdateProductReq updateProductReq, AddProductReq addProductReq) {
-        return (updateProductReq != null && isNotBlank(updateProductReq.getProductCode()) && isNotBlank(updateProductReq.getBarcode())) ||
-                (addProductReq != null && isNotBlank(addProductReq.getProductCode()) && isNotBlank(addProductReq.getBarcode()));
+        return (updateProductReq.getProductCode() != null && updateProductReq.getBarcode() != null) ||
+                (addProductReq.getProductCode() != null && addProductReq.getBarcode() != null);
     }
 
     /**
@@ -129,7 +129,7 @@ public class ProductValidator {
      * @return true if neither product code nor barcode are provided, false otherwise
      */
     private boolean neitherCodeNorBarcodeProvided(AddProductReq addProductReq) {
-        return (addProductReq == null || (isBlank(addProductReq.getProductCode()) && isBlank(addProductReq.getBarcode())));
+        return ((addProductReq.getProductCode() == null && addProductReq.getBarcode() == null) || (isBlank(addProductReq.getProductCode()) && isBlank(addProductReq.getBarcode())));
     }
 
     /**

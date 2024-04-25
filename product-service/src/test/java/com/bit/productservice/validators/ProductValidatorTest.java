@@ -29,6 +29,7 @@ class ProductValidatorTest {
     private ProductValidator productValidator;
 
     private UpdateProductReq updateProductReq;
+    private AddProductReq addProductReq;
 
     @BeforeEach
     void setUp() {
@@ -42,15 +43,17 @@ class ProductValidatorTest {
                 null,
                 null
         );
-    }
 
-    @Test
-    void validateAddProductReq_ValidRequest_NoErrors() {
-        AddProductReq addProductReq = new AddProductReq();
+        addProductReq = new AddProductReq();
         addProductReq.setName("Test Product");
         addProductReq.setPrice(10.0);
         addProductReq.setCategory("Test Category");
         addProductReq.setStockAmount(5);
+        addProductReq.setProductCode("code");
+    }
+
+    @Test
+    void validateAddProductReq_ValidRequest_NoErrors() {
         MultipartFile file = mock(MultipartFile.class);
 
         List<String> errors = productValidator.validateAddProductReq(addProductReq, file);
@@ -60,7 +63,10 @@ class ProductValidatorTest {
 
     @Test
     void validateAddProductReq_InvalidRequest_ReturnsErrors() {
-        AddProductReq addProductReq = new AddProductReq();
+        addProductReq.setName(null);
+        addProductReq.setPrice(null);
+        addProductReq.setCategory(null);
+        addProductReq.setStockAmount(null);
 
         List<String> errors = productValidator.validateAddProductReq(addProductReq, null);
 
@@ -75,11 +81,7 @@ class ProductValidatorTest {
 
     @Test
     void validateAddProductReq_PriceNegative_ReturnsError() {
-        AddProductReq addProductReq = new AddProductReq();
-        addProductReq.setName("Test Product");
         addProductReq.setPrice(-10.0);
-        addProductReq.setCategory("Test Category");
-        addProductReq.setStockAmount(5);
         MultipartFile file = mock(MultipartFile.class);
 
         List<String> errors = productValidator.validateAddProductReq(addProductReq, file);
@@ -90,10 +92,6 @@ class ProductValidatorTest {
 
     @Test
     void validateAddProductReq_StockAmountNegative_ReturnsError() {
-        AddProductReq addProductReq = new AddProductReq();
-        addProductReq.setName("Test Product");
-        addProductReq.setPrice(10.0);
-        addProductReq.setCategory("Test Category");
         addProductReq.setStockAmount(-5);
         MultipartFile file = mock(MultipartFile.class);
 
@@ -105,7 +103,6 @@ class ProductValidatorTest {
 
     @Test
     void validateProduct_BothCodeTypeProvided_ThrowsException() {
-        AddProductReq addProductReq = new AddProductReq();
         addProductReq.setProductCode("123");
         addProductReq.setBarcode("456");
 
@@ -114,16 +111,14 @@ class ProductValidatorTest {
 
     @Test
     void validateProduct_NoCodeProvided_ThrowsException() {
-        AddProductReq addProductReq = new AddProductReq();
         addProductReq.setProductCode(null);
         addProductReq.setBarcode(null);
 
-        assertThrows(NoCodeProvidedException.class, () -> productValidator.validateProduct(addProductReq, updateProductReq));
+        assertThrows(NoCodeProvidedException.class, () -> productValidator.validateAddProductReq(addProductReq, null));
     }
 
     @Test
     void validateProduct_ProductWithSameNameExists_ThrowsException() {
-        AddProductReq addProductReq = new AddProductReq();
         addProductReq.setName("Existing Product");
 
         when(productRepository.existsByName(addProductReq.getName())).thenReturn(true);
@@ -133,7 +128,7 @@ class ProductValidatorTest {
 
     @Test
     void validateProduct_ProductWithSameBarcodeExists_ThrowsException() {
-        AddProductReq addProductReq = new AddProductReq();
+        addProductReq.setProductCode(null);
         addProductReq.setBarcode("123");
 
         when(productRepository.existsByBarcode(addProductReq.getBarcode())).thenReturn(true);
@@ -143,7 +138,6 @@ class ProductValidatorTest {
 
     @Test
     void validateProduct_ProductWithSameProductCodeExists_ThrowsException() {
-        AddProductReq addProductReq = new AddProductReq();
         addProductReq.setProductCode("123");
 
         when(productRepository.existsByProductCode(addProductReq.getProductCode())).thenReturn(true);

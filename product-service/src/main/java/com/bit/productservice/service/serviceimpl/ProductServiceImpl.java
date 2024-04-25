@@ -2,11 +2,11 @@ package com.bit.productservice.service.serviceimpl;
 
 import com.bit.productservice.dto.ProductDTO;
 import com.bit.productservice.dto.ProductInfo;
+import com.bit.productservice.dto.SpecifyStockNumberReq;
 import com.bit.productservice.dto.addproduct.AddProductReq;
 import com.bit.productservice.dto.updateproduct.UpdateProductReq;
 import com.bit.productservice.entity.Image;
 import com.bit.productservice.entity.Product;
-import com.bit.productservice.exceptions.invalidsearchtype.InvalidSearchTypeException;
 import com.bit.productservice.exceptions.negativefield.NegativeFieldException;
 import com.bit.productservice.exceptions.nulloremptyfield.NullOrEmptyFieldException;
 import com.bit.productservice.exceptions.productalreadydeleted.ProductAlreadyDeletedException;
@@ -16,13 +16,14 @@ import com.bit.productservice.repository.ImageRepository;
 import com.bit.productservice.repository.ProductRepository;
 import com.bit.productservice.service.CloudinaryService;
 import com.bit.productservice.service.ProductService;
+import com.bit.productservice.utils.SortApplier;
 import com.bit.productservice.validators.ProductValidator;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,6 +32,7 @@ import reactor.core.scheduler.Schedulers;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -45,124 +47,45 @@ public class ProductServiceImpl implements ProductService {
     private final CloudinaryService cloudinaryService;
     private final ImageRepository imageRepository;
     private final ProductValidator productValidator;
+    private final SortApplier sortApplier;
     private static final Logger logger = LoggerFactory.getLogger(ProductServiceImpl.class);
     private static final String PRODUCT_NOT_FOUND = "Product not found";
 
     @Override
-    public List<ProductDTO> getProducts() {
-        logger.info("Fetching all products");
+    public List<ProductDTO> getProducts(Integer pageNo, Integer pageSize, String searchTerm, String lettersToFilter, String existenceStatus, String stockStatus, String sortBy, String sortOrder) {
+        logger.info("Fetching products");
 
-        List<Product> products = productRepository.findAll(Sort.by("name").ascending());
-
-        logger.info("Products fetched successfully");
-
-        return products.stream()
-                .filter(product -> !product.isDeleted())
-                .map(this::convertToDTO)
-                .toList();
-    }
-
-    @Override
-    public List<ProductDTO> searchProductByCode(String searchType, String searchTerm, Integer pageNo, Integer pageSize) {
-        logger.info("Fetching products by {} {}", searchType, searchTerm);
-
+        Pageable pageable = sortApplier.applySortForProducts(pageNo, pageSize, sortBy, sortOrder);
         Page<Product> pagingProduct;
-        if (searchType == null) {
-            pagingProduct = productRepository.findByBarcodeStartingWith(searchTerm, PageRequest.of(pageNo, pageSize, Sort.by("name").ascending()));
-            if (pagingProduct.isEmpty()) {
-                pagingProduct = productRepository.findByProductCodeStartingWith(searchTerm, PageRequest.of(pageNo, pageSize, Sort.by("name").ascending()));
+
+        Specification<Product> specification = Specification.where((root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (searchTerm != null) {
+                predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + searchTerm.toLowerCase() + "%"));
             }
-        }
-        else if ("productCode".equalsIgnoreCase(searchType)) {
-            pagingProduct = productRepository.findByProductCodeStartingWith(searchTerm, PageRequest.of(pageNo, pageSize, Sort.by("name").ascending()));
-        } else if ("barcode".equalsIgnoreCase(searchType)) {
-            pagingProduct = productRepository.findByBarcodeStartingWith(searchTerm, PageRequest.of(pageNo, pageSize, Sort.by("name").ascending()));
-        } else {
-            throw new InvalidSearchTypeException("Invalid search type. Use 'productCode' or 'barcode'.");
-        }
+            if (existenceStatus != null) {
+                predicates.add(criteriaBuilder.equal(root.get("isDeleted"), existenceStatus.equalsIgnoreCase("deleted")));
+            }
+            if (stockStatus != null) {
+                predicates.add(criteriaBuilder.equal(root.get("inStock"), stockStatus.equalsIgnoreCase("inStock")));
+            }
+            if (lettersToFilter != null) {
+                predicates.add(getProductSpecification(lettersToFilter).toPredicate(root, query, criteriaBuilder));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        });
+
+        pagingProduct = productRepository.findAll(specification, pageable);
+
+        List<ProductDTO> products = pagingProduct.getContent().stream()
+                .map(this::convertToDTO)
+                .toList();
 
         logger.info("Products fetched successfully");
 
-        return pagingProduct.stream()
-                .filter(product -> !product.isDeleted())
-                .map(this::convertToDTO)
-                .toList();
-    }
-
-    @Override
-    public List<ProductDTO> getProductsWithSpecificLetters(String letter, Integer pageNo, Integer pageSize) {
-        Specification<Product> specification = (root, query, criteriaBuilder) -> {
-            switch (letter) {
-                case "A" -> {
-                    return criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "a%");
-                }
-                case "B" -> {
-                    return criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "b%");
-                }
-                case "C-D" -> {
-                    return criteriaBuilder.or(
-                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "c", "d"),
-                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "C", "D")
-                    );
-                }
-                case "E-F" -> {
-                    return criteriaBuilder.or(
-                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "e", "f"),
-                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "E", "F")
-                    );
-                }
-                case "G-I" -> {
-                    return criteriaBuilder.or(
-                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "g", "i"),
-                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "G", "I")
-                    );
-                }
-                case "K" -> {
-                    return criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "k%");
-                }
-                case "L-N" -> {
-                    return criteriaBuilder.or(
-                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "l", "n"),
-                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "L", "N")
-                    );
-                }
-                case "P" -> {
-                    return criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "p%");
-                }
-                case "R-S" -> {
-                    return criteriaBuilder.or(
-                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "r", "s"),
-                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "R", "s")
-                    );
-                }
-                case "Ş-T" -> {
-                    return criteriaBuilder.or(
-                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "ş", "t"),
-                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "Ş", "T")
-                    );
-                }
-                case "Ü-Z" -> {
-                    return criteriaBuilder.or(
-                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "ü", "z"),
-                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "Ü", "Z")
-                    );
-                }
-                default -> {
-                    return criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), letter + "%");
-                }
-            }
-        };
-
-        logger.info("Products filtering by criteria");
-
-        Page<Product> pagingProduct = productRepository.findAll(specification, PageRequest.of(pageNo, pageSize, Sort.by("name").ascending()));
-
-        logger.info("Products filtered successfully");
-
-        return pagingProduct.getContent().stream()
-                .filter(product -> !product.isDeleted())
-                .map(this::convertToDTO)
-                .toList();
+        return products;
     }
 
     @Override
@@ -237,6 +160,8 @@ public class ProductServiceImpl implements ProductService {
         if (!product.isDeleted()){
             product.setDeleted(true);
             product.setLastUpdateDate(LocalDate.now());
+            product.setStockAmount(0);
+            product.setInStock(false);
 
             productRepository.save(product);
 
@@ -248,14 +173,20 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public void reAddProduct(String productId) {
+    public void reAddProduct(String productId, SpecifyStockNumberReq specifyStockNumberReq) {
         logger.info("Re-adding product...");
 
         Product product = getProductById(productId);
 
+        if (specifyStockNumberReq.getStockNumber() < 0){
+            throw new NegativeFieldException("Stock amount cannot be negative");
+        }
+
        if (product.isDeleted()){
            product.setDeleted(false);
            product.setLastUpdateDate(LocalDate.now());
+           product.setStockAmount(specifyStockNumberReq.getStockNumber());
+           product.setInStock(specifyStockNumberReq.getStockNumber() > 0);
 
            productRepository.save(product);
 
@@ -451,5 +382,75 @@ public class ProductServiceImpl implements ProductService {
         logger.info("Product fetched successfully with ID {}", productId);
 
         return product;
+    }
+
+    /**
+     * Constructs a Specification for filtering products based on a given letter.
+     *
+     * @param letter The letter to filter products by.
+     * @return A Specification that can be used to filter products based on the given letter.
+     */
+    private static Specification<Product> getProductSpecification(String letter) {
+        return (root, query, criteriaBuilder) -> {
+            switch (letter) {
+                case "A" -> {
+                    return criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "a%");
+                }
+                case "B" -> {
+                    return criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "b%");
+                }
+                case "C-D" -> {
+                    return criteriaBuilder.or(
+                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "c", "d"),
+                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "C", "D")
+                    );
+                }
+                case "E-F" -> {
+                    return criteriaBuilder.or(
+                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "e", "f"),
+                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "E", "F")
+                    );
+                }
+                case "G-I" -> {
+                    return criteriaBuilder.or(
+                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "g", "i"),
+                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "G", "I")
+                    );
+                }
+                case "K" -> {
+                    return criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "k%");
+                }
+                case "L-N" -> {
+                    return criteriaBuilder.or(
+                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "l", "n"),
+                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "L", "N")
+                    );
+                }
+                case "P" -> {
+                    return criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "p%");
+                }
+                case "R-S" -> {
+                    return criteriaBuilder.or(
+                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "r", "s"),
+                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "R", "s")
+                    );
+                }
+                case "Ş-T" -> {
+                    return criteriaBuilder.or(
+                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "ş", "t"),
+                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "Ş", "T")
+                    );
+                }
+                case "Ü-Z" -> {
+                    return criteriaBuilder.or(
+                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "ü", "z"),
+                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "Ü", "Z")
+                    );
+                }
+                default -> {
+                    return criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), letter + "%");
+                }
+            }
+        };
     }
 }

@@ -2,6 +2,7 @@ package com.bit.productservice.service;
 
 import com.bit.productservice.dto.ProductDTO;
 import com.bit.productservice.dto.ProductInfo;
+import com.bit.productservice.dto.SpecifyStockNumberReq;
 import com.bit.productservice.dto.addproduct.AddProductReq;
 import com.bit.productservice.dto.updateproduct.UpdateProductReq;
 import org.springframework.web.multipart.MultipartFile;
@@ -16,32 +17,19 @@ import java.util.Map;
  */
 public interface ProductService {
     /**
-     * Retrieves all products.
+     * Retrieves a list of products based on the specified parameters.
      *
+     * @param pageNo          the page number to retrieve
+     * @param pageSize        the number of products per page
+     * @param searchTerm      the search term to filter products
+     * @param lettersToFilter the letters to filter products by
+     * @param existenceStatus the existence status of the products
+     * @param stockStatus     the stock status of the products
+     * @param sortBy          the field to sort by
+     * @param sortOrder       the order to sort by (ascending or descending)
      * @return a list of product DTOs
      */
-    List<ProductDTO> getProducts();
-
-    /**
-     * Retrieves products with null barcode and filters by letter.
-     *
-     * @param letter    the starting letter of the product name
-     * @param pageNo    the page number
-     * @param pageSize  the size of each page
-     * @return a list of product DTOs
-     */
-    List<ProductDTO> getProductsWithSpecificLetters(String letter, Integer pageNo, Integer pageSize);
-
-    /**
-     * Searches for products by code.
-     *
-     * @param searchType The search type (barcode or productCode).
-     * @param searchTerm the term includes code to search a specific product.
-     * @param pageNo      the page number.
-     * @param pageSize    the size of each page.
-     * @return a list of product DTOs.
-     */
-    List<ProductDTO> searchProductByCode(String searchType, String searchTerm, Integer pageNo, Integer pageSize);
+    List<ProductDTO> getProducts(Integer pageNo, Integer pageSize, String searchTerm, String lettersToFilter, String existenceStatus, String stockStatus, String sortBy, String sortOrder);
 
     /**
      * Adds a product.
@@ -70,11 +58,12 @@ public interface ProductService {
     void deleteProduct(String productId);
 
     /**
-     * Re-adds a product.
+     * Re-adds a product with the specified stock number.
      *
-     * @param productId the ID of the product to re-add
+     * @param productId             The ID of the product to be re-added.
+     * @param specifyStockNumberReq An object containing the specified stock number for the product.
      */
-    void reAddProduct(String productId);
+    void reAddProduct(String productId, SpecifyStockNumberReq specifyStockNumberReq);
 
     /**
      * Checks product information by code.

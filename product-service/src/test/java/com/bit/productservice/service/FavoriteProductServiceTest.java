@@ -10,6 +10,7 @@ import com.bit.productservice.repository.FavoriteProductRepository;
 import com.bit.productservice.repository.ProductRepository;
 import com.bit.productservice.service.serviceimpl.FavoriteProductServiceImpl;
 import com.bit.productservice.utils.JwtUtil;
+import com.bit.productservice.utils.SortApplier;
 import com.bit.productservice.validators.FavoriteProductValidator;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.Getter;
@@ -18,11 +19,13 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -35,6 +38,8 @@ class FavoriteProductServiceTest {
     private FavoriteProductRepository favoriteProductRepository;
     @Mock
     private FavoriteProductValidator favoriteProductValidator;
+    @Mock
+    private SortApplier sortApplier;
 
     @Mock
     @Getter
@@ -57,10 +62,12 @@ class FavoriteProductServiceTest {
 
     @Test
     void addProductToFavorites_ValidProduct_Success() {
+        String productId = "123";
+
         when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
         when(jwtUtil.extractUserId(token)).thenReturn(1L);
-        String productId = "123";
         when(productRepository.existsById(productId)).thenReturn(true);
+        when(productRepository.findById(productId)).thenReturn(Optional.of(new Product()));
 
         favoriteProductService.addProductToFavorites(productId);
 
@@ -132,32 +139,27 @@ class FavoriteProductServiceTest {
 
     @Test
     void listFavoriteProductsForCurrentUser_Success() {
-        PageRequest pageRequest = PageRequest.of(0, 10);
-
-        when(request.getHeader("Authorization")).thenReturn("Bearer " + token);
-        when(jwtUtil.extractUserId(token)).thenReturn(1L);
-
-        Page<FavoriteProduct> favoriteProductPage = mock(Page.class);
-        when(favoriteProductRepository.findByUserId(1L, pageRequest)).thenReturn(favoriteProductPage);
-
-        FavoriteProduct favoriteProduct = new FavoriteProduct();
-        favoriteProduct.setProductId("456");
-        List<FavoriteProduct> favoriteProductsList = Collections.singletonList(favoriteProduct);
-        when(favoriteProductPage.getContent()).thenReturn(favoriteProductsList);
+        Image image = new Image();
+        image.setImageUrl("example.com");
 
         Product product = new Product();
-        product.setName("Test Product");
-        product.setPrice(10.0);
-        product.setCategory("Test Category");
-        product.setImage(new Image());
-        when(productRepository.getProductById("456")).thenReturn(product);
+        product.setName("Apple");
+        product.setImage(image);
 
-        List<ProductDTO> result = favoriteProductService.listFavoriteProductsForCurrentUser(0, 10);
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "name"));
+        when(sortApplier.applySortForFavoriteProducts(0, 10, "name", "asc")).thenReturn(pageable);
 
-        assertEquals(1, result.size());
-        ProductDTO productDTO = result.get(0);
-        assertEquals("Test Product", productDTO.getName());
-        assertEquals(10.0, productDTO.getPrice());
-        assertEquals("Test Category", productDTO.getCategory());
+        List<FavoriteProduct> favoriteProducts = new ArrayList<>();
+        favoriteProducts.add(new FavoriteProduct(1L, product));
+
+        Page<FavoriteProduct> favoriteProductPage = new PageImpl<>(favoriteProducts, pageable, favoriteProducts.size());
+        when(favoriteProductRepository.findAll(any(Specification.class), eq(pageable))).thenReturn(favoriteProductPage);
+
+        when(productRepository.findAllById(anyList())).thenReturn(favoriteProducts.stream().map(FavoriteProduct::getProduct).collect(Collectors.toList()));
+
+        List<ProductDTO> products = favoriteProductService.listFavoriteProductsForCurrentUser(0, 10, null, null, "name", "asc");
+
+        assertEquals(favoriteProducts.size(), products.size());
     }
+
 }

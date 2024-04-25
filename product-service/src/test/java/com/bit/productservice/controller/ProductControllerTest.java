@@ -2,6 +2,7 @@ package com.bit.productservice.controller;
 
 import com.bit.productservice.dto.ProductDTO;
 import com.bit.productservice.dto.ProductInfo;
+import com.bit.productservice.dto.SpecifyStockNumberReq;
 import com.bit.productservice.dto.UpdateStockRequest;
 import com.bit.productservice.dto.addproduct.AddProductReq;
 import com.bit.productservice.dto.updateproduct.UpdateProductReq;
@@ -16,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
-import javax.naming.directory.InvalidSearchFilterException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -35,28 +35,6 @@ class ProductControllerTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-    }
-
-    @Test
-    void getProducts() {
-        List<ProductDTO> productList = new ArrayList<>();
-        when(productService.getProducts()).thenReturn(productList);
-
-        List<ProductDTO> response = productController.getProducts();
-
-        assertEquals(productList, response);
-        verify(productService, times(1)).getProducts();
-    }
-
-    @Test
-    void getProductsByFilterAndPagination() {
-        List<ProductDTO> productList = new ArrayList<>();
-        when(productService.getProductsWithSpecificLetters(anyString(), anyInt(), anyInt())).thenReturn(productList);
-
-        List<ProductDTO> response = productController.getProductsWithSpecificLetters("A", 0, 15);
-
-        assertEquals(productList, response);
-        verify(productService, times(1)).getProductsWithSpecificLetters("A", 0, 15);
     }
 
     @Test
@@ -104,22 +82,14 @@ class ProductControllerTest {
     void reAddProduct() {
         String productId = "123";
 
-        ResponseEntity<String> response = productController.reAddProduct(productId);
+        SpecifyStockNumberReq specifyStockNumberReq = new SpecifyStockNumberReq();
+        specifyStockNumberReq.setStockNumber(3);
+
+        ResponseEntity<String> response = productController.reAddProduct(productId, specifyStockNumberReq);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Product re-added successfully", response.getBody());
-        verify(productService, times(1)).reAddProduct(productId);
-    }
-
-    @Test
-    void searchProductByProductCode() throws InvalidSearchFilterException {
-        List<ProductDTO> productList = new ArrayList<>();
-        when(productService.searchProductByCode(anyString(), anyString(), anyInt(), anyInt())).thenReturn(productList);
-
-        List<ProductDTO> response = productController.searchProductByCode("productCode", "searchTerm", 0, 15);
-
-        assertEquals(productList, response);
-        verify(productService, times(1)).searchProductByCode("productCode", "searchTerm", 0, 15);
+        verify(productService, times(1)).reAddProduct(productId, specifyStockNumberReq);
     }
 
     @Test
@@ -145,5 +115,30 @@ class ProductControllerTest {
         productController.updateStocks(request);
 
         verify(productService, times(1)).updateStocks(request.getProductsIdWithQuantity(), request.isShouldDecrease());
+    }
+
+    @Test
+    void testGetProducts() {
+        int pageNo = 0;
+        int pageSize = 15;
+        String searchTerm = "search";
+        String lettersToFilter = "letters";
+        String existenceStatus = "existing";
+        String stockStatus = "available";
+        String sortBy = "name";
+        String sortOrder = "ASC";
+
+        List<ProductDTO> productList = new ArrayList<>();
+        productList.add(new ProductDTO());
+        productList.add(new ProductDTO());
+
+        when(productService.getProducts(pageNo, pageSize, searchTerm, lettersToFilter, existenceStatus, stockStatus, sortBy, sortOrder))
+                .thenReturn(productList);
+
+        ResponseEntity<List<ProductDTO>> responseEntity = productController.getProducts(pageNo, pageSize, searchTerm, lettersToFilter, existenceStatus, stockStatus, sortBy, sortOrder);
+
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals(productList, responseEntity.getBody());
+        verify(productService, times(1)).getProducts(pageNo, pageSize, searchTerm, lettersToFilter, existenceStatus, stockStatus, sortBy, sortOrder);
     }
 }
