@@ -3,9 +3,11 @@ package com.bit.usermanagementservice.service;
 import com.bit.usermanagementservice.config.AdminInitializationConfig;
 import com.bit.usermanagementservice.config.PasswordEncoderConfig;
 import com.bit.usermanagementservice.dto.adduser.AddUserReq;
+import com.bit.usermanagementservice.dto.getuser.UserDTO;
 import com.bit.usermanagementservice.dto.updateuser.UpdateUserReq;
 import com.bit.usermanagementservice.entity.Role;
 import com.bit.usermanagementservice.entity.User;
+import com.bit.usermanagementservice.exceptions.invalidstatustype.InvalidStatusTypeException;
 import com.bit.usermanagementservice.exceptions.rolenotfound.RoleNotFoundException;
 import com.bit.usermanagementservice.exceptions.useralreadyactive.UserAlreadyActiveException;
 import com.bit.usermanagementservice.exceptions.useralreadydeleted.UserAlreadyDeletedException;
@@ -27,6 +29,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.*;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.*;
@@ -253,5 +256,23 @@ class UserServiceTest {
         when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
 
         assertThrows(UserAlreadyActiveException.class, () -> userService.reactivateUser(userId));
+    }
+
+    @Test
+    void testGetUsers() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<User> userPage =  new PageImpl<>(userList, pageable, userList.size());
+
+        when(userRepository.findAll(pageable)).thenReturn(userPage);
+
+        List<UserDTO> actual = userService.getUsers(0, 10, null, null, null, null);
+
+        assertEquals(userList.size(), actual.size());
+        verify(userRepository, times(1)).findAll(pageable);
+    }
+
+    @Test
+    void testGetUsers_ThrowsInvalidStatusTypeException() {
+        assertThrows(InvalidStatusTypeException.class, () -> userService.getUsers(0, 10, "invalid", null, null, null));
     }
 }
