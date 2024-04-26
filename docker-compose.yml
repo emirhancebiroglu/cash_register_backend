@@ -179,6 +179,21 @@ services:
       - "8084:8084"
     depends_on:
       - eureka-server
+      - sales-reports-db
+      - api-gateway
+      - kafka
+    networks:
+      - spring-network
+
+  reporting-service:
+    image: emirhancebiroglu/reporting-service:latest
+    container_name: reporting-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    ports:
+      - "8085:8085"
+    depends_on:
+      - eureka-server
       - sales-db
       - api-gateway
       - kafka
