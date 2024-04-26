@@ -35,16 +35,17 @@ public interface ReportingService {
     void updateProductAndSaleReport(ReturnedProductInfoDTO returnedProductInfoDTO);
 
     /**
-     * Retrieves a list of reports based on pagination, sorting, filtering, and payment method.
+     * Lists reports based on specified parameters.
      *
-     * @param page          The page number.
-     * @param size          The page size.
-     * @param sortBy        The field to sort by.
-     * @param filter        The filter criteria.
-     * @param paymentMethod The payment method.
-     * @return A list of report DTOs.
+     * @param page The page number of the reports to retrieve.
+     * @param size The number of reports per page.
+     * @param sortBy The field to sort the reports by.
+     * @param filter The filter criteria for the reports.
+     * @param paymentMethod The payment method filter criteria for the reports.
+     * @param sortOrder The sort order (ascending or descending) for the reports.
+     * @return A list of report request DTOs containing the requested reports.
      */
-    List<ListReportsReq> listReports(int page, int size, String sortBy, String filter, String paymentMethod);
+    List<ListReportsReq> listReports(int page, int size, String sortBy, String filter, String paymentMethod, String sortOrder);
 
     /**
      * Generates a PDF receipt for the specified sale report.

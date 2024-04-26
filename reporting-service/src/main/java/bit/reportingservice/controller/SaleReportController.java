@@ -21,25 +21,16 @@ import java.util.List;
 public class SaleReportController {
     private final ReportingService reportingService;
 
-    /**
-     * Retrieves a list of sale reports based on pagination and filtering criteria.
-     *
-     * @param page          the page number
-     * @param size          the number of reports per page
-     * @param sortBy        the field to sort by and the sorting order (e.g., "COMPLETED_DATE_DESC")
-     * @param filterBy      optional filter criteria
-     * @param paymentMethod optional payment method filter
-     * @return a list of sale reports matching the criteria
-     */
     @GetMapping("/list-reports")
     public List<ListReportsReq> listReports(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "COMPLETED_DATE_DESC") String sortBy,
-            @RequestParam(required = false) String filterBy,
-            @RequestParam(required = false) String paymentMethod
+            @RequestParam(required = false) String cancelledStatus,
+            @RequestParam(required = false) String paymentStatus,
+            @RequestParam(defaultValue = "completedDate", required = false) String sortBy,
+            @RequestParam(defaultValue = "asc", required = false) String sortOrder
     ){
-        return reportingService.listReports(page, size, sortBy, filterBy, paymentMethod);
+        return reportingService.listReports(page, size, cancelledStatus, paymentStatus, sortBy, sortOrder);
     }
 
     /**

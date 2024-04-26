@@ -2,10 +2,10 @@ package bit.reportingservice.service;
 
 import bit.reportingservice.dto.ListReportsReq;
 import bit.reportingservice.dto.kafka.*;
-import bit.reportingservice.entity.*;
-import bit.reportingservice.exceptions.invalidfilter.InvalidFilterException;
-import bit.reportingservice.exceptions.invalidpaymentmethod.InvalidPaymentMethodException;
-import bit.reportingservice.exceptions.invalidsort.InvalidSortException;
+import bit.reportingservice.entity.Campaign;
+import bit.reportingservice.entity.DiscountType;
+import bit.reportingservice.entity.Product;
+import bit.reportingservice.entity.SaleReport;
 import bit.reportingservice.exceptions.productnotfound.ProductNotFoundException;
 import bit.reportingservice.exceptions.reportnotfound.ReportNotFoundException;
 import bit.reportingservice.repository.CampaignRepository;
@@ -13,20 +13,19 @@ import bit.reportingservice.repository.ProductRepository;
 import bit.reportingservice.repository.SaleReportRepository;
 import bit.reportingservice.service.serviceimpl.ReportingServiceImpl;
 import bit.reportingservice.utils.ReceiptGenerator;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.function.Executable;
+import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.*;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -53,8 +52,6 @@ class ReportingServiceTest {
     private CancelledSaleReportDTO cancelledSaleReportDTO;
     private SaleReport saleReport;
     private CampaignDTO campaignDTO;
-    private final String VALID_PAYMENT_METHOD = "CREDIT_CARD";
-    private final String VALID_SORT_BY = "COMPLETED_DATE_DESC";
 
     @BeforeEach
     void setUp() {
@@ -179,72 +176,6 @@ class ReportingServiceTest {
     }
 
     @Test
-    void listReports_WithValidInputs_ReturnsListOfReports() {
-        Pageable pageable = PageRequest.of(0, 20);
-
-        when(saleReportRepository.findByPaymentMethod(eq(PaymentMethod.valueOf(VALID_PAYMENT_METHOD)), any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of(saleReport), pageable, 1));
-
-        List<ListReportsReq> actualReports = reportingService.listReports(pageable.getPageNumber(), pageable.getPageSize(), VALID_SORT_BY, "PAYMENT_METHOD", VALID_PAYMENT_METHOD);
-
-        Assertions.assertEquals(1, actualReports.size());
-    }
-
-    @Test
-    void listReports_WithInvalidPaymentMethod_ThrowsInvalidPaymentMethodException() {
-        Pageable pageable = PageRequest.of(0, 20);
-
-        when(saleReportRepository.findByPaymentMethod(eq(null), any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of(saleReport), pageable, 1));
-
-        assertThrowsInvalidPaymentMethodException(() -> reportingService.listReports(pageable.getPageNumber(), pageable.getPageSize(), VALID_SORT_BY, "PAYMENT_METHOD", "invalid"));
-    }
-
-    @Test
-    void listReports_WithNullFilter_ReturnsListOfReports() {
-        Pageable pageable = PageRequest.of(0, 20);
-
-        when(saleReportRepository.findAll(any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of(saleReport), pageable, 1));
-
-        List<ListReportsReq> actualReports = reportingService.listReports(pageable.getPageNumber(), pageable.getPageSize(), VALID_SORT_BY, null, VALID_PAYMENT_METHOD);
-
-        Assertions.assertEquals(1, actualReports.size());
-    }
-
-    @Test
-    void listReports_WithCancelledOnlyFilter_ReturnsListOfReports() {
-        Pageable pageable = PageRequest.of(0, 20);
-
-        when(saleReportRepository.findByCancelled(eq(true), any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of(saleReport), pageable, 1));
-
-        List<ListReportsReq> actualReports = reportingService.listReports(pageable.getPageNumber(), pageable.getPageSize(), "TOTAL_PRICE_DESC", "CANCELLED_ONLY", null);
-
-        Assertions.assertEquals(1, actualReports.size());
-    }
-
-    @Test
-    void listReports_WithInvalidFilter_ReturnsListOfReports() {
-        Pageable pageable = PageRequest.of(0, 20);
-
-        when(saleReportRepository.findByCancelled(eq(true), any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of(saleReport), pageable, 1));
-
-        assertThrowsInvalidFilterException(() -> reportingService.listReports(pageable.getPageNumber(), pageable.getPageSize(), VALID_SORT_BY, "invalid", null));
-    }
-
-    @Test
-    void listReports_WithInvalidSort_ReturnsListOfReports() {
-        Pageable pageable = PageRequest.of(0, 20);
-
-        when(saleReportRepository.findByCancelled(eq(true), any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of(saleReport), pageable, 1));
-
-        assertThrowsInvalidSortException(() -> reportingService.listReports(pageable.getPageNumber(), pageable.getPageSize(), "invalid", "CANCELLED_ONLY", null));
-    }
-
-    @Test
     void testGeneratePdfReceipt() throws IOException {
         Long reportId = 1L;
         byte[] pdfBytes = "Generated PDF".getBytes();
@@ -280,6 +211,19 @@ class ReportingServiceTest {
         verify(campaignRepository, times(1)).save(any(Campaign.class));
     }
 
+    @Test
+    void listReports_shouldReturnListOfReports() {
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Direction.ASC, "completedDate"));
+        List<SaleReport> pageContent = Collections.singletonList(saleReport);
+        PageImpl<SaleReport> page = new PageImpl<>(pageContent, pageable, pageContent.size());
+
+        when(saleReportRepository.findAll(ArgumentMatchers.<Specification<SaleReport>>any(), eq(pageable))).thenReturn(page);
+
+        List<ListReportsReq> reports = reportingService.listReports(0, 10, null, "cash", "completedDate", "asc");
+
+        assertEquals(pageContent.size(), reports.size());
+    }
+
     private static List<Product> getProducts() {
         Product product1 = new Product();
         Product product2 = new Product();
@@ -303,17 +247,4 @@ class ReportingServiceTest {
         products.add(product2);
         return products;
     }
-
-    private void assertThrowsInvalidPaymentMethodException(Executable executable) {
-        assertThrows(InvalidPaymentMethodException.class, executable);
-    }
-
-    private void assertThrowsInvalidFilterException(Executable executable) {
-        assertThrows(InvalidFilterException.class, executable);
-    }
-
-    private void assertThrowsInvalidSortException(Executable executable) {
-        assertThrows(InvalidSortException.class, executable);
-    }
-
 }

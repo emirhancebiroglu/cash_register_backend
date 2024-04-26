@@ -150,9 +150,6 @@
                         <exclude>bit/reportingservice/entity/Product.class</exclude>
                         <exclude>bit/reportingservice/entity/SaleReport.class</exclude>
                         <exclude>bit/reportingservice/entity/SortBy.class</exclude>
-                        <exclude>bit/reportingservice/exceptions/invalidfilter/InvalidFilterExceptionHandler.class</exclude>
-                        <exclude>bit/reportingservice/exceptions/invalidpaymentmethod/InvalidPaymentMethodExceptionHandler.class</exclude>
-                        <exclude>bit/reportingservice/exceptions/invalidsort/InvalidSortExceptionHandler.class</exclude>
                         <exclude>bit/reportingservice/exceptions/productnotfound/ProductNotFoundExceptionHandler.class</exclude>
                         <exclude>bit/reportingservice/exceptions/reportnotfound/ReportNotFoundExceptionHandler.class</exclude>
                         <exclude>bit/reportingservice/exceptions/ErrorDetails.class</exclude>
