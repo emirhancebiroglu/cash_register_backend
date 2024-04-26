@@ -6,6 +6,10 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/**
+ * CampaignRepository interface provides methods to interact with the Campaign entity in the database.
+ * It extends the Spring Data JPA repository interface, which automatically generates CRUD methods.
+ */
 @Repository
 public interface CampaignRepository extends JpaRepository<Campaign, Long> {
     /**

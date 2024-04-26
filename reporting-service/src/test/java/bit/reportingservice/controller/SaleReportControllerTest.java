@@ -16,8 +16,6 @@ import java.util.List;
 import java.util.Objects;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -34,17 +32,6 @@ class SaleReportControllerTest {
     }
 
     @Test
-    void listReports_shouldReturnListOfReports() {
-        List<ListReportsReq> reports = Collections.singletonList(new ListReportsReq());
-        when(reportingService.listReports(anyInt(), anyInt(), any(), any(), any())).thenReturn(reports);
-
-        List<ListReportsReq> response = saleReportController.listReports(0, 10, "COMPLETED_DATE_DESC", null, null);
-
-        assertEquals(reports, response);
-        verify(reportingService).listReports(0, 10, "COMPLETED_DATE_DESC", null, null);
-    }
-
-    @Test
     void generatePdfReceipt_shouldReturnPdfBytes() throws IOException {
         byte[] pdfBytes = new byte[10];
         when(reportingService.generatePdfReceipt(1L)).thenReturn(pdfBytes);
@@ -56,5 +43,24 @@ class SaleReportControllerTest {
         assertEquals("application/pdf", Objects.requireNonNull(response.getHeaders().getContentType()).toString());
         assertEquals("sale1.pdf", response.getHeaders().getContentDisposition().getFilename());
         verify(reportingService).generatePdfReceipt(1L);
+    }
+
+    @Test
+    void listReports_shouldReturnListOfReports() {
+        int page = 0;
+        int size = 10;
+        String paymentStatus = "cash";
+        String sortBy = "completedDate";
+        String sortOrder = "asc";
+
+        List<ListReportsReq> dummyReports = Collections.singletonList(new ListReportsReq());
+        when(reportingService.listReports(page, size, null, paymentStatus, sortBy, sortOrder))
+                .thenReturn(dummyReports);
+
+        List<ListReportsReq> response = saleReportController.listReports(page, size, null, paymentStatus, sortBy, sortOrder);
+
+        verify(reportingService).listReports(page, size, null, paymentStatus, sortBy, sortOrder);
+
+        assertEquals(dummyReports.size(), response.size());
     }
 }

@@ -7,9 +7,6 @@ import bit.reportingservice.entity.Campaign;
 import bit.reportingservice.entity.PaymentMethod;
 import bit.reportingservice.entity.Product;
 import bit.reportingservice.entity.SaleReport;
-import bit.reportingservice.exceptions.invalidfilter.InvalidFilterException;
-import bit.reportingservice.exceptions.invalidpaymentmethod.InvalidPaymentMethodException;
-import bit.reportingservice.exceptions.invalidsort.InvalidSortException;
 import bit.reportingservice.exceptions.productnotfound.ProductNotFoundException;
 import bit.reportingservice.exceptions.reportnotfound.ReportNotFoundException;
 import bit.reportingservice.repository.CampaignRepository;
@@ -17,6 +14,7 @@ import bit.reportingservice.repository.ProductRepository;
 import bit.reportingservice.repository.SaleReportRepository;
 import bit.reportingservice.service.ReportingService;
 import bit.reportingservice.utils.ReceiptGenerator;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +22,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -112,27 +111,40 @@ public class ReportingServiceImpl implements ReportingService {
         logger.info("Product and sale report updated");
     }
 
-    /**
-     * This method lists reports based on the provided parameters. It retrieves the reports based on the specified page, size, sorting criteria, and filtering options, and maps the retrieved reports to ListReportsReq objects before returning them.
-     *
-     * @param page The page number to retrieve the reports from.
-     * @param size The number of reports to retrieve per page.
-     * @param sortBy The sorting criteria to apply to the reports.
-     * @param filterBy The filtering options to apply to the reports.
-     * @param paymentMethod The payment method to filter the reports by.
-     * @return A list of ListReportsReq objects representing the retrieved reports, along with their associated products, total prices, payment methods, money taken, change, completed dates, cancelled dates, returned money, and cancellation status.
-     */
     @Override
-    public List<ListReportsReq> listReports(int page, int size, String sortBy, String filterBy, String paymentMethod) {
+    public List<ListReportsReq> listReports(int page, int size, String cancelledStatus, String paymentStatus, String sortBy, String sortOrder) {
             logger.info("Listing reports...");
 
-            Pageable pageable = PageRequest.of(page, size, getSort(sortBy));
+            Pageable pageable = applySort(page, size, sortBy, sortOrder);
 
-            Page<SaleReport> saleReportsPage = filterReports(filterBy, getPaymentMethod(paymentMethod), pageable);
+            Page<SaleReport> saleReportsPage;
 
-             logger.info("Reports listed");
+            Specification<SaleReport> specification = Specification.where((root, query, criteriaBuilder) -> {
+                List<Predicate> predicates = new ArrayList<>();
 
-            return saleReportsPage.map(this::mapToListReportReq).getContent();
+                if (paymentStatus != null) {
+                    if (paymentStatus.equalsIgnoreCase("cash")) {
+                        predicates.add(criteriaBuilder.equal(root.get("paymentMethod"), PaymentMethod.CASH));
+                    } else if (paymentStatus.equalsIgnoreCase("credit-card")) {
+                        predicates.add(criteriaBuilder.equal(root.get("paymentMethod"), PaymentMethod.CREDIT_CARD));
+                    }
+                }
+                if (cancelledStatus != null) {
+                    predicates.add(criteriaBuilder.equal(root.get("cancelled"), cancelledStatus.equalsIgnoreCase("cancelled")));
+                }
+
+                return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+            });
+
+            saleReportsPage = saleReportRepository.findAll(specification, pageable);
+
+            List<ListReportsReq> reports =saleReportsPage.getContent().stream()
+                            .map(this::mapToListReportReq)
+                            .toList();
+
+            logger.info("Reports listed");
+
+            return reports;
         }
 
     /**
@@ -186,39 +198,18 @@ public class ReportingServiceImpl implements ReportingService {
     }
 
     /**
-     * This method filters reports based on the specified filtering options and payment method. It retrieves the reports based on the specified filtering options and payment method, and returns them as a Page object along with the provided Pageable object.
-     *
-     * @param filterBy The filtering options to apply to the reports.
-     * @param paymentMethod The payment method to filter the reports by.
-     * @param pageable The Pageable object containing the page number, size, and sorting criteria to apply to the reports.
-     * @return A Page object containing the filtered reports along with the provided Pageable object.
-     */
-    private Page<SaleReport> filterReports(String filterBy, PaymentMethod paymentMethod, Pageable pageable) {
-        if (filterBy == null) {
-            return saleReportRepository.findAll(pageable);
-        }
-
-        return switch (filterBy) {
-            case "CANCELLED_ONLY" -> saleReportRepository.findByCancelled(true, pageable);
-            case "PAYMENT_METHOD" -> saleReportRepository.findByPaymentMethod(paymentMethod, pageable);
-            default -> throw new InvalidFilterException("Unexpected value: " + filterBy);
-        };
-    }
-
-    /**
-     * This method gets the sorting criteria based on the provided sorting option.
-     *
-     * @param sortBy The sorting option to apply to the reports.
-     * @return The Sort object containing the sorting criteria based on the provided sorting option.
-     * @throws InvalidSortException If the provided sorting option is unexpected.
-     */
-    private Sort getSort(String sortBy) {
-        return switch (sortBy) {
-            case "COMPLETED_DATE_DESC" -> Sort.by(Sort.Direction.DESC, "completedDate");
-            case "TOTAL_PRICE_DESC" -> Sort.by(Sort.Direction.DESC, "totalPrice");
-            default -> throw new InvalidSortException("Unexpected value: " + sortBy);
-        };
-    }
+ * Applies the specified sorting criteria to the given pageable object.
+ *
+ * @param pageNo The number of the page to be sorted.
+ * @param pageSize The size of the page to be sorted.
+ * @param sortBy The field by which the data should be sorted.
+ * @param sortOrder The order in which the data should be sorted (ASC or DESC).
+ * @return A Pageable object with the specified sorting criteria applied.
+ */
+private Pageable applySort(Integer pageNo, Integer pageSize, String sortBy, String sortOrder) {
+    Sort sort = sortOrder.equalsIgnoreCase("ASC") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+    return PageRequest.of(pageNo, pageSize, sort);
+}
 
     /**
      * Maps a SaleReport object to a ListReportsReq object.
@@ -292,12 +283,11 @@ public class ReportingServiceImpl implements ReportingService {
     }
 
     /**
-     * This method retrieves a product based on the provided product details and the associated sale report.
+     * This method retrieves a product based on its details and the associated sale report.
      *
      * @param productDTO The ProductDTO containing the details of the product to be retrieved.
      * @param saleReport The SaleReport object associated with the product.
      * @return A Product object containing the mapped data.
-     * @throws InvalidPaymentMethodException If the provided payment method is unexpected.
      */
     private static Product getProduct(ProductDTO productDTO, SaleReport saleReport) {
         Product product = new Product();
@@ -312,28 +302,5 @@ public class ReportingServiceImpl implements ReportingService {
         product.setPrice(productDTO.getPrice());
         product.setReturned(productDTO.isReturned());
         return product;
-    }
-
-    /**
-     * This method retrieves a payment method based on the provided string.
-     * It checks if the provided string is null, and if so, it returns null.
-     * If the provided string is not null, it attempts to convert it to a PaymentMethod enum value using the {@code PaymentMethod.valueOf(String)} method.
-     * If the conversion is successful, it returns the corresponding PaymentMethod enum value.
-     * If the conversion fails due to an IllegalArgumentException, it throws an {@code InvalidPaymentMethodException} with the message "Invalid payment method".
-     * @param payment The string representing the payment method to be retrieved.
-     * @return The PaymentMethod enum value corresponding to the provided string, or null if the provided string is null.
-     * @throws InvalidPaymentMethodException If the conversion fails due to an IllegalArgumentException.
-     */
-    private static PaymentMethod getPaymentMethod(String payment){
-        if (payment == null) {
-            return null;
-        }
-
-        try {
-            return PaymentMethod.valueOf(payment);
-        }
-        catch (IllegalArgumentException e){
-            throw new InvalidPaymentMethodException("Invalid payment method");
-        }
     }
 }
