@@ -91,7 +91,9 @@ services:
       - POSTGRES_PASSWORD=2165
       - POSTGRES_SCHEMA=products
     ports:
-      - "5433:5433"
+      - "5433:5432"
+    expose:
+      - "5433"
     command: [ "postgres", "-c", "search_path=products" ]
     networks:
       - spring-network
@@ -101,12 +103,14 @@ services:
     container_name: sales-db
     restart: always
     environment:
-      - POSTGRES_DB=sales-db
+      - POSTGRES_DB=sales_db
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=2165
       - POSTGRES_SCHEMA=sales
     ports:
-      - "5434:5434"
+      - "5434:5432"
+    expose:
+      - "5434"
     command: [ "postgres", "-c", "search_path=sales" ]
     networks:
       - spring-network
@@ -116,12 +120,14 @@ services:
     container_name: sales-reports-db
     restart: always
     environment:
-      - POSTGRES_DB=sales-reports-db
+      - POSTGRES_DB=sales_reports_db
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=2165
       - POSTGRES_SCHEMA=reports
     ports:
-      - "5432:5432"
+      - "5435:5432"
+    expose:
+      - "5435"
     command: [ "postgres", "-c", "search_path=reports" ]
     networks:
       - spring-network
