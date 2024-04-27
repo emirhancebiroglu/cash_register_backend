@@ -97,7 +97,7 @@ This project is licensed under the MIT License - see the [LICENCE.txt](LICENCE.t
 
 ## Contact
 
-For any questions or feedback, please contact Your Name.
+For any questions or feedback, please contact me at: ```emirhancebiroglu21@hotmail.com```.
 
 ## Acknowledgements
 
