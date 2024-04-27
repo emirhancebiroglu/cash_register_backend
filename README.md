@@ -54,7 +54,7 @@ To get started with the Cash Register Backend, follow these steps:
 
 3. Configure each service's 'application-docker.properties' file according to your environment and requirements.
    
-   ![application-docker](https://github.com/emirhancebiroglu/cash_register_backend/assets/152030621/5412d9a2-b012-4b40-8392-2cbdd595c8f6)
+   <img width="241" alt="prop" src="https://github.com/emirhancebiroglu/cash_register_backend/assets/152030621/d03101e2-6163-4027-b0ea-f8464a78fcd0">
 
 5. Build and run the Docker containers using Docker Compose: ```docker-compose up -d```
    
