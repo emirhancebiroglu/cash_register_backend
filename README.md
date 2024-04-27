@@ -1,6 +1,6 @@
 # Cash-Register-Backend Project For 32Bit-2024
 
-Cash Register Backend is a collection of microservices built with Spring Boot to manage transactions and inventory for a retail cash register system. It includes services for product management, user management, sales tracking, reporting, and JWT token-based authentication. Service discovery is facilitated through Eureka, and Spring Cloud Gateway serves as the API gateway. The project utilizes Docker for containerization and Google Jib for building optimized container images. Additionally, it integrates various technologies such as Kafka for event streaming, Java Mail Sender for email notifications, Thymeleaf for email templating, Passay for password validation, Apache PDFBox for PDF generation, and Log4j2 for logging.
+Cash Register Backend is a collection of microservices built with Spring Boot to manage transactions and inventory for a retail cash register system.
 
 ## Microservices
 
@@ -18,15 +18,18 @@ Cash Register Backend is a collection of microservices built with Spring Boot to
 
 - Spring Cloud Gateway
 
+## Storage
+
+- PostgreSQL
+
 ## Containerization
 
-- Docker
 - Docker Compose
 - Google Jib
   
 ## Authentication
 
-- Token-based authentication with JWT
+- Token-based with JWT
   
 ## Logs
 
@@ -43,6 +46,9 @@ Cash Register Backend is a collection of microservices built with Spring Boot to
 - Thymeleaf (for email templating)
 - Passay (for password validation)
 - Apache PDFBox (for PDF generation)
+- Cloudinary (for image management)
+- WebClient (for reactive programming)
+- Jacoco (for test coverage)
   
 ## Getting Started
 
@@ -60,9 +66,9 @@ To get started with the Cash Register Backend, follow these steps:
    
 ## Usage
 
-1. User Management Service: Register as a new user.
+1. User Management Service: Use this service to handle with user related operations (CRUD).
 
-2. JWT Auth Service: Obtain JWT tokens for authentication and access control.
+2. JWT Auth Service: Perform login and obtain JWT token to access to services.
 
 3. Product Service: Manage products and inventory.
 
@@ -98,19 +104,3 @@ This project is licensed under the MIT License - see the [LICENCE.txt](LICENCE.t
 ## Contact
 
 For any questions or feedback, please contact me at: ```emirhancebiroglu21@hotmail.com```.
-
-## Acknowledgements
-
-- Spring Boot
-- Eureka Service Discovery
-- Spring Cloud Gateway
-- JWT
-- Docker
-- Google Jib
-- Kafka
-- Java Mail Sender
-- Thymeleaf
-- Passay
-- Apache PDFBox
-- Log4j2
-- JUnit 5
