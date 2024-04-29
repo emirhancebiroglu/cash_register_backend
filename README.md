@@ -66,15 +66,17 @@ To get started with the Cash Register Backend, follow these steps:
    
 ## Usage
 
-1. User Management Service: Use this service to handle with user related operations (CRUD).
+1. JWT Auth Service: Perform login and obtain JWT token to access to services. Note that there is an admin user craeted by system defaulty so that you can access to User Management Service's endpoints and add your own admin(s). use "admin" as both user code and password to login and obtain the jwt.
 
-2. JWT Auth Service: Perform login and obtain JWT token to access to services.
+   <img width="635" alt="admin" src="https://github.com/emirhancebiroglu/cash_register_backend/assets/152030621/dca9b271-4a1e-4a45-922f-8f97a0128963">
+   
+3. User Management Service: Use this service to handle with user related operations (CRUD).
+   
+4. Product Service: Manage products and inventory.
 
-3. Product Service: Manage products and inventory.
+5. Sales Service: Record and manage sales transactions.
 
-4. Sales Service: Record and manage sales transactions.
-
-5. Reporting Service: Generate reports based on sales data.
+6. Reporting Service: Generate reports based on sales data.
 
 ## API Documentation
 
