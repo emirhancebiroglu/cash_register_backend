@@ -70,7 +70,7 @@ To get started with the Cash Register Backend, follow these steps:
 
    <img width="635" alt="admin" src="https://github.com/emirhancebiroglu/cash_register_backend/assets/152030621/dca9b271-4a1e-4a45-922f-8f97a0128963">
    
-3. User Management Service: Use this service to handle with user related operations (CRUD).
+3. User Management Service: Utilize this service to manage user-related operations (CRUD). When registering a user in the system, please use an existing email address, as the login credentials (user code and system-generated password) will be sent to that email. Subsequently, you can log in using this information and change the password using the relevant endpoint.
    
 4. Product Service: Manage products and inventory.
 
