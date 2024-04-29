@@ -63,6 +63,8 @@ services:
       - POSTGRES_SCHEMA=users
     ports:
       - "5431:5431"
+    volumes:
+      - ./user-management-db-init:/docker-entrypoint-initdb.d
     command: [ "postgres", "-c", "search_path=users" ]
     networks:
       - spring-network
@@ -78,6 +80,8 @@ services:
     restart: always
     ports:
       - "5432:5432"
+    volumes:
+      - ./jwt-auth-db-init:/docker-entrypoint-initdb.d
     command: [ "postgres", "-c", "search_path=user-credentials" ]
     networks:
       - spring-network
@@ -93,6 +97,8 @@ services:
       - POSTGRES_SCHEMA=products
     ports:
       - "5433:5432"
+    volumes:
+      - ./product-db-init:/docker-entrypoint-initdb.d
     expose:
       - "5433"
     command: [ "postgres", "-c", "search_path=products" ]
@@ -110,6 +116,8 @@ services:
       - POSTGRES_SCHEMA=sales
     ports:
       - "5434:5432"
+    volumes:
+      - ./sales-db-init:/docker-entrypoint-initdb.d
     expose:
       - "5434"
     command: [ "postgres", "-c", "search_path=sales" ]
@@ -127,6 +135,8 @@ services:
       - POSTGRES_SCHEMA=reports
     ports:
       - "5435:5432"
+    volumes:
+      - ./sales-reports-db-init:/docker-entrypoint-initdb.d
     expose:
       - "5435"
     command: [ "postgres", "-c", "search_path=reports" ]
