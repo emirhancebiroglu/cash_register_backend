@@ -33,7 +33,7 @@ public class CheckoutValidator {
         validateProductsNotEmpty(checkout);
         validateCheckoutNotCompleted(checkout);
         validatePaymentMethod(completeCheckoutReq);
-        validateMoneyTaken(completeCheckoutReq);
+        validateMoneyTaken(completeCheckoutReq, checkout);
     }
 
     /**
@@ -42,13 +42,13 @@ public class CheckoutValidator {
      * @param completeCheckoutReq The request containing details of the checkout to be completed.
      * @throws InvalidMoneyTakenException if money taken is not provided for cash payment or is negative.
      */
-    private void validateMoneyTaken(CompleteCheckoutReq completeCheckoutReq) {
+    private void validateMoneyTaken(CompleteCheckoutReq completeCheckoutReq, Checkout checkout) {
         if (Objects.equals(completeCheckoutReq.getPaymentMethod(), "CASH")){
             if (completeCheckoutReq.getMoneyTaken() == null){
                 throw new InvalidMoneyTakenException("You should provide how much money you take from customer with this payment method");
             }
-            else if (completeCheckoutReq.getMoneyTaken() <= 0){
-                throw new InvalidMoneyTakenException("Money taken cannot be 0 or negative");
+            else if (completeCheckoutReq.getMoneyTaken() <= checkout.getTotalPrice()){
+                throw new InvalidMoneyTakenException("Money taken cannot be less than total price");
             }
         }
         else if(Objects.equals(completeCheckoutReq.getPaymentMethod(), "CREDIT_CARD") && completeCheckoutReq.getMoneyTaken() != null){

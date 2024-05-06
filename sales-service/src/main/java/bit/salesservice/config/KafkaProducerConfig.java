@@ -38,7 +38,7 @@ public class KafkaProducerConfig {
         configProps.put(JsonSerializer.TYPE_MAPPINGS, "saleReport:bit.salesservice.dto.kafka.SaleReportDTO, " +
                 "returnedProductInfo:bit.salesservice.dto.kafka.ReturnedProductInfoDTO, " +
                 "cancelledSaleReport:bit.salesservice.dto.kafka.CancelledSaleReportDTO, " +
-                "campaign:bit:salesservice.dto.kafka.CampaignDTO");
+                "campaign:bit.salesservice.dto.kafka.CampaignDTO");
 
         logProducerConfiguration(configProps);
 
