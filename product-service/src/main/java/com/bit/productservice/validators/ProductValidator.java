@@ -118,8 +118,11 @@ public class ProductValidator {
      * @return true if both product code and barcode are provided, false otherwise
      */
     private boolean bothCodeAndBarcodeProvided(UpdateProductReq updateProductReq, AddProductReq addProductReq) {
-        return (updateProductReq.getProductCode() != null && updateProductReq.getBarcode() != null) ||
-                (addProductReq.getProductCode() != null && addProductReq.getBarcode() != null);
+        if (updateProductReq != null && updateProductReq.getProductCode() != null && updateProductReq.getBarcode() != null){
+            return true;
+        }
+
+        return addProductReq != null && addProductReq.getProductCode() != null && addProductReq.getBarcode() != null;
     }
 
     /**
