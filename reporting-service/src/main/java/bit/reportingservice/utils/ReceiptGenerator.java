@@ -58,7 +58,7 @@ public class ReceiptGenerator {
                 contentStream.showText("Sale No   : " + saleReport.getId());
 
                 contentStream.newLineAtOffset(+150, +15);
-                contentStream.showText("Sale   : " + "CREDIT_CARD");
+                contentStream.showText("Sale   : " + saleReport.getPaymentMethod());
 
                 contentStream.newLineAtOffset(-150, -35);
                 contentStream.showText(SEPARATOR);
