@@ -402,19 +402,25 @@ public class ProductServiceImpl implements ProductService {
                 case "C-D" -> {
                     return criteriaBuilder.or(
                             criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "c", "d"),
-                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "C", "D")
+                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "C", "D"),
+                            criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "c%"),
+                            criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "d%")
                     );
                 }
                 case "E-F" -> {
                     return criteriaBuilder.or(
                             criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "e", "f"),
-                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "E", "F")
+                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "E", "F"),
+                            criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "e%"),
+                            criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "f%")
                     );
                 }
                 case "G-I" -> {
                     return criteriaBuilder.or(
                             criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "g", "i"),
-                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "G", "I")
+                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "G", "I"),
+                            criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "g%"),
+                            criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "i%")
                     );
                 }
                 case "K" -> {
@@ -423,7 +429,9 @@ public class ProductServiceImpl implements ProductService {
                 case "L-N" -> {
                     return criteriaBuilder.or(
                             criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "l", "n"),
-                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "L", "N")
+                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "L", "N"),
+                            criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "l%"),
+                            criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "n%")
                     );
                 }
                 case "P" -> {
@@ -432,19 +440,25 @@ public class ProductServiceImpl implements ProductService {
                 case "R-S" -> {
                     return criteriaBuilder.or(
                             criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "r", "s"),
-                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "R", "s")
+                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "R", "s"),
+                            criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "r%"),
+                            criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "s%")
                     );
                 }
                 case "Ş-T" -> {
                     return criteriaBuilder.or(
                             criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "ş", "t"),
-                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "Ş", "T")
+                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "Ş", "T"),
+                            criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "ş%"),
+                            criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "t%")
                     );
                 }
                 case "Ü-Z" -> {
                     return criteriaBuilder.or(
                             criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "ü", "z"),
-                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "Ü", "Z")
+                            criteriaBuilder.between(criteriaBuilder.lower(root.get("name")), "Ü", "Z"),
+                            criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "ü%"),
+                            criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "z%")
                     );
                 }
                 default -> {
