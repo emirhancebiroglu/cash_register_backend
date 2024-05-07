@@ -1,6 +1,7 @@
 package bit.reportingservice.utils;
 
 import bit.reportingservice.entity.Campaign;
+import bit.reportingservice.entity.DiscountType;
 import bit.reportingservice.entity.Product;
 import bit.reportingservice.entity.SaleReport;
 import bit.reportingservice.repository.CampaignRepository;
@@ -73,7 +74,14 @@ public class ReceiptGenerator {
 
                     if (campaign.isPresent()){
                         timesApplied = quantity / campaign.get().getNeededQuantity();
-                        discount = (product.getPrice() * (campaign.get().getDiscountAmount() / 100)) * (campaign.get().getNeededQuantity() * timesApplied);
+
+                        if (campaign.get().getDiscountType().equals(DiscountType.FIXED_AMOUNT)){
+                            discount = (product.getPrice() - campaign.get().getDiscountAmount()) * timesApplied;
+                        }
+                        else{
+                            discount = (product.getPrice() * (campaign.get().getDiscountAmount() / 100)) * (campaign.get().getNeededQuantity() * timesApplied);
+                        }
+
                         priceWithCampaign -= discount;
                     }
 
