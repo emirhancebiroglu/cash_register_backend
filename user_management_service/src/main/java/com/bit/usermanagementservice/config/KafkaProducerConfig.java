@@ -2,8 +2,8 @@ package com.bit.usermanagementservice.config;
 
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringSerializer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,7 +20,7 @@ import java.util.Map;
  */
 @Configuration
 public class KafkaProducerConfig {
-    private static final Logger logger = LoggerFactory.getLogger(KafkaProducerConfig.class);
+    private static final Logger logger = LogManager.getLogger(KafkaProducerConfig.class);
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
 

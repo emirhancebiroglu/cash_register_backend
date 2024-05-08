@@ -29,8 +29,8 @@ import com.bit.usermanagementservice.utils.PasswordGenerator;
 import com.bit.usermanagementservice.utils.UserCodeGenerator;
 import com.bit.usermanagementservice.validators.UserValidator;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -60,7 +60,7 @@ public class UserServiceImpl implements UserService {
     private final AdminInitializationConfig adminInitializationConfig;
     private final CredentialsProducer credentialsProducer;
     private final UserValidator userValidator;
-    private static final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
+    private static final Logger logger = LogManager.getLogger(UserServiceImpl.class);
     private static final String DELETED = "deleted";
     private static final String FIRST_NAME = "firstName";
 

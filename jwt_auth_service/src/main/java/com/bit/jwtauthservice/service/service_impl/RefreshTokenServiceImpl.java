@@ -8,8 +8,8 @@ import com.bit.jwtauthservice.repository.RefreshTokenRepository;
 import com.bit.jwtauthservice.repository.UserRepository;
 import com.bit.jwtauthservice.service.RefreshTokenService;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -24,7 +24,7 @@ import java.util.UUID;
 public class RefreshTokenServiceImpl implements RefreshTokenService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserRepository userRepository;
-    private static final Logger logger = LoggerFactory.getLogger(RefreshTokenServiceImpl.class);
+    private static final Logger logger = LogManager.getLogger(RefreshTokenServiceImpl.class);
 
     /**
      * Creates a new refresh token for the specified user.

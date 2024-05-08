@@ -29,8 +29,8 @@ import com.bit.jwtauthservice.service.RefreshTokenService;
 import com.bit.jwtauthservice.utils.TokenStateChanger;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -69,7 +69,7 @@ public class AuthServiceImpl implements AuthService {
     @Value("${password.reset.link.body}")
     private String resetLinkBody;
 
-    private final Logger logger = LoggerFactory.getLogger(AuthServiceImpl.class);
+    private final Logger logger = LogManager.getLogger(AuthServiceImpl.class);
 
     /**
      * Authenticates a user based on the provided login credentials.

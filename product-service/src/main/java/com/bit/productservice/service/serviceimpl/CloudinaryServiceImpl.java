@@ -3,8 +3,8 @@ package com.bit.productservice.service.serviceimpl;
 import com.bit.productservice.service.CloudinaryService;
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -21,7 +21,7 @@ import java.util.Objects;
  */
 @Service
 public class CloudinaryServiceImpl implements CloudinaryService {
-    private static final Logger logger = LoggerFactory.getLogger(CloudinaryServiceImpl.class);
+    private static final Logger logger = LogManager.getLogger(CloudinaryServiceImpl.class);
     Cloudinary cloudinary;
 
     /**

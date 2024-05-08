@@ -19,8 +19,8 @@ import bit.salesservice.utils.ProductInfoHttpRequest;
 import bit.salesservice.utils.SaleReportProducer;
 import lombok.RequiredArgsConstructor;
 import org.apache.http.HttpHeaders;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,7 +41,7 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
     private final CampaignRepository campaignRepository;
     private final SaleReportProducer saleReportProducer;
     private final String jwtToken = HttpHeaders.AUTHORIZATION.substring(7);
-    private static final Logger logger = LoggerFactory.getLogger(ShoppingBagServiceImpl.class);
+    private static final Logger logger = LogManager.getLogger(ShoppingBagServiceImpl.class);
     private final ProductInfoHttpRequest request;
     private static final String NOT_FOUND = "Product not found";
     private static final String INVALID_QUANTITY = "Please provide a valid quantity";

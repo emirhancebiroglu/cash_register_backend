@@ -5,8 +5,8 @@ import bit.salesservice.dto.ProductInfo;
 import bit.salesservice.dto.UpdateStockRequest;
 import lombok.RequiredArgsConstructor;
 import org.apache.http.HttpHeaders;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
 
@@ -19,7 +19,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class ProductInfoHttpRequest {
     private final WebClientConfig webClientConfig;
-    private static final Logger logger = LoggerFactory.getLogger(ProductInfoHttpRequest.class);
+    private static final Logger logger = LogManager.getLogger(ProductInfoHttpRequest.class);
 
     /**
      * Retrieves product information from the backend API using the provided product code and authentication token.

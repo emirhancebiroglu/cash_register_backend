@@ -20,8 +20,8 @@ import com.bit.productservice.utils.SortApplier;
 import com.bit.productservice.validators.ProductValidator;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -48,7 +48,7 @@ public class ProductServiceImpl implements ProductService {
     private final ImageRepository imageRepository;
     private final ProductValidator productValidator;
     private final SortApplier sortApplier;
-    private static final Logger logger = LoggerFactory.getLogger(ProductServiceImpl.class);
+    private static final Logger logger = LogManager.getLogger(ProductServiceImpl.class);
     private static final String PRODUCT_NOT_FOUND = "Product not found";
 
     @Override

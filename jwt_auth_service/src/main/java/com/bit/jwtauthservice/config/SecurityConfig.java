@@ -1,8 +1,8 @@
 package com.bit.jwtauthservice.config;
 
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -18,7 +18,7 @@ import org.springframework.security.web.authentication.logout.LogoutHandler;
 @RequiredArgsConstructor
 public class SecurityConfig {
   private final LogoutHandler logoutHandler;
-  private static final Logger logger = LoggerFactory.getLogger(SecurityConfig.class);
+  private static final Logger logger = LogManager.getLogger(SecurityConfig.class);
 
   /**
    * Method to configure the security filter chain.

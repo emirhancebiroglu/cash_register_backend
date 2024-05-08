@@ -15,8 +15,8 @@ import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -34,7 +34,7 @@ public class FavoriteProductServiceImpl implements FavoriteProductService {
     private final HttpServletRequest request;
     private final JwtUtil jwtUtil;
     private final SortApplier sortApplier;
-    private static final Logger logger = LoggerFactory.getLogger(FavoriteProductServiceImpl.class);
+    private static final Logger logger = LogManager.getLogger(FavoriteProductServiceImpl.class);
 
     @Override
     public void addProductToFavorites(String productId) {

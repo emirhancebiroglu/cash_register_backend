@@ -7,7 +7,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
-import java.util.logging.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Configuration class for password encoder.
@@ -16,7 +17,7 @@ import java.util.logging.Logger;
 @RequiredArgsConstructor
 @Data
 public class PasswordEncoderConfig {
-    private static final Logger logger = Logger.getLogger(PasswordEncoderConfig.class.getName());
+    private static final Logger logger = LogManager.getLogger(PasswordEncoderConfig.class.getName());
 
     /**
      * Bean method for creating BCrypt password encoder.

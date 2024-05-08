@@ -1,8 +1,8 @@
 package com.bit.jwtauthservice.config;
 
 import com.bit.jwtauthservice.exceptions.mailconfig.MailConfigException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,7 +16,7 @@ import java.util.Properties;
  */
 @Configuration
 public class EmailConfig {
-    private static final Logger logger = LoggerFactory.getLogger(EmailConfig.class);
+    private static final Logger logger = LogManager.getLogger(EmailConfig.class);
 
     @Value("${spring.mail.host}")
     private String host;

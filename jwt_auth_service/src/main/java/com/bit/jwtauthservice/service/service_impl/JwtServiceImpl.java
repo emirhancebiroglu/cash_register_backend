@@ -10,8 +10,8 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -42,7 +42,7 @@ public class JwtServiceImpl implements JwtService {
   @Value("${jwt.refresh-token.expiration}")
   private Long refreshExpiration;
 
-  private static final Logger logger = LoggerFactory.getLogger(JwtServiceImpl.class);
+  private static final Logger logger = LogManager.getLogger(JwtServiceImpl.class);
 
   /**
    * Retrieves the signing key for JWT.

@@ -1,7 +1,7 @@
 package com.bit.usermanagementservice.utils;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 
 import java.security.SecureRandom;
@@ -12,7 +12,7 @@ import java.security.SecureRandom;
  */
 @Component
 public class PasswordGenerator {
-    private static final Logger logger = LoggerFactory.getLogger(PasswordGenerator.class);
+    private static final Logger logger = LogManager.getLogger(PasswordGenerator.class);
     private static final String SPECIAL_CHARACTERS = "!@#*_,.?";
 
     /**

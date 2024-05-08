@@ -20,10 +20,10 @@ import bit.salesservice.utils.ProductInfoHttpRequest;
 import bit.salesservice.validators.CampaignValidator;
 import lombok.RequiredArgsConstructor;
 import org.apache.http.HttpHeaders;
+import org.apache.logging.log4j.LogManager;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.Logger;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -46,7 +46,7 @@ public class CampaignServiceImpl implements CampaignService {
     private final ProductInfoHttpRequest info;
     private final CampaignValidator campaignValidator;
     private final CampaignProducer campaignProducer;
-    private static final Logger logger = LoggerFactory.getLogger(CampaignServiceImpl.class);
+    private static final Logger logger = LogManager.getLogger(CampaignServiceImpl.class);
     private final String jwtToken = HttpHeaders.AUTHORIZATION.substring(7);
 
     private static final String NOT_FOUND = "Campaign not found";

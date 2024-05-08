@@ -15,8 +15,8 @@ import bit.salesservice.utils.SaleReportProducer;
 import bit.salesservice.validators.CheckoutValidator;
 import lombok.RequiredArgsConstructor;
 import org.apache.http.HttpHeaders;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -35,7 +35,7 @@ public class CheckoutServiceImpl implements CheckoutService {
     private final String jwtToken = HttpHeaders.AUTHORIZATION.substring(7);
     private final CheckoutValidator checkoutValidator;
     private final ProductInfoHttpRequest request;
-    private static final Logger logger = LoggerFactory.getLogger(CheckoutServiceImpl.class);
+    private static final Logger logger = LogManager.getLogger(CheckoutServiceImpl.class);
 
     @Override
     public void cancelCheckout(Long checkoutId) {

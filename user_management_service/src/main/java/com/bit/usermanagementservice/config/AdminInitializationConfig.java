@@ -9,8 +9,8 @@ import com.bit.usermanagementservice.repository.RoleRepository;
 import com.bit.usermanagementservice.repository.UserRepository;
 import com.bit.usermanagementservice.utils.CredentialsProducer;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -31,7 +31,7 @@ public class AdminInitializationConfig implements CommandLineRunner {
     private final RoleRepository roleRepository;
     private final PasswordEncoderConfig passwordEncoderConfig;
     private final CredentialsProducer credentialsProducer;
-    private static final Logger logger = LoggerFactory.getLogger(AdminInitializationConfig.class);
+    private static final Logger logger = LogManager.getLogger(AdminInitializationConfig.class);
     private static final String ADMIN_STRING = "admin";
 
     /**

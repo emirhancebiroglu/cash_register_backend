@@ -3,8 +3,8 @@ package bit.salesservice.utils;
 import bit.salesservice.entity.Campaign;
 import bit.salesservice.repository.CampaignRepository;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -18,7 +18,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class CampaignExpirationChecker {
     private final CampaignRepository campaignRepository;
-    private static final Logger logger = LoggerFactory.getLogger(CampaignExpirationChecker.class);
+    private static final Logger logger = LogManager.getLogger(CampaignExpirationChecker.class);
 
     /**
      * Scheduled task to periodically check and update the status of campaigns based on their expiration.

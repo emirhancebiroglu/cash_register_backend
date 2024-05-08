@@ -7,8 +7,8 @@ import com.bit.gatewayservice.exceptions.missingauthorizationheader.MissingAutho
 import com.bit.gatewayservice.util.JwtUtil;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
@@ -27,7 +27,7 @@ public class AuthenticationFilter extends AbstractGatewayFilterFactory<Authentic
   private final RouteValidator validator;
   private final JwtUtil jwtUtil;
   private final WebClientConfig webClientConfig;
-  private static final Logger logger = LoggerFactory.getLogger(AuthenticationFilter.class);
+  private static final Logger logger = LogManager.getLogger(AuthenticationFilter.class);
   private static final String BEARER = "Bearer ";
 
   public AuthenticationFilter(RouteValidator validator, JwtUtil jwtUtil, WebClientConfig webClientConfig) {

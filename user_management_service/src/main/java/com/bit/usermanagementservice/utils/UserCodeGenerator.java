@@ -1,7 +1,7 @@
 package com.bit.usermanagementservice.utils;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 
 import java.security.SecureRandom;
@@ -15,7 +15,7 @@ import java.util.TreeSet;
  */
 @Component
 public class UserCodeGenerator {
-    private static final Logger logger = LoggerFactory.getLogger(UserCodeGenerator.class);
+    private static final Logger logger = LogManager.getLogger(UserCodeGenerator.class);
     private static final String ADMIN_ROLE_CODE = "A";
     private static final String CASHIER_ROLE_CODE = "C";
     private static final String STORE_MANAGER_ROLE_CODE = "S";

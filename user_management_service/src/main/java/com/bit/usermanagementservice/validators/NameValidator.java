@@ -1,7 +1,7 @@
 package com.bit.usermanagementservice.validators;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 
 /**
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class NameValidator {
-    private static final Logger logger = LoggerFactory.getLogger(NameValidator.class);
+    private static final Logger logger = LogManager.getLogger(NameValidator.class);
     private static final String NAME_REGEX = "^[a-zA-Z]{3,18}$";
 
     /**

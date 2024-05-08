@@ -16,8 +16,8 @@ import bit.reportingservice.service.ReportingService;
 import bit.reportingservice.utils.ReceiptGenerator;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -41,7 +41,7 @@ public class ReportingServiceImpl implements ReportingService {
     private final ProductRepository productRepository;
     private final CampaignRepository campaignRepository;
     private final ReceiptGenerator receiptGenerator;
-    private static final Logger logger = LoggerFactory.getLogger(ReportingServiceImpl.class);
+    private static final Logger logger = LogManager.getLogger(ReportingServiceImpl.class);
 
     /**
      * This method saves a sale report. It maps the provided SaleReportDTO to a SaleReport object and saves it using the saleReportRepository.

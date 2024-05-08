@@ -2,8 +2,8 @@ package com.bit.jwtauthservice.config;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,7 +21,7 @@ import java.util.Map;
  */
 @Configuration
 public class KafkaConsumerConfig {
-    private static final Logger logger = LoggerFactory.getLogger(KafkaConsumerConfig.class);
+    private static final Logger logger = LogManager.getLogger(KafkaConsumerConfig.class);
 
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;

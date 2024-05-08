@@ -5,8 +5,8 @@ import com.bit.usermanagementservice.dto.kafka.UserReactivateDTO;
 import com.bit.usermanagementservice.dto.kafka.UserSafeDeletionDTO;
 import com.bit.usermanagementservice.dto.kafka.UserUpdateDTO;
 import lombok.AllArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
 @AllArgsConstructor
 public class CredentialsProducer {
     private KafkaTemplate<String, Object> kafkaTemplate;
-    private static final Logger logger = LoggerFactory.getLogger(CredentialsProducer.class);
+    private static final Logger logger = LogManager.getLogger(CredentialsProducer.class);
 
     /**
      * Sends a message for user credentials to the specified topic.

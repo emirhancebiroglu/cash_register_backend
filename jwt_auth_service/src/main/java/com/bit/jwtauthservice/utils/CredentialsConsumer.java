@@ -8,8 +8,8 @@ import com.bit.jwtauthservice.entity.User;
 import com.bit.jwtauthservice.exceptions.usernotfound.UserNotFoundException;
 import com.bit.jwtauthservice.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
 
@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class CredentialsConsumer {
     private final UserRepository userRepository;
-    private static final Logger logger = LoggerFactory.getLogger(CredentialsConsumer.class);
+    private static final Logger logger = LogManager.getLogger(CredentialsConsumer.class);
     private static final String USER_NOT_FOUND_MESSAGE = "User not found!";
 
     /**

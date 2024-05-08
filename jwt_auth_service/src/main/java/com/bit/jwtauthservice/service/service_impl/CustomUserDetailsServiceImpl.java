@@ -4,8 +4,8 @@ import com.bit.jwtauthservice.exceptions.usernotfound.UserNotFoundException;
 import com.bit.jwtauthservice.repository.UserRepository;
 import com.bit.jwtauthservice.service.CustomUserDetailsService;
 import lombok.RequiredArgsConstructor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
@@ -17,7 +17,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class CustomUserDetailsServiceImpl implements CustomUserDetailsService {
     private final UserRepository userRepository;
-    private static final Logger logger = LoggerFactory.getLogger(CustomUserDetailsServiceImpl.class);
+    private static final Logger logger = LogManager.getLogger(CustomUserDetailsServiceImpl.class);
 
     /**
      * Retrieves the user details based on the user code provided.
