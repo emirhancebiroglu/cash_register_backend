@@ -16,15 +16,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class CampaignConsumer {
-
-    /**
-     * The {@link bit.reportingservice.service.ReportingService} that is used to save the received campaign data.
-     */
     private final ReportingService reportingService;
-
-    /**
-     * The {@code Logger} for this class, provided by {@link org.slf4j.LoggerFactory}.
-     */
     private static final Logger logger = LoggerFactory.getLogger(CampaignConsumer.class);
 
     /**

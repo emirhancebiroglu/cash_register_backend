@@ -69,7 +69,10 @@ public class ReportingServiceImpl implements ReportingService {
         logger.info("Saving cancelled sale report...");
 
         SaleReport saleReport = saleReportRepository.findById(cancelledSaleReportDTO.getId())
-                .orElseThrow(() -> new ReportNotFoundException("Report not found"));
+                .orElseThrow(() -> {
+                    logger.error("Report not found for id {}", cancelledSaleReportDTO.getId());
+                    return new ReportNotFoundException("Report not found");
+                });
 
         saleReport.setCancelled(true);
         saleReport.setCancelledDate(cancelledSaleReportDTO.getCanceledDate());
@@ -97,7 +100,10 @@ public class ReportingServiceImpl implements ReportingService {
         logger.info("Updating product and sale report...");
 
         Product product = productRepository.findById(returnedProductInfoDTO.getId())
-                .orElseThrow(() -> new ProductNotFoundException("Product not found"));
+                .orElseThrow(() -> {
+                    logger.error("Product not found for id {}", returnedProductInfoDTO.getId());
+                    return new ProductNotFoundException("Product not found");
+                });
 
         product.setReturned(returnedProductInfoDTO.getReturned());
         product.setQuantity(returnedProductInfoDTO.getQuantity());
@@ -159,7 +165,10 @@ public class ReportingServiceImpl implements ReportingService {
         logger.info("Generating pdf receipt...");
 
         SaleReport saleReport = saleReportRepository.findById(reportId)
-                .orElseThrow(() -> new ReportNotFoundException("Report not found"));
+                .orElseThrow(() -> {
+                    logger.error("Report not found for id {}", reportId);
+                    return new ReportNotFoundException("Report not found");
+                });
 
         logger.info("Receipt generated");
 

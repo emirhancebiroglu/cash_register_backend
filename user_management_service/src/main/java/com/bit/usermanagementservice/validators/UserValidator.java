@@ -5,6 +5,8 @@ import com.bit.usermanagementservice.exceptions.atleastoneroleneeded.AtLeastOneR
 import com.bit.usermanagementservice.exceptions.invalidemail.InvalidEmailException;
 import com.bit.usermanagementservice.exceptions.invalidname.InvalidNameException;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 
 import java.util.Set;
@@ -19,6 +21,9 @@ import java.util.Set;
 public class UserValidator {
     private final EmailValidator emailValidator;
     private final NameValidator nameValidator;
+
+    private static final Logger logger = LogManager.getLogger(UserValidator.class);
+
 
     /**
      * Validates user data including email, first name, last name, and roles.
@@ -43,6 +48,7 @@ public class UserValidator {
      */
     public void validateEmail(String email) {
         if (!emailValidator.isValidEmail(email)){
+            logger.error("Invalid email address : {}", email);
             throw new InvalidEmailException("Invalid email: " + email);
         }
     }
@@ -55,6 +61,7 @@ public class UserValidator {
      */
     public void validateFirstName(String firstName){
         if (!nameValidator.validateFirstName(firstName)){
+            logger.error("Invalid first name : {}", firstName);
             throw new InvalidNameException("Invalid first name: " + firstName);
         }
     }
@@ -67,6 +74,7 @@ public class UserValidator {
      */
     public void validateLastName(String lastName){
         if (!nameValidator.validateLastName(lastName)){
+            logger.error("Invalid last name : {}", lastName);
             throw new InvalidNameException("Invalid last name: " + lastName);
         }
     }
@@ -79,6 +87,7 @@ public class UserValidator {
      */
     public void validateRoles(Set<String> roleNames){
         if (roleNames  == null || roleNames .isEmpty()){
+            logger.error("At least one role must be specified");
             throw new AtLeastOneRoleNeededException("At least one role must be specified");
         }
     }

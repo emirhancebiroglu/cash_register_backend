@@ -58,6 +58,7 @@ public class CampaignServiceImpl implements CampaignService {
         logger.info("Adding campaign...");
 
         if (campaignRepository.findByName(addAndUpdateCampaignReq.getName()) != null){
+            logger.error("Campaign with name {} already exists.", addAndUpdateCampaignReq.getName());
             throw new CampaignAlreadyExistsException("Campaign wit the name " + addAndUpdateCampaignReq.getName() + " already exists");
         }
 
@@ -84,9 +85,13 @@ public class CampaignServiceImpl implements CampaignService {
         logger.info("Updating campaign...");
 
         Campaign existingCampaign = campaignRepository.findById(campaignId)
-                .orElseThrow(() -> new CampaignNotFoundException(NOT_FOUND));
+                .orElseThrow(() -> {
+                    logger.error(NOT_FOUND);
+                    return new CampaignNotFoundException(NOT_FOUND);
+                });
 
         if (existingCampaign.isInactive()){
+            logger.error("Campaign is inactivated or has reached its end date, please reactivate the campaign to update it.");
             throw new InactiveCampaignException("Campaign is inactivated or has reached its end date, please reactivate the campaign to update it.");
         }
 
@@ -141,9 +146,13 @@ public class CampaignServiceImpl implements CampaignService {
         logger.info("Inactivating campaign...");
 
         Campaign campaign = campaignRepository.findById(campaignId)
-                .orElseThrow(() -> new CampaignNotFoundException(NOT_FOUND));
+                .orElseThrow(() -> {
+                    logger.error(NOT_FOUND);
+                    return new CampaignNotFoundException(NOT_FOUND);
+                });
 
         if (campaign.isInactive()){
+            logger.error("Campaign is already inactivated");
             throw new InactiveCampaignException("Campaign is already inactivated");
         }
 
@@ -159,9 +168,13 @@ public class CampaignServiceImpl implements CampaignService {
         logger.info("Reactivating campaign...");
 
         Campaign campaign = campaignRepository.findById(campaignId)
-                .orElseThrow(() -> new CampaignNotFoundException(NOT_FOUND));
+                .orElseThrow(() -> {
+                    logger.error(NOT_FOUND);
+                    return new CampaignNotFoundException(NOT_FOUND);
+                });
 
         if (!campaign.isInactive()){
+            logger.error("Campaign is already active");
             throw new ActiveCampaignException("Campaign is already active");
         }
 
@@ -259,10 +272,12 @@ public class CampaignServiceImpl implements CampaignService {
             try {
                 parsedDiscountType = DiscountType.valueOf(discountType.toUpperCase());
             } catch (IllegalArgumentException ex) {
+                logger.error("Invalid discount type : {}", discountType);
                 throw new InvalidDiscountTypeException("Invalid discount type: " + discountType);
             }
         }
         if (status != null && (!status.equalsIgnoreCase(STATUS_ACTIVE) && !status.equalsIgnoreCase("inactive"))) {
+            logger.error("Invalid status type : {}", status);
             throw new InvalidStatusTypeException("Invalid status type");
         }
         return parsedDiscountType;
@@ -303,6 +318,7 @@ public class CampaignServiceImpl implements CampaignService {
             discountType = DiscountType.valueOf(addAndUpdateCampaignReq.getDiscountType());
         }
         catch (IllegalArgumentException e){
+            logger.error("Invalid discount type");
             throw new InvalidDiscountTypeException("Invalid discount type");
         }
         return discountType;
@@ -322,6 +338,7 @@ public class CampaignServiceImpl implements CampaignService {
                     return Mono.just(info.getProductInfo(productCode, jwtToken))
                             .flatMap(productInfo -> {
                                 if (!productInfo.isExists()) {
+                                    logger.error("Product not found : {}", productCode);
                                     return Mono.error(new ProductNotFoundException("Product not found: " + productCode));
                                 }
                                 return Mono.empty();
@@ -354,6 +371,7 @@ public class CampaignServiceImpl implements CampaignService {
 
         if (addAndUpdateCampaignReq.getNeededQuantity() != null){
             if (discountType == DiscountType.FIXED_AMOUNT && addAndUpdateCampaignReq.getNeededQuantity() > 1){
+                logger.error("Fixed amount discount type should not require more than 1 quantity for the campaign");
                 throw new FixedAmountDiscountTypeWithProvidedQuantityException("Fixed amount discount type should not require more than 1 quantity for the campaign");
             }
             campaign.setNeededQuantity(addAndUpdateCampaignReq.getNeededQuantity());

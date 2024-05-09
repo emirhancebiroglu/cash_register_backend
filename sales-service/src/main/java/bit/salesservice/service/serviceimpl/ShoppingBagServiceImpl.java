@@ -45,6 +45,8 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
     private final ProductInfoHttpRequest request;
     private static final String NOT_FOUND = "Product not found";
     private static final String INVALID_QUANTITY = "Please provide a valid quantity";
+    private static final String NOT_IN_STOCKS = "There is not enough product in stocks.";
+    private static final String OUT_OF_RANGE = "Quantity is out of range";
 
 
     @Override
@@ -56,11 +58,13 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
         checkIfProductAvailable(req, productInfo);
 
         if (req.getQuantity() <= 0){
+            logger.error(INVALID_QUANTITY);
             throw new InvalidQuantityException(INVALID_QUANTITY);
         }
 
         if (productInfo.getStockAmount() < req.getQuantity()){
-            throw new NotInStocksException("There is not enough product in stocks.");
+            logger.error(NOT_IN_STOCKS);
+            throw new NotInStocksException(NOT_IN_STOCKS);
         }
 
         Checkout currentCheckout = getCurrentCheckout();
@@ -72,7 +76,8 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
         } else if (existingProduct != null) {
             int newQuantity = existingProduct.getQuantity() + req.getQuantity();
             if (productInfo.getStockAmount() < newQuantity) {
-                throw new NotInStocksException("There is not enough product in stocks.");
+                logger.error(NOT_IN_STOCKS);
+                throw new NotInStocksException(NOT_IN_STOCKS);
             }
             existingProduct.setQuantity(newQuantity);
         } else {
@@ -98,16 +103,21 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
         logger.info("Removing product from shopping bag...");
 
         Product product = shoppingBagRepository.findById(id)
-                .orElseThrow(() -> new ProductNotFoundException(NOT_FOUND));
+                .orElseThrow(() -> {
+                    logger.error(NOT_FOUND);
+                    return new ProductNotFoundException(NOT_FOUND);
+                });
 
         if (quantity == 0){
+            logger.error(INVALID_QUANTITY);
             throw new InvalidQuantityException(INVALID_QUANTITY);
         }
 
         int productQuantity = product.getQuantity();
 
         if (productQuantity < quantity){
-            throw new InvalidQuantityException("Quantity is out of range");
+            logger.error(OUT_OF_RANGE);
+            throw new InvalidQuantityException(OUT_OF_RANGE);
         }
 
         if (productQuantity > quantity){
@@ -171,21 +181,27 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
         logger.info("Returning product from shopping bag...");
 
         Product product = shoppingBagRepository.findById(id)
-                .orElseThrow(() -> new ProductNotFoundException(NOT_FOUND));
+                .orElseThrow(() -> {
+                    logger.error(NOT_FOUND);
+                    return new ProductNotFoundException(NOT_FOUND);
+                });
 
         if (quantity == 0){
+            logger.error(INVALID_QUANTITY);
             throw new InvalidQuantityException(INVALID_QUANTITY);
         }
 
         if (product.getCheckout().isCompleted()) {
             if (product.isRemoved() || product.isReturned()){
+                logger.error("This product is removed or returned");
                 throw new ProductNotFoundException("This product is removed or returned");
             }
 
             int productQuantity = product.getQuantity();
 
             if (productQuantity < quantity) {
-                throw new InvalidQuantityException("Quantity is out of range");
+                logger.error(OUT_OF_RANGE);
+                throw new InvalidQuantityException(OUT_OF_RANGE);
             }
 
             if (productQuantity > quantity) {
@@ -205,6 +221,7 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
             sendReturnedProductsInfoToReportingService(product);
         }
         else{
+            logger.error("Checkout is not completed.");
             throw new UncompletedCheckoutException("Checkout is not completed.");
         }
 
@@ -273,10 +290,12 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
         int stockAmount = productInfo.getStockAmount();
 
         if (!exists){
-            throw new ProductNotFoundException("Product not exists or in stock");
+            logger.error(NOT_FOUND);
+            throw new ProductNotFoundException(NOT_FOUND);
         }
 
         if (stockAmount < req.getQuantity()) {
+            logger.error(NOT_IN_STOCKS);
             throw new NotInStocksException("There is not enough product in stocks. Please provide a valid quantity");
         }
         return stockAmount;
@@ -439,7 +458,7 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
         boolean exists = productInfo.isExists();
 
         if (!exists || stockAmount == 0){
-            throw new ProductNotFoundException("Product not exists or in stock");
+            throw new ProductNotFoundException(NOT_FOUND);
         }
     }
 

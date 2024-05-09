@@ -41,6 +41,7 @@ public class CloudinaryServiceImpl implements CloudinaryService {
         logger.info("Uploading file: {}", file.getName());
         var result = cloudinary.uploader().upload(file, ObjectUtils.emptyMap());
         if (!Files.deleteIfExists(file.toPath())) {
+            logger.error("Failed to delete temporary file: {}", file.getAbsolutePath());
             throw new IOException("Failed to delete temporary file: " + file.getAbsolutePath());
         }
         logger.info("File uploaded successfully with result: {}", result);

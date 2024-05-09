@@ -9,6 +9,8 @@ import com.bit.productservice.exceptions.productwithsamename.ProductWithSameName
 import com.bit.productservice.exceptions.productwithsameproductcode.ProductWithSameProductCodeException;
 import com.bit.productservice.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -22,6 +24,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProductValidator {
     private final ProductRepository productRepository;
+    private static final Logger logger = LogManager.getLogger(ProductValidator.class);
 
     /**
      * Validates the fields of the AddProductReq object.
@@ -34,32 +37,40 @@ public class ProductValidator {
         List<String> errors = new ArrayList<>();
 
         if (neitherCodeNorBarcodeProvided(addProductReq)) {
+            logger.error("Either barcode or product code should be provided");
             throw new NoCodeProvidedException("Either barcode or product code should be provided");
         }
 
         if (addProductReq.getName() == null || addProductReq.getName().isEmpty()) {
+            logger.error("Name field is required");
             errors.add("Name field is required");
         }
 
         if (addProductReq.getPrice() == null) {
+            logger.error("Price field is required");
             errors.add("Price field is required");
         }
         else if(addProductReq.getPrice() < 0){
+            logger.error("Price field cannot be negative");
             errors.add("Price field cannot be negative");
         }
 
         if (addProductReq.getCategory() == null || addProductReq.getCategory().isEmpty()) {
+            logger.error("Category field is required");
             errors.add("Category field is required");
         }
 
         if (addProductReq.getStockAmount() == null) {
+            logger.error("Stock field is required");
             errors.add("Stock field is required");
         }
         else if(addProductReq.getStockAmount() < 0){
+            logger.error("Stock field cannot be negative");
             errors.add("Stock field cannot be negative");
         }
 
         if (file == null || file.isEmpty()) {
+            logger.error("Image field is required");
             errors.add("Image field is required");
         }
 
@@ -86,6 +97,7 @@ public class ProductValidator {
     public void validateProductName(AddProductReq addProductReq, UpdateProductReq updateProductReq) {
         if ((updateProductReq != null && productRepository.existsByName(updateProductReq.getName())) ||
                 (addProductReq != null && productRepository.existsByName(addProductReq.getName()))) {
+            logger.error("A product with the same name already exists");
             throw new ProductWithSameNameException("A product with the same name already exists");
         }
     }
@@ -98,14 +110,17 @@ public class ProductValidator {
      */
     private void validateProductCodeAndBarcode(AddProductReq addProductReq, UpdateProductReq updateProductReq) {
         if (bothCodeAndBarcodeProvided(updateProductReq, addProductReq)) {
+            logger.error("Either barcode or product code should be provided, not both");
             throw new BothCodeTypeProvidedException("Either barcode or product code should be provided, not both");
         }
 
         if (duplicateProductCodeExists(updateProductReq, addProductReq)) {
+            logger.error("A product with the same product code already exists");
             throw new ProductWithSameProductCodeException("A product with the same product code already exists");
         }
 
         if (duplicateBarcodeExists(updateProductReq, addProductReq)) {
+            logger.error("A product with the same barcode already exists");
             throw new ProductWithSameBarcodeException("A product with the same barcode already exists");
         }
     }

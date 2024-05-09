@@ -50,6 +50,7 @@ public class ProductServiceImpl implements ProductService {
     private final SortApplier sortApplier;
     private static final Logger logger = LogManager.getLogger(ProductServiceImpl.class);
     private static final String PRODUCT_NOT_FOUND = "Product not found";
+    private static final String  STOCK_AMOUNT_CANNOT_BE_NEGATIVE = "Stock amount cannot be negative";
 
     @Override
     public List<ProductDTO> getProducts(Integer pageNo, Integer pageSize, String searchTerm, String lettersToFilter, String existenceStatus, String stockStatus, String sortBy, String sortOrder) {
@@ -128,6 +129,7 @@ public class ProductServiceImpl implements ProductService {
         productValidator.validateProduct(null, updateProductReq);
 
         if (product.isDeleted()){
+            logger.error(PRODUCT_NOT_FOUND);
             throw new ProductNotFoundException(PRODUCT_NOT_FOUND);
         }
 
@@ -179,7 +181,7 @@ public class ProductServiceImpl implements ProductService {
         Product product = getProductById(productId);
 
         if (specifyStockNumberReq.getStockNumber() < 0){
-            throw new NegativeFieldException("Stock amount cannot be negative");
+            throw new NegativeFieldException(STOCK_AMOUNT_CANNOT_BE_NEGATIVE);
         }
 
        if (product.isDeleted()){
@@ -345,6 +347,7 @@ public class ProductServiceImpl implements ProductService {
         }
         if (updateProductReq.getPrice() != null){
             if (updateProductReq.getPrice() < 0) {
+                logger.error("Price cannot be negative");
                 throw new NegativeFieldException("Price cannot be negative");
             }
             product.setPrice(updateProductReq.getPrice());
@@ -354,7 +357,8 @@ public class ProductServiceImpl implements ProductService {
         }
         if (updateProductReq.getStockAmount() != null){
             if (updateProductReq.getStockAmount() < 0) {
-                throw new NegativeFieldException("Stock amount cannot be negative");
+                logger.error(STOCK_AMOUNT_CANNOT_BE_NEGATIVE);
+                throw new NegativeFieldException(STOCK_AMOUNT_CANNOT_BE_NEGATIVE);
             }
             product.setStockAmount(updateProductReq.getStockAmount());
             product.setInStock(updateProductReq.getStockAmount() > 0);
@@ -377,7 +381,10 @@ public class ProductServiceImpl implements ProductService {
         logger.info("Fetching product with ID {}", productId);
 
         Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ProductNotFoundException(PRODUCT_NOT_FOUND));
+                .orElseThrow(() -> {
+                    logger.error("Product with ID {} not found", productId);
+                    return new ProductNotFoundException(PRODUCT_NOT_FOUND);
+                });
 
         logger.info("Product fetched successfully with ID {}", productId);
 

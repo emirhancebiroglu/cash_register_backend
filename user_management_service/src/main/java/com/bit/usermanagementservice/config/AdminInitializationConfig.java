@@ -49,7 +49,10 @@ public class AdminInitializationConfig implements CommandLineRunner {
      */
     public void initializeAdmin() throws RoleNotFoundException{
         Role adminRole = roleRepository.findByName("ROLE_ADMIN")
-                .orElseThrow(() -> new RoleNotFoundException("ROLE_ADMIN not found"));
+                .orElseThrow(() -> {
+                    logger.error("ROLE_ADMIN not found");
+                    return new RoleNotFoundException("ROLE_ADMIN not found");
+                });
 
         if (isAdminInitializationRequired(adminRole)) {
             createAdminUser(adminRole);

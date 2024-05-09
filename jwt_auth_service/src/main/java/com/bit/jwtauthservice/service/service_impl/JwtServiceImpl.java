@@ -67,7 +67,10 @@ public class JwtServiceImpl implements JwtService {
 
     String userCode = userDetails.getUsername();
     User user = userRepository.findByUserCode(userCode)
-            .orElseThrow(() -> new UserNotFoundException("User not found"));
+            .orElseThrow(() -> {
+              logger.error("Could not find user for user code {}", userCode);
+              return new UserNotFoundException("User not found");
+            });
 
     Map<String, Object> claims = Map.ofEntries(
             entry("authorities", userDetails.getAuthorities().stream()

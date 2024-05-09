@@ -39,9 +39,12 @@ public class LogoutServiceImpl implements LogoutHandler {
         final String jwt = authHeader.substring(7);
 
         var storedToken = tokenRepository.findByJwtToken(jwt)
-                .orElseThrow(() -> new TokenNotFoundException("Token not found"));
+                .orElseThrow(() -> {
+                    logger.error("Could not find token in tokenRepository for JWT token {}", jwt);
+                    return new TokenNotFoundException("Token not found");
+                });
 
-        logger.debug("Found token in repository.");
+        logger.info("Found token in repository.");
 
         storedToken.setExpired(true);
         storedToken.setRevoked(true);

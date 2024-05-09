@@ -20,10 +20,10 @@ public class JwtUtil {
   String jwtSecretKey;
 
   /**
-   * Extracts the username from the JWT token.
+   * Extracts the user id from the JWT token.
    *
    * @param token the JWT token
-   * @return the extracted username
+   * @return the extracted user id
    */
   public Long extractUserId(String token) {
     return extractClaim(token, claims -> claims.get("userId", Long.class));

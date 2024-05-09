@@ -23,6 +23,8 @@ public class TokenStateChanger {
      * @param jwtToken The JWT token to save.
      */
     public void saveUserToken(User user, String jwtToken) {
+        logger.info("Saving JWT token for user {} in the database", user.getUsername());
+
         var token = Token.builder()
                 .user(user)
                 .jwtToken(jwtToken)
@@ -39,6 +41,8 @@ public class TokenStateChanger {
      * @param user The user for whom to revoke tokens.
      */
     public void revokeAllUserTokens(User user){
+        logger.info("Revoking all tokens for user {}", user.getUsername());
+
         List<Token> validUserTokens = tokenRepository.findAllValidTokensByUser(user.getId());
 
         if (validUserTokens.isEmpty()) {

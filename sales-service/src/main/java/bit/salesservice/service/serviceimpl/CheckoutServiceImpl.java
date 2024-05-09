@@ -42,7 +42,10 @@ public class CheckoutServiceImpl implements CheckoutService {
         logger.info("Cancelling checkout process...");
 
         Checkout checkout = checkoutRepository.findById(checkoutId)
-                .orElseThrow(() -> new CheckoutNotFoundException("Checkout not found"));
+                .orElseThrow(() -> {
+                    logger.error("Checkout not found");
+                    return new CheckoutNotFoundException("Checkout not found");
+                });
 
         checkout.setCancelled(true);
         checkout.setCancelledDate(LocalDateTime.now());

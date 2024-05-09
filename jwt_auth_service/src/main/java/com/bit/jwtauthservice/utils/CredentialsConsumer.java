@@ -30,6 +30,8 @@ public class CredentialsConsumer {
      */
     @KafkaListener(topics = "user-credentials", groupId = "users")
     public void listen(UserCredentialsDTO userCredentials) {
+        logger.info("Synchronizing user credentials");
+
         User user = new User(
                 userCredentials.getId(),
                 userCredentials.getEmail(),
@@ -50,6 +52,8 @@ public class CredentialsConsumer {
      */
     @KafkaListener(topics = "user-deletion", groupId = "users")
     public void listen(UserSafeDeletionDTO userSafeDeletionDTO) {
+        logger.info("Updating user deletion status");
+
         User user = userRepository.findById(userSafeDeletionDTO.getId()).orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MESSAGE));
 
         user.setDeleted(userSafeDeletionDTO.isDeleted());
@@ -65,6 +69,8 @@ public class CredentialsConsumer {
      */
     @KafkaListener(topics = "user-update", groupId = "users")
     public void listen(UserUpdateDTO userUpdateDTO) {
+        logger.info("Updating user details");
+
         User user = userRepository.findById(userUpdateDTO.getId()).orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MESSAGE));
 
         user.setEmail(userUpdateDTO.getEmail());
@@ -82,6 +88,8 @@ public class CredentialsConsumer {
      */
     @KafkaListener(topics = "user-reactivate", groupId = "users")
     public void listen(UserReactivateDTO userReactivateDTO) {
+        logger.info("Updating user reactivation status");
+
         User user = userRepository.findById(userReactivateDTO.getId()).orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MESSAGE));
 
         user.setPassword(userReactivateDTO.getPassword());

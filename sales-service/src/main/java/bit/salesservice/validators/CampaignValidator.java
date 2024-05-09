@@ -9,6 +9,8 @@ import bit.salesservice.exceptions.invalidquantity.InvalidQuantityException;
 import bit.salesservice.exceptions.multiplecampaign.MultipleCampaignException;
 import bit.salesservice.exceptions.nullcampaignname.NullCampaignNameException;
 import bit.salesservice.repository.CampaignRepository;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -20,6 +22,8 @@ import java.util.List;
  */
 @Component
 public class CampaignValidator {
+    private static final Logger logger = LogManager.getLogger(CampaignValidator.class);
+
     /**
      * Validates the parameters of a campaign DTO, including the discount amount, duration days,
      * product codes, campaign name, discount type, and needed quantity.
@@ -54,10 +58,12 @@ public class CampaignValidator {
         Integer durationDays = addAndUpdateCampaignReq.getDurationDays();
 
         if (durationDays <= 0) {
+            logger.error("Duration of the campaign must be a positive integer");
             throw new InvalidDurationDaysException("Duration of the campaign must be a positive integer");
         }
 
-        if (durationDays > 360){
+        if (durationDays > 365){
+            logger.error("Duration of the campaign cannot be more than 1 year");
             throw new InvalidDurationDaysException("Duration of the campaign cannot be more than 1 year");
         }
     }
@@ -73,6 +79,7 @@ public class CampaignValidator {
         for (String code : codes) {
             List<Campaign> campaignList = campaignRepository.findByCodesContaining(code);
             if (!campaignList.isEmpty()) {
+                logger.error("A product can only have one campaign: {}", code);
                 throw new MultipleCampaignException("A product can only have one campaign: " + code);
             }
         }
@@ -86,6 +93,7 @@ public class CampaignValidator {
      */
     public void validateDiscountAmount(Double amount) {
         if (amount <= 0) {
+            logger.error("Discount amount cannot be 0 or negative");
             throw new InvalidDiscountAmountException("Discount amount cannot be 0 or negative");
         }
     }
@@ -98,6 +106,7 @@ public class CampaignValidator {
      */
     public void validateDiscountType(String discountType) {
         if (discountType.isEmpty()) {
+            logger.error("No discount type provided");
             throw new InvalidDiscountTypeException("No discount type provided");
         }
     }
@@ -110,7 +119,8 @@ public class CampaignValidator {
      */
     public void validateNeededQuantity(Integer quantity) {
         if (quantity != null && (quantity <= 0)) {
-                throw new InvalidQuantityException("Needed quantity cannot be 0 or negative");
+            logger.error("Needed quantity cannot be 0 or negative");
+            throw new InvalidQuantityException("Needed quantity cannot be 0 or negative");
         }
     }
 
@@ -122,6 +132,7 @@ public class CampaignValidator {
      */
     private void checkIfDiscountAmountNull(Double amount){
         if (amount == null) {
+            logger.error("No discount amount provided");
             throw new InvalidDiscountAmountException("No discount amount provided");
         }
     }
@@ -134,6 +145,7 @@ public class CampaignValidator {
      */
     private void validateCampaignName(String name) {
         if (name.isEmpty()) {
+            logger.error("No campaign name provided");
             throw new NullCampaignNameException("No campaign name provided");
         }
     }
@@ -146,6 +158,7 @@ public class CampaignValidator {
      */
     private static void checkIfDurationDaysNull(Integer durationDays) {
         if (durationDays == null) {
+            logger.error("Duration of the campaign is not provided");
             throw new InvalidDurationDaysException("Duration of the campaign is not provided");
         }
     }

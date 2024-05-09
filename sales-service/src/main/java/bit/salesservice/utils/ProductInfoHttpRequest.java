@@ -29,7 +29,9 @@ public class ProductInfoHttpRequest {
      * @return The product information retrieved from the backend API.
      */
     public ProductInfo getProductInfo(String code, String authToken){
-        return webClientConfig.webClient().get()
+        logger.info("Retrieving product information from the backend");
+
+        ProductInfo productInfo = webClientConfig.webClient().get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/api/products/check-product")
                         .queryParam("code", code)
@@ -37,7 +39,12 @@ public class ProductInfoHttpRequest {
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
                 .retrieve()
                 .bodyToMono(ProductInfo.class)
+                .doOnError(error -> logger.error("Failed to retrieve product info : {}", error.getMessage()))
                 .block();
+
+        logger.info("Product information retrieved successfully");
+
+        return productInfo;
     }
 
     /**
@@ -48,6 +55,8 @@ public class ProductInfoHttpRequest {
      * @param shouldDecrease          A boolean indicating whether to decrease the stock level (true) or increase it (false).
      */
     public void updateStocks(String authToken, Map<String, Integer> productsIdWithQuantity, boolean shouldDecrease){
+        logger.info("Updating stock levels of products in the backend");
+
         webClientConfig.webClient().post()
                 .uri("/api/products/update-stocks")
                 .header(HttpHeaders.AUTHORIZATION, "Bearer " + authToken)
@@ -56,5 +65,7 @@ public class ProductInfoHttpRequest {
                 .bodyToMono(Void.class)
                 .doOnError(error -> logger.error("Failed to update stocks: {}", error.getMessage()))
                 .subscribe();
+
+        logger.info("Stock levels updated successfully");
     }
 }

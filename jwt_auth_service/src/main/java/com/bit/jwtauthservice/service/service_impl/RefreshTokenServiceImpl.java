@@ -47,6 +47,8 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
             logger.info("Created refresh token for user {}", user.getUsername());
             return refreshTokenRepository.save(refreshToken);
         }
+
+        logger.error("Couldn't find user for user code {}", user.getUserCode());
         throw new UserNotFoundException("User not found");
     }
 

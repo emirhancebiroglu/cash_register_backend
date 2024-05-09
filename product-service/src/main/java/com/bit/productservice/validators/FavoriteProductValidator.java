@@ -5,6 +5,8 @@ import com.bit.productservice.exceptions.productisnotfavorite.ProductIsNotFavori
 import com.bit.productservice.exceptions.productnotfound.ProductNotFoundException;
 import com.bit.productservice.repository.FavoriteProductRepository;
 import com.bit.productservice.repository.ProductRepository;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 
 /**
@@ -12,6 +14,9 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class FavoriteProductValidator {
+    private static final Logger logger = LogManager.getLogger(FavoriteProductValidator.class);
+
+
     /**
      * Checks if a product exists.
      *
@@ -21,6 +26,7 @@ public class FavoriteProductValidator {
      */
     public void isProductExist(ProductRepository productRepository, String productId){
         if (productRepository.getProductById(productId) == null){
+            logger.error("Product not found");
             throw new ProductNotFoundException("Product not found.");
         }
     }
@@ -35,6 +41,7 @@ public class FavoriteProductValidator {
      */
     public void isProductNotFavorite(String productId, Long userId, FavoriteProductRepository favoriteProductRepository){
         if (!favoriteProductRepository.existsByUserIdAndProductId(userId, productId)) {
+            logger.error("Product is not favorite");
             throw new ProductIsNotFavoriteException("Product is not favorite.");
         }
     }
@@ -49,6 +56,7 @@ public class FavoriteProductValidator {
      */
     public void isProductFavorite(String productId, Long userId, FavoriteProductRepository favoriteProductRepository){
         if (favoriteProductRepository.existsByUserIdAndProductId(userId, productId)) {
+            logger.error("Product is already in favorite list");
             throw new ProductAlreadyInFavoriteException("Product is already in favorite list");
         }
     }

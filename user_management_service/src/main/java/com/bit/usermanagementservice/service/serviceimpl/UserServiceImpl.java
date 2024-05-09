@@ -136,6 +136,7 @@ public class UserServiceImpl implements UserService {
         User existingUser = findUserByIdOrThrow(userId);
 
         if(existingUser.isDeleted()){
+            logger.error("This user no longer exists : {}", existingUser.getEmail());
             throw new UserNotFoundException("This user no longer exists: " + existingUser.getEmail());
         }
 
@@ -275,6 +276,7 @@ public class UserServiceImpl implements UserService {
      */
     private void validateStatus(String status) {
         if (status != null && (!status.equalsIgnoreCase(DELETED) && !status.equalsIgnoreCase("notDeleted"))) {
+            logger.error("Status of user can be either deleter or notDeleted");
             throw new InvalidStatusTypeException("Status of user can be either deleted or notDeleted");
         }
     }
@@ -370,13 +372,19 @@ public class UserServiceImpl implements UserService {
      */
     private Role findRoleByNameOrThrow(String roleName) {
         return roleRepository.findByName(roleName)
-                .orElseThrow(() -> new RoleNotFoundException("Role not found: " + roleName));
+                .orElseThrow(() -> {
+                    logger.error("Role not found: {}", roleName);
+                    return new RoleNotFoundException("Role not found: " + roleName);
+                });
     }
 
 
     private User findUserByIdOrThrow(Long userId) {
         return userRepository.findById(userId)
-                .orElseThrow(() -> new UserNotFoundException("User not found"));
+                .orElseThrow(() -> {
+                    logger.error("User not found {}", userId);
+                    return new UserNotFoundException("User not found");
+                });
     }
 
     /**

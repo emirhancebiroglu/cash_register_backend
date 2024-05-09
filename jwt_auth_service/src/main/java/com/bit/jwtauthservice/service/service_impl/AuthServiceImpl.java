@@ -89,10 +89,12 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND));
 
         if (user.isDeleted()) {
+            logger.error(USER_NOT_FOUND);
             throw new UserNotFoundException(USER_NOT_FOUND);
         }
 
         if (!passwordEncoderConfig.passwordEncoder().matches(loginReq.getPassword(), user.getPassword())) {
+            logger.error("Invalid password");
             throw new BadCredentialsException("Invalid password");
         }
 
@@ -129,7 +131,10 @@ public class AuthServiceImpl implements AuthService {
         logger.info("Sending forgotten user code to '{}'", forgotUserCodeReq.getEmail());
 
         User user = userRepository.findByEmail(forgotUserCodeReq.getEmail())
-                .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND));
+                .orElseThrow(() -> {
+                    logger.error("User not found for email: {}", forgotUserCodeReq.getEmail());
+                    return new UserNotFoundException(USER_NOT_FOUND);
+                });
 
         emailService.sendUserCode(user.getEmail(), "Your user code.", "sendUserCode-mail-template", user.getUserCode());
 
@@ -147,7 +152,10 @@ public class AuthServiceImpl implements AuthService {
         logger.info("Preparing the password reset link...");
 
         User user = userRepository.findByEmail(forgotPasswordReq.getEmail())
-                .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND));
+                .orElseThrow(() -> {
+                    logger.error("User not found for email: {}", forgotPasswordReq.getEmail());
+                    return new UserNotFoundException(USER_NOT_FOUND);
+                });
 
         ResetPasswordToken resetPasswordToken = new ResetPasswordToken();
         resetPasswordToken.setToken(UUID.randomUUID().toString());
@@ -180,20 +188,29 @@ public class AuthServiceImpl implements AuthService {
         logger.info("Password resetting process is on...");
 
         ResetPasswordToken resetPasswordToken = resetPasswordTokenRepository.findByToken(token)
-                .orElseThrow(() -> new InvalidResetTokenException("Invalid token"));
+                .orElseThrow(() -> {
+                    logger.error("Invalid token {}", token);
+                    return new InvalidResetTokenException("Invalid token");
+                });
 
         if (resetPasswordToken.getExpirationDate().isBefore(LocalDate.now())) {
+            logger.error("Token has expired {}", token);
             throw new InvalidResetTokenException("Token has expired");
         }
 
         User user = userRepository.findByResetPasswordToken(resetPasswordToken)
-                .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND));
+                .orElseThrow(() -> {
+                    logger.error("User not found for this token: {}", resetPasswordToken);
+                    return new UserNotFoundException(USER_NOT_FOUND);
+                });
 
         if (!resetPasswordReq.getNewPassword().equals(resetPasswordReq.getConfirmPassword())) {
+            logger.error("Passwords do not match");
             throw new PasswordMismatchException("Passwords do not match");
         }
 
         if (passwordEncoderConfig.passwordEncoder().matches(resetPasswordReq.getNewPassword(), user.getPassword())) {
+            logger.error("New password cannot be the same as the old password");
             throw new SamePasswordException("New password cannot be the same as the old password");
         }
 
@@ -221,13 +238,18 @@ public class AuthServiceImpl implements AuthService {
         String userCode = jwtService.extractUsername(request.getHeader("Authorization").substring(7));
 
         User user = userRepository.findByUserCode(userCode)
-                .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND));
+                .orElseThrow(() -> {
+                    logger.error("User not found for user code: {}", userCode);
+                    return new UserNotFoundException(USER_NOT_FOUND);
+                });
 
         if (!passwordEncoderConfig.passwordEncoder().matches(changePasswordReq.getOldPassword(), user.getPassword())) {
+            logger.error("Incorrect old password");
             throw new IncorrectOldPasswordException("Incorrect old password");
         }
 
         if (!changePasswordReq.getNewPassword().equals(changePasswordReq.getConfirmPassword())) {
+            logger.error("New password and confirm password do not match");
             throw new ConfirmPasswordException("New password and confirm password do not match");
         }
 
@@ -252,7 +274,10 @@ public class AuthServiceImpl implements AuthService {
         logger.info("Validating token: {}", jwt);
 
         return Mono.fromCallable(() -> tokenRepository.findByJwtToken(jwt)
-                        .orElseThrow(() -> new TokenNotFoundException("Token not found")))
+                        .orElseThrow(() -> {
+                            logger.error("Token not found");
+                            return new TokenNotFoundException("Token not found");
+                        }))
                 .subscribeOn(Schedulers.boundedElastic())
                 .map(token -> !token.isExpired() && !token.isRevoked())
                 .doOnSuccess(validity -> logger.info("Token validation result: {}", validity));
