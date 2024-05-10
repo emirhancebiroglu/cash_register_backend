@@ -76,7 +76,7 @@ public class ReceiptGenerator {
                         timesApplied = quantity / campaign.get().getNeededQuantity();
 
                         if (campaign.get().getDiscountType().equals(DiscountType.FIXED_AMOUNT)){
-                            discount = priceWithCampaign - (campaign.get().getDiscountAmount() * timesApplied);
+                            discount = campaign.get().getDiscountAmount() * timesApplied;
                         }
                         else{
                             discount = (product.getPrice() * (campaign.get().getDiscountAmount() / 100)) * (campaign.get().getNeededQuantity() * timesApplied);
