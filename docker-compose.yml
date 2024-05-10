@@ -62,7 +62,9 @@ services:
       - POSTGRES_PASSWORD=2165
       - POSTGRES_SCHEMA=users
     ports:
-      - "5431:5431"
+      - "5433:5432"
+    expose:
+      - "5433"
     volumes:
       - ./user-management-db-init:/docker-entrypoint-initdb.d
     command: [ "postgres", "-c", "search_path=users" ]
@@ -79,7 +81,9 @@ services:
       - POSTGRES_SCHEMA=user-credentials
     restart: always
     ports:
-      - "5432:5432"
+      - "5434:5432"
+    expose:
+      - "5434"
     volumes:
       - ./jwt-auth-db-init:/docker-entrypoint-initdb.d
     command: [ "postgres", "-c", "search_path=user-credentials" ]
@@ -96,11 +100,11 @@ services:
       - POSTGRES_PASSWORD=2165
       - POSTGRES_SCHEMA=products
     ports:
-      - "5433:5432"
+      - "5435:5432"
     volumes:
       - ./product-db-init:/docker-entrypoint-initdb.d
     expose:
-      - "5433"
+      - "5435"
     command: [ "postgres", "-c", "search_path=products" ]
     networks:
       - spring-network
@@ -115,11 +119,11 @@ services:
       - POSTGRES_PASSWORD=2165
       - POSTGRES_SCHEMA=sales
     ports:
-      - "5434:5432"
+      - "5436:5432"
     volumes:
       - ./sales-db-init:/docker-entrypoint-initdb.d
     expose:
-      - "5434"
+      - "5436"
     command: [ "postgres", "-c", "search_path=sales" ]
     networks:
       - spring-network
@@ -134,11 +138,11 @@ services:
       - POSTGRES_PASSWORD=2165
       - POSTGRES_SCHEMA=reports
     ports:
-      - "5435:5432"
+      - "5437:5432"
     volumes:
       - ./sales-reports-db-init:/docker-entrypoint-initdb.d
     expose:
-      - "5435"
+      - "5437"
     command: [ "postgres", "-c", "search_path=reports" ]
     networks:
       - spring-network
@@ -155,6 +159,7 @@ services:
       - user-management-db
       - api-gateway
       - kafka
+      - jwt-auth-service
     networks:
       - spring-network
 
@@ -199,6 +204,7 @@ services:
       - sales-reports-db
       - api-gateway
       - kafka
+      - reporting-service
     networks:
       - spring-network
 
