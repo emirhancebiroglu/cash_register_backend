@@ -55,7 +55,7 @@ public class CheckoutServiceImpl implements CheckoutService {
             product.setReturned(true);
         }
 
-        Map<String, Integer> productsIdWithQuantity = getProductsIdWithQuantity(checkout);
+        Map<String, Integer> productsIdWithQuantity = getProductsCodeWithQuantity(checkout);
         request.updateStocks(jwtToken, productsIdWithQuantity, false);
 
         checkoutRepository.save(checkout);
@@ -66,24 +66,27 @@ public class CheckoutServiceImpl implements CheckoutService {
     }
 
     @Override
-    public void completeCheckout(CompleteCheckoutReq completeCheckoutReq) {
+    public void completeCheckout(CompleteCheckoutReq completeCheckoutReq, Long checkoutId) {
         logger.info("Performing checkout process...");
 
-        Checkout checkout = validateAndSetCheckout(completeCheckoutReq);
+        Checkout checkout = validateAndSetCheckout(completeCheckoutReq, checkoutId);
         checkoutRepository.save(checkout);
 
-        Checkout nextCheckout = new Checkout();
-        nextCheckout.setCreatedDate(LocalDateTime.now());
-        nextCheckout.setUpdatedDate(LocalDateTime.now());
-        nextCheckout.setTotalPrice(0D);
-        checkoutRepository.save(nextCheckout);
-
-        Map<String, Integer> productsIdWithQuantity = getProductsIdWithQuantity(checkout);
+        Map<String, Integer> productsIdWithQuantity = getProductsCodeWithQuantity(checkout);
         request.updateStocks(jwtToken, productsIdWithQuantity, true);
 
         sendSaleReportToReportingService(checkout);
 
         logger.info("Checkout completed successfully");
+    }
+
+    @Override
+    public void openSale() {
+        Checkout checkout = new Checkout();
+        checkout.setCreatedDate(LocalDateTime.now());
+        checkout.setUpdatedDate(LocalDateTime.now());
+        checkout.setTotalPrice(0D);
+        checkoutRepository.save(checkout);
     }
 
     /**
@@ -92,8 +95,9 @@ public class CheckoutServiceImpl implements CheckoutService {
      * @param completeCheckoutReq the request containing checkout completion details
      * @return the validated and updated checkout entity
      */
-    private Checkout validateAndSetCheckout(CompleteCheckoutReq completeCheckoutReq) {
-        Checkout checkout = checkoutRepository.findFirstByOrderByIdDesc();
+    private Checkout validateAndSetCheckout(CompleteCheckoutReq completeCheckoutReq, Long checkoutId) {
+        Checkout checkout = checkoutRepository.findById(checkoutId)
+                .orElseThrow(() -> new CheckoutNotFoundException("Checkout not found"));
 
         checkoutValidator.validateCheckout(checkout, completeCheckoutReq);
 
@@ -118,12 +122,12 @@ public class CheckoutServiceImpl implements CheckoutService {
      * @param checkout the checkout from which to retrieve products
      * @return a map of product IDs with quantities
      */
-    private static Map<String, Integer> getProductsIdWithQuantity(Checkout checkout) {
-        Map<String, Integer> productsIdWithQuantity = new HashMap<>();
+    private static Map<String, Integer> getProductsCodeWithQuantity(Checkout checkout) {
+        Map<String, Integer> productsCodeWithQuantity = new HashMap<>();
         for (Product product : checkout.getProducts()) {
-            productsIdWithQuantity.put(product.getCode(), product.getQuantity());
+            productsCodeWithQuantity.put(product.getCode(), product.getQuantity());
         }
-        return productsIdWithQuantity;
+        return productsCodeWithQuantity;
     }
 
     /**

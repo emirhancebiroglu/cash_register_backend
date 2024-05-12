@@ -1,6 +1,7 @@
 package bit.salesservice.controller;
 
 import bit.salesservice.dto.AddAndListProductReq;
+import bit.salesservice.dto.RemoveOrReturnProductFromBagReq;
 import bit.salesservice.service.ShoppingBagService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -24,37 +25,32 @@ public class ShoppingBagController {
      * @param req the request body containing the details of the product to be added
      * @return ResponseEntity indicating the status of the operation
      */
-    @PostMapping("/bag/add-product")
-    public ResponseEntity<String> addProductToShoppingBag(@RequestBody AddAndListProductReq req) {
-        shoppingBagService.addProductToBag(req);
+    @PostMapping("/bag/add-product/{checkoutId}")
+    public ResponseEntity<String> addProductToShoppingBag(@RequestBody AddAndListProductReq req, @PathVariable Long checkoutId) {
+        shoppingBagService.addProductToBag(req, checkoutId);
         return ResponseEntity.status(HttpStatus.CREATED).body("Product added successfully");
     }
 
     /**
      * Endpoint for removing a product from the shopping bag.
      *
-     * @param id       the ID of the product to be removed
-     * @param quantity the quantity of the product to be removed
      * @return ResponseEntity indicating the status of the operation
      */
-    @PostMapping("/bag/remove-product/{id}/{quantity}")
-    public ResponseEntity<String> removeProductFromShoppingBag(@PathVariable Long id, @PathVariable Integer quantity) {
-        shoppingBagService.removeProductFromBag(id, quantity);
+    @PostMapping("/bag/remove-product")
+    public ResponseEntity<String> removeProductFromShoppingBag(@RequestBody RemoveOrReturnProductFromBagReq request) {
+        shoppingBagService.removeProductFromBag(request);
         return ResponseEntity.status(HttpStatus.OK).body("Product removed successfully");
     }
 
     /**
      * Endpoint for returning a product from the shopping bag.
      *
-     * @param id       the ID of the product to be returned
-     * @param quantity the quantity of the product to be returned
      * @return ResponseEntity indicating the status of the operation
      */
-    @PostMapping("/bag/return-product/{id}/{quantity}")
-    public ResponseEntity<String> returnProductFromShoppingBag(@PathVariable Long id, @PathVariable Integer quantity) {
-        shoppingBagService.returnProductFromBag(id, quantity);
+    @PostMapping("/bag/return-product")
+    public ResponseEntity<String> returnProductFromShoppingBag(@RequestBody RemoveOrReturnProductFromBagReq request) {
+        shoppingBagService.returnProductFromBag(request);
         return ResponseEntity.status(HttpStatus.OK).body("Product returned successfully");
-
     }
 
     /**
@@ -62,9 +58,9 @@ public class ShoppingBagController {
      *
      * @return ResponseEntity indicating the status of the operation
      */
-    @PostMapping("/bag/remove-all")
-    public ResponseEntity<String> removeAll() {
-        shoppingBagService.removeAll();
+    @PostMapping("/bag/remove-all/{checkoutId}")
+    public ResponseEntity<String> removeAll(@PathVariable Long checkoutId) {
+        shoppingBagService.removeAll(checkoutId);
         return ResponseEntity.status(HttpStatus.OK).body("Bag is cleaned successfully");
     }
 
@@ -73,8 +69,8 @@ public class ShoppingBagController {
      *
      * @return a list of AddAndListProductReq containing the products in the shopping bag
      */
-    @GetMapping("/bag/get-products")
-    public List<AddAndListProductReq> getProductsInShoppingBagForCurrentCheckout() {
-        return shoppingBagService.getProductsInBagForCurrentCheckout();
+    @GetMapping("/bag/get-products/{checkoutId}")
+    public List<AddAndListProductReq> getProductsInShoppingBag(@PathVariable Long checkoutId) {
+        return shoppingBagService.getProductsInBag(checkoutId);
     }
 }

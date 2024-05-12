@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Repository interface for managing shopping bag related operations.
@@ -40,4 +41,6 @@ public interface ShoppingBagRepository extends JpaRepository<Product, Long> {
      * @return a list of product objects
      */
     List<Product> findByCheckoutId(Long id);
+
+    Optional<Product> findByCode(String code);
 }

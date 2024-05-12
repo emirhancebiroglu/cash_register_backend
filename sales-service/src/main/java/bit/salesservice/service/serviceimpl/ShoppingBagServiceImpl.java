@@ -1,12 +1,14 @@
 package bit.salesservice.service.serviceimpl;
 
-import bit.salesservice.dto.ProductInfo;
 import bit.salesservice.dto.AddAndListProductReq;
+import bit.salesservice.dto.ProductInfo;
+import bit.salesservice.dto.RemoveOrReturnProductFromBagReq;
 import bit.salesservice.dto.kafka.ReturnedProductInfoDTO;
 import bit.salesservice.entity.Campaign;
 import bit.salesservice.entity.Checkout;
 import bit.salesservice.entity.DiscountType;
 import bit.salesservice.entity.Product;
+import bit.salesservice.exceptions.checkoutnotfound.CheckoutNotFoundException;
 import bit.salesservice.exceptions.invalidquantity.InvalidQuantityException;
 import bit.salesservice.exceptions.notinstocks.NotInStocksException;
 import bit.salesservice.exceptions.productnotfound.ProductNotFoundException;
@@ -25,7 +27,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +43,7 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
     private final SaleReportProducer saleReportProducer;
     private final String jwtToken = HttpHeaders.AUTHORIZATION.substring(7);
     private static final Logger logger = LogManager.getLogger(ShoppingBagServiceImpl.class);
-    private final ProductInfoHttpRequest request;
+    private final ProductInfoHttpRequest httpRequest;
     private static final String NOT_FOUND = "Product not found";
     private static final String INVALID_QUANTITY = "Please provide a valid quantity";
     private static final String NOT_IN_STOCKS = "There is not enough product in stocks.";
@@ -50,10 +51,10 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
 
 
     @Override
-    public void addProductToBag(AddAndListProductReq req) {
+    public void addProductToBag(AddAndListProductReq req, Long checkoutId) {
         logger.info("Adding product to shopping bag...");
 
-        ProductInfo productInfo = request.getProductInfo(req.getCode(), jwtToken);
+        ProductInfo productInfo = httpRequest.getProductInfo(req.getCode(), jwtToken);
 
         checkIfProductAvailable(req, productInfo);
 
@@ -67,8 +68,10 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
             throw new NotInStocksException(NOT_IN_STOCKS);
         }
 
-        Checkout currentCheckout = getCurrentCheckout();
-        Product existingProduct = shoppingBagRepository.findByCodeAndCheckout(req.getCode(), currentCheckout);
+        Checkout checkout = checkoutRepository.findById(checkoutId)
+                .orElseThrow(() -> new CheckoutNotFoundException("Checkout not found"));
+
+        Product existingProduct = shoppingBagRepository.findByCodeAndCheckout(req.getCode(), checkout);
 
         if (existingProduct != null && existingProduct.isRemoved()) {
             existingProduct.setRemoved(false);
@@ -84,12 +87,12 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
             existingProduct = new Product();
             existingProduct.setCode(req.getCode());
             existingProduct.setName(productInfo.getName());
-            if (currentCheckout.getProducts() == null){
-                currentCheckout.setTotalPrice(0D);
+            if (checkout.getProducts() == null){
+                checkout.setTotalPrice(0D);
             }
             existingProduct.setQuantity(req.getQuantity());
             existingProduct.setPrice(productInfo.getPrice());
-            existingProduct.setCheckout(currentCheckout);
+            existingProduct.setCheckout(checkout);
         }
 
         updateCheckoutTotalForAddingProduct(existingProduct, productInfo.getPrice(), req.getQuantity());
@@ -99,36 +102,36 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
     }
 
     @Override
-    public void removeProductFromBag(Long id, Integer quantity) {
+    public void removeProductFromBag(RemoveOrReturnProductFromBagReq request) {
         logger.info("Removing product from shopping bag...");
 
-        Product product = shoppingBagRepository.findById(id)
+        Product product = shoppingBagRepository.findByCode(request.getCode())
                 .orElseThrow(() -> {
                     logger.error(NOT_FOUND);
                     return new ProductNotFoundException(NOT_FOUND);
                 });
 
-        if (quantity == 0){
+        if (request.getQuantity() <= 0){
             logger.error(INVALID_QUANTITY);
             throw new InvalidQuantityException(INVALID_QUANTITY);
         }
 
         int productQuantity = product.getQuantity();
 
-        if (productQuantity < quantity){
+        if (productQuantity < request.getQuantity()){
             logger.error(OUT_OF_RANGE);
             throw new InvalidQuantityException(OUT_OF_RANGE);
         }
 
-        if (productQuantity > quantity){
-            product.setQuantity(productQuantity - quantity);
+        if (productQuantity > request.getQuantity()){
+            product.setQuantity(productQuantity - request.getQuantity());
         }
         else{
             product.setQuantity(0);
             product.setRemoved(true);
         }
 
-        updateCheckoutTotalForRemovingOrReturningProduct(product, product.getPrice(), quantity);
+        updateCheckoutTotalForRemovingOrReturningProduct(product, product.getPrice(), request.getQuantity());
         shoppingBagRepository.save(product);
 
         logger.info("Product removed successfully");
@@ -136,12 +139,13 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
 
     @Override
     @Transactional
-    public void removeAll() {
+    public void removeAll(Long checkoutId) {
         logger.info("Removing all products from shopping bag...");
 
-        Checkout currentCheckout = getCurrentCheckout();
+        Checkout checkout = checkoutRepository.findById(checkoutId)
+                .orElseThrow(() -> new CheckoutNotFoundException("Checkout not found"));
 
-        List<Product> products = shoppingBagRepository.findByCheckoutId(currentCheckout.getId());
+        List<Product> products = shoppingBagRepository.findByCheckoutId(checkoutId);
 
         for (Product product : products){
             if (!product.isRemoved()){
@@ -152,46 +156,45 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
 
         shoppingBagRepository.saveAll(products);
 
-        currentCheckout.setTotalPrice(0D);
-        checkoutRepository.save(currentCheckout);
+        checkout.setTotalPrice(0D);
+        checkoutRepository.save(checkout);
 
         logger.info("All products removed successfully");
     }
 
     @Override
-    public List<AddAndListProductReq> getProductsInBagForCurrentCheckout() {
+    public List<AddAndListProductReq> getProductsInBag(Long checkoutId) {
         logger.info("Getting products in shopping bag for current checkout...");
 
-        Checkout currentCheckout = getCurrentCheckout();
+        Checkout checkout = checkoutRepository.findById(checkoutId)
+                .orElseThrow(() -> new CheckoutNotFoundException("Checkout not found"));
 
         List<AddAndListProductReq> products;
 
-        if (!currentCheckout.isCompleted()){
-            products = shoppingBagRepository.findProductReqByCheckoutAndRemoved(currentCheckout);
-            logger.info("Products fetched successfully.");
-            return products;
-        }
-
-        logger.info("Checkout is completed. No products to retrieve.");
-        return Collections.emptyList();
+        products = shoppingBagRepository.findProductReqByCheckoutAndRemoved(checkout);
+        logger.info("Products fetched successfully.");
+        return products;
     }
 
     @Override
-    public void returnProductFromBag(Long id, Integer quantity) {
+    public void returnProductFromBag(RemoveOrReturnProductFromBagReq request) {
         logger.info("Returning product from shopping bag...");
 
-        Product product = shoppingBagRepository.findById(id)
+        Product product = shoppingBagRepository.findByCode(request.getCode())
                 .orElseThrow(() -> {
                     logger.error(NOT_FOUND);
                     return new ProductNotFoundException(NOT_FOUND);
                 });
 
-        if (quantity == 0){
+        Checkout checkout = checkoutRepository.findById(request.getCheckoutId())
+                .orElseThrow(() -> new CheckoutNotFoundException("Checkout not found"));
+
+        if (request.getQuantity() <= 0){
             logger.error(INVALID_QUANTITY);
             throw new InvalidQuantityException(INVALID_QUANTITY);
         }
 
-        if (product.getCheckout().isCompleted()) {
+        if (checkout.isCompleted()) {
             if (product.isRemoved() || product.isReturned()){
                 logger.error("This product is removed or returned");
                 throw new ProductNotFoundException("This product is removed or returned");
@@ -199,23 +202,23 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
 
             int productQuantity = product.getQuantity();
 
-            if (productQuantity < quantity) {
+            if (productQuantity < request.getQuantity()) {
                 logger.error(OUT_OF_RANGE);
                 throw new InvalidQuantityException(OUT_OF_RANGE);
             }
 
-            if (productQuantity > quantity) {
-                product.setQuantity(productQuantity - quantity);
+            if (productQuantity > request.getQuantity()) {
+                product.setQuantity(productQuantity - request.getQuantity());
             } else {
                 product.setQuantity(0);
                 product.setReturned(true);
             }
 
-            product.setReturnedQuantity(product.getReturnedQuantity() + quantity);
-            updateCheckoutTotalForRemovingOrReturningProduct(product, product.getPrice(), quantity);
+            product.setReturnedQuantity(product.getReturnedQuantity() + request.getQuantity());
+            updateCheckoutTotalForRemovingOrReturningProduct(product, product.getPrice(), request.getQuantity());
 
-            Map<String, Integer> productsIdWithQuantity = getProductsIdWithQuantity(id, quantity);
-            request.updateStocks(jwtToken, productsIdWithQuantity, false);
+            Map<String, Integer> productsIdWithQuantity = getProductsCodeWithQuantity(request.getCode(), request.getQuantity());
+            httpRequest.updateStocks(jwtToken, productsIdWithQuantity, false);
 
             shoppingBagRepository.save(product);
             sendReturnedProductsInfoToReportingService(product);
@@ -226,23 +229,6 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
         }
 
         logger.info("Product returned successfully");
-    }
-
-    /**
-     * Retrieves the current checkout. If there is no existing checkout, a new one is created.
-     *
-     * @return the current checkout
-     */
-    private Checkout getCurrentCheckout() {
-        Checkout currentCheckout = checkoutRepository.findFirstByOrderByIdDesc();
-        if (currentCheckout == null) {
-            currentCheckout = new Checkout();
-            currentCheckout.setCreatedDate(LocalDateTime.now());
-            currentCheckout.setUpdatedDate(LocalDateTime.now());
-
-            checkoutRepository.save(currentCheckout);
-        }
-        return currentCheckout;
     }
 
     /**
@@ -482,17 +468,16 @@ public class ShoppingBagServiceImpl implements ShoppingBagService {
     /**
      * Retrieves a map of product IDs with their corresponding quantities.
      *
-     * @param id       the ID of the product
      * @param quantity the quantity of the product
      * @return a map of product IDs with quantities
      */
-    private Map<String, Integer> getProductsIdWithQuantity(Long id, Integer quantity) {
-        Map<String, Integer> productIdWithQuantity = new HashMap<>();
+    private Map<String, Integer> getProductsCodeWithQuantity(String code, Integer quantity) {
+        Map<String, Integer> productCodeWithQuantity = new HashMap<>();
 
-        Product product = shoppingBagRepository.findById(id)
+        Product product = shoppingBagRepository.findByCode(code)
                 .orElseThrow(() -> new ProductNotFoundException(NOT_FOUND));
 
-        productIdWithQuantity.put(product.getCode(), quantity);
-        return productIdWithQuantity;
+        productCodeWithQuantity.put(product.getCode(), quantity);
+        return productCodeWithQuantity;
     }
 }

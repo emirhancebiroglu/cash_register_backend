@@ -17,6 +17,9 @@ public interface CheckoutService {
      * Completes a checkout.
      *
      * @param completeCheckoutReq the request containing the details to complete the checkout
+     * @param checkoutId
      */
-    void completeCheckout(CompleteCheckoutReq completeCheckoutReq);
+    void completeCheckout(CompleteCheckoutReq completeCheckoutReq, Long checkoutId);
+
+    void openSale();
 }
