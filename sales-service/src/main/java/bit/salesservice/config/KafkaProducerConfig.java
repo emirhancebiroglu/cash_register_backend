@@ -20,7 +20,10 @@ import java.util.Map;
  */
 @Configuration
 public class KafkaProducerConfig {
+    // Logger for logging Kafka producer configuration
     private static final Logger logger = LogManager.getLogger(KafkaProducerConfig.class);
+
+    // Value fetched from application.properties for Kafka bootstrap servers
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
 
@@ -31,17 +34,22 @@ public class KafkaProducerConfig {
      */
     @Bean
     public ProducerFactory<String, Object> producerFactory() {
+        // Configuration properties for Kafka producer
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
         configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+
+        // Custom type mappings for JSON serialization
         configProps.put(JsonSerializer.TYPE_MAPPINGS, "saleReport:bit.salesservice.dto.kafka.SaleReportDTO, " +
                 "returnedProductInfo:bit.salesservice.dto.kafka.ReturnedProductInfoDTO, " +
                 "cancelledSaleReport:bit.salesservice.dto.kafka.CancelledSaleReportDTO, " +
                 "campaign:bit.salesservice.dto.kafka.CampaignDTO");
 
+        // Log Kafka producer configuration
         logProducerConfiguration(configProps);
 
+        // Create and return Kafka producer factory
         return new DefaultKafkaProducerFactory<>(configProps);
     }
 
@@ -52,6 +60,7 @@ public class KafkaProducerConfig {
      */
     @Bean
     public KafkaTemplate<String, Object> kafkaTemplate() {
+        // Create and return Kafka template using the configured producer factory
         return new KafkaTemplate<>(producerFactory());
     }
 
@@ -61,6 +70,7 @@ public class KafkaProducerConfig {
      * @param configProps the Kafka producer configuration properties
      */
     private void logProducerConfiguration(Map<String, Object> configProps) {
-        configProps.forEach((key, value) -> logger.info("Kafka Producer Config - {}: {}", key, value));
+        // Log each configuration property and its value
+        configProps.forEach((key, value) -> logger.trace("Kafka Producer Config - {}: {}", key, value));
     }
 }

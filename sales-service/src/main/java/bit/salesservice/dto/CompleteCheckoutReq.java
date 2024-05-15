@@ -7,6 +7,6 @@ import lombok.Data;
  */
 @Data
 public class CompleteCheckoutReq {
-    private String paymentMethod;
-    private Double moneyTaken;
+    private Double moneyTakenFromCash; // Amount of money taken from cash
+    private Double moneyTakenFromCard; // Amount of money taken from card
 }

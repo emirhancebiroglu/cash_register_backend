@@ -13,8 +13,8 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CancelledSaleReportDTO {
-    private Long id;
-    private boolean isCancelled;
-    private LocalDateTime canceledDate;
-    private Double returnedMoney;
+    private Long id; // ID of the cancelled sale report
+    private boolean isCancelled; // Indicates if the sale was cancelled
+    private LocalDateTime canceledDate; // Date and time when the sale was cancelled
+    private Double returnedMoney; // Amount of money returned for the cancelled sale
 }

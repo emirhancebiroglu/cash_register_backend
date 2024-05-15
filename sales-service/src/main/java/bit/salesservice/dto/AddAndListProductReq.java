@@ -11,8 +11,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class AddAndListProductReq {
-    private String code;
-    private String name;
-    private int quantity;
-    private double price;
+    private String code; // Code or identifier of the product
+    private String name; // Name of the product
+    private int quantity; // Quantity of the product
+    private double price; // Price of the product
 }

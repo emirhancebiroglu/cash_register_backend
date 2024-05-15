@@ -9,8 +9,8 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class CampaignDTO {
-    private String name;
-    private DiscountType discountType;
-    private Double discountAmount;
-    private Integer neededQuantity;
+    private String name; // Name of the campaign
+    private DiscountType discountType; // Type of discount (e.g., percentage, fixed amount)
+    private Double discountAmount; // Amount of discount
+    private Integer neededQuantity; // Quantity needed to trigger the discount
 }

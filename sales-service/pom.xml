@@ -160,6 +160,7 @@
 						<exclude>bit/salesservice/dto/ProductInfo.class</exclude>
 						<exclude>bit/salesservice/dto/ProductDTO.class</exclude>
 						<exclude>bit/salesservice/dto/UpdateStockRequest.class</exclude>
+						<exclude>bit/salesservice/dto/RemoveOrReturnProductFromBagReq.class</exclude>
 						<exclude>bit/salesservice/entity/Campaign.class</exclude>
 						<exclude>bit/salesservice/entity/Checkout.class</exclude>
 						<exclude>bit/salesservice/entity/DiscountType.class</exclude>

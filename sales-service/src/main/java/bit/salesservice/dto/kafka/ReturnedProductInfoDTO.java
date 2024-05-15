@@ -11,9 +11,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ReturnedProductInfoDTO {
-    private Long id;
-    private Integer returnedQuantity;
-    private Double returnedMoney;
-    private Integer quantity;
-    private Boolean returned;
+    private Long id; // ID of the returned product
+    private Integer returnedQuantity; // Quantity of the product returned
+    private Double returnedMoney; // Amount of money refunded for the returned product
+    private Integer quantity; // Total quantity of the product originally purchased
+    private Boolean returned; // Indicates if the product was returned or not
 }

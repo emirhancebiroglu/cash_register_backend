@@ -31,10 +31,10 @@ public class CampaignExpirationChecker {
 
         for (Campaign campaign : campaigns) {
             if (campaign.getEndDate().isBefore(LocalDateTime.now())){
-                logger.info("Campaign {} is expired, inactivating...", campaign.getName());
+                logger.trace("Campaign {} is expired, inactivating...", campaign.getName());
                 campaign.setInactive(true);
                 campaignRepository.save(campaign);
-                logger.info("Campaign {} inactivated successfully", campaign.getName());
+                logger.trace("Campaign {} inactivated successfully", campaign.getName());
             }
         }
     }

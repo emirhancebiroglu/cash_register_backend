@@ -4,13 +4,9 @@ import bit.salesservice.dto.AddAndUpdateCampaignReq;
 import bit.salesservice.dto.ListCampaignsReq;
 import bit.salesservice.dto.ProductInfo;
 import bit.salesservice.entity.Campaign;
-import bit.salesservice.exceptions.activecampaign.ActiveCampaignException;
-import bit.salesservice.exceptions.campaignalreadyexists.CampaignAlreadyExistsException;
 import bit.salesservice.exceptions.campaignnotfound.CampaignNotFoundException;
 import bit.salesservice.exceptions.fixedamountdiscounttypewithprovidedquantity.FixedAmountDiscountTypeWithProvidedQuantityException;
-import bit.salesservice.exceptions.inactivecampaign.InactiveCampaignException;
 import bit.salesservice.exceptions.invaliddiscounttype.InvalidDiscountTypeException;
-import bit.salesservice.exceptions.invalidstatustype.InvalidStatusTypeException;
 import bit.salesservice.exceptions.productnotfound.ProductNotFoundException;
 import bit.salesservice.repository.CampaignRepository;
 import bit.salesservice.service.serviceimpl.CampaignServiceImpl;
@@ -90,18 +86,10 @@ class CampaignServiceTest {
         Campaign campaign = new Campaign();
         campaign.setName("Test Campaign");
 
-        when(campaignRepository.findByName(request.getName())).thenReturn(null);
         when(productInfoHttpRequest.getProductInfo(any(), any())).thenReturn(mono.block());
         when(campaignRepository.save(any())).thenReturn(campaign);
 
         assertDoesNotThrow(() -> campaignService.addCampaign(request));
-    }
-
-    @Test
-    void addCampaign_WithExistingCampaign_ThrowsCampaignAlreadyExistsException() {
-        when(campaignRepository.findByName(request.getName())).thenReturn(new Campaign());
-
-        assertThrows(CampaignAlreadyExistsException.class, () -> campaignService.addCampaign(request));
     }
 
     @Test
@@ -117,7 +105,6 @@ class CampaignServiceTest {
         Campaign campaign = new Campaign();
         campaign.setName("Test Campaign");
 
-        when(campaignRepository.findByName(request.getName())).thenReturn(null);
         when(productInfoHttpRequest.getProductInfo(any(), any())).thenReturn(mono.block());
 
         assertThrows(FixedAmountDiscountTypeWithProvidedQuantityException.class, () -> campaignService.addCampaign(request));
@@ -131,7 +118,6 @@ class CampaignServiceTest {
         Campaign campaign = new Campaign();
         campaign.setName("Test Campaign");
 
-        when(campaignRepository.findByName(request.getName())).thenReturn(null);
         when(productInfoHttpRequest.getProductInfo(any(), any())).thenReturn(mono.block());
 
         assertDoesNotThrow(() -> campaignService.addCampaign(request));
@@ -160,17 +146,6 @@ class CampaignServiceTest {
     }
 
     @Test
-    void inactivateCampaign_AlreadyInactive() {
-        campaign.setInactive(true);
-
-        when(campaignRepository.findById(campaignId)).thenReturn(Optional.of(campaign));
-
-        assertThrows(InactiveCampaignException.class, () -> campaignService.inactivateCampaign(campaignId));
-
-        verify(campaignRepository, never()).save(any());
-    }
-
-    @Test
     void reactivateCampaign_Success() {
         Integer durationDays = 7;
         campaign.setInactive(true);
@@ -193,17 +168,6 @@ class CampaignServiceTest {
         when(campaignRepository.findById(campaignId)).thenReturn(Optional.empty());
 
         assertThrows(CampaignNotFoundException.class, () -> campaignService.reactivateCampaign(campaignId, 7));
-
-        verify(campaignRepository, never()).save(any());
-    }
-
-    @Test
-    void reactivateCampaign_AlreadyActive() {
-        campaign.setInactive(false);
-
-        when(campaignRepository.findById(campaignId)).thenReturn(Optional.of(campaign));
-
-        assertThrows(ActiveCampaignException.class, () -> campaignService.reactivateCampaign(campaignId, 7));
 
         verify(campaignRepository, never()).save(any());
     }
@@ -256,17 +220,6 @@ class CampaignServiceTest {
     }
 
     @Test
-    void updateCampaign_InactiveCampaign() {
-        campaign.setInactive(true);
-
-        when(campaignRepository.findById(campaignId)).thenReturn(Optional.of(campaign));
-
-        assertThrows(InactiveCampaignException.class, () -> campaignService.updateCampaign(request, campaignId));
-
-        verify(campaignRepository, never()).save(any());
-    }
-
-    @Test
     void updateCampaign_ProductNotFound() {
         when(campaignRepository.findById(campaignId)).thenReturn(Optional.of(campaign));
         when(productInfoHttpRequest.getProductInfo(any(), any())).thenReturn(null);
@@ -286,10 +239,5 @@ class CampaignServiceTest {
         List<ListCampaignsReq> result = campaignService.getCampaigns(0, 10, null, null, null, "name", "ASC");
 
         assertEquals(campaigns.size(), result.size());
-    }
-
-    @Test
-    void getCampaigns_InvalidStatusType_ThrowsInvalidStatusTypeException() {
-        assertThrows(InvalidStatusTypeException.class, () -> campaignService.getCampaigns(0, 10, null, "invalid", null, "name", "DESC"));
     }
 }

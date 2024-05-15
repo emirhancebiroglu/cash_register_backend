@@ -27,7 +27,10 @@ public class CampaignController {
      */
     @PostMapping("/campaign/add")
     public ResponseEntity<String> addCampaign(@RequestBody AddAndUpdateCampaignReq addAndUpdateCampaignReq) {
+        // Call the campaign service to add a new campaign
         campaignService.addCampaign(addAndUpdateCampaignReq);
+
+        // Return response with status code 201 (CREATED) and a success message
         return ResponseEntity.status(HttpStatus.CREATED).body("Campaign added successfully");
     }
 
@@ -40,7 +43,10 @@ public class CampaignController {
      */
     @PutMapping("/campaign/update/{campaignId}")
     public ResponseEntity<String> updateCampaign(@RequestBody AddAndUpdateCampaignReq addAndUpdateCampaignReq, @PathVariable Long campaignId) {
+        // Call the campaign service to update an existing campaign
         campaignService.updateCampaign(addAndUpdateCampaignReq, campaignId);
+
+        // Return response with status code 200 (OK) and a success message
         return ResponseEntity.status(HttpStatus.OK).body("Campaign updated successfully");
     }
 
@@ -52,7 +58,10 @@ public class CampaignController {
      */
     @DeleteMapping("/campaign/inactivate/{campaignId}")
     public ResponseEntity<String> inactivateCampaign(@PathVariable Long campaignId) {
+        // Call the campaign service to inactivate a campaign
         campaignService.inactivateCampaign(campaignId);
+
+        // Return response with status code 200 (OK) and a success message
         return ResponseEntity.status(HttpStatus.OK).body("Campaign inactivated successfully");
     }
 
@@ -65,7 +74,10 @@ public class CampaignController {
      */
     @PostMapping("/campaign/reactivate/{campaignId}/{durationDays}")
     public ResponseEntity<String> reactivateCampaign(@PathVariable Long campaignId, @PathVariable Integer durationDays) {
+        // Call the campaign service to reactivate a campaign
         campaignService.reactivateCampaign(campaignId, durationDays);
+
+        // Return response with status code 200 (OK) and a success message
         return ResponseEntity.status(HttpStatus.OK).body("Campaign reactivated successfully");
     }
 
@@ -84,8 +96,10 @@ public class CampaignController {
             @RequestParam(name = "sortBy", required = false, defaultValue = "name") String sortBy,
             @RequestParam(name = "sortOrder", required = false, defaultValue = "ASC") String sortOrder
     ) {
+        // Call the campaign service to retrieve campaigns based on provided parameters
         List<ListCampaignsReq> campaignsPage = campaignService.getCampaigns(pageNo, pageSize, discountType, status, searchingTerm, sortBy, sortOrder);
 
+        // Return response with status code 200 (OK) and the list of campaigns
         return ResponseEntity.status(HttpStatus.OK).body(campaignsPage);
     }
 }

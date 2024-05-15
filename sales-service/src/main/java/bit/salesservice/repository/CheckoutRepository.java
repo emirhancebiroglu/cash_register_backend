@@ -9,10 +9,4 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface CheckoutRepository extends JpaRepository<Checkout, Long> {
-    /**
-     * Retrieves the latest checkout by ID in descending order.
-     *
-     * @return the latest checkout object
-     */
-    Checkout findFirstByOrderByIdDesc();
 }

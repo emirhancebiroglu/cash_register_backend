@@ -1,6 +1,7 @@
 package bit.salesservice.service;
 
 import bit.salesservice.dto.AddAndListProductReq;
+import bit.salesservice.dto.RemoveOrReturnProductFromBagReq;
 
 import java.util.List;
 
@@ -11,35 +12,31 @@ public interface ShoppingBagService {
     /**
      * Adds a product to the shopping bag.
      *
-     * @param req the request containing the product details to be added
+     * @param req        the request containing the product details to be added
      */
-    void addProductToBag(AddAndListProductReq req);
+    void addProductToBag(AddAndListProductReq req, Long checkoutId);
 
     /**
      * Removes a specified quantity of a product from the shopping bag.
      *
-     * @param id       the ID of the product to be removed
-     * @param quantity the quantity of the product to be removed
      */
-    void removeProductFromBag(Long id, Integer quantity);
+    void removeProductFromBag(RemoveOrReturnProductFromBagReq request);
 
     /**
      * Removes all products from the shopping bag.
      */
-    void removeAll();
+    void removeAll(Long checkoutId);
 
     /**
      * Retrieves a list of products in the shopping bag for the current checkout.
      *
      * @return a list of products in the shopping bag
      */
-    List<AddAndListProductReq> getProductsInBagForCurrentCheckout();
+    List<AddAndListProductReq> getProductsInBag(Long checkoutId);
 
     /**
      * Returns a specified quantity of a product from the shopping bag.
      *
-     * @param id       the ID of the product to be returned
-     * @param quantity the quantity of the product to be returned
      */
-    void returnProductFromBag(Long id, Integer quantity);
+    void returnProductFromBag(RemoveOrReturnProductFromBagReq request);
 }

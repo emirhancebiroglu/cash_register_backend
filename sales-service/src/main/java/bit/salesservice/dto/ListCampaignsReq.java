@@ -10,12 +10,12 @@ import java.util.List;
  */
 @Data
 public class ListCampaignsReq {
-    private String name;
-    private boolean isInactive;
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
-    private Integer durationDays;
-    private List<String> codes;
-    private String discountType;
-    private Double discountAmount;
+    private String name; // Name of the campaign
+    private boolean isInactive; // Indicates whether the campaign is inactive
+    private LocalDateTime startDate; // Start date of the campaign
+    private LocalDateTime endDate; // End date of the campaign
+    private Integer durationDays; // Duration of the campaign in days
+    private List<String> codes; // List of codes associated with the campaign
+    private String discountType; // Type of discount offered by the campaign
+    private Double discountAmount; // Amount of discount offered by the campaign
 }

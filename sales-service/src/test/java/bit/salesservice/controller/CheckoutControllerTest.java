@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.verify;
 
 class CheckoutControllerTest {
     @Mock
@@ -29,9 +30,9 @@ class CheckoutControllerTest {
     void completeCheckout_Success() {
         CompleteCheckoutReq request = new CompleteCheckoutReq();
 
-        doNothing().when(checkoutService).completeCheckout(request);
+        doNothing().when(checkoutService).completeCheckout(request, 1L);
 
-        ResponseEntity<String> response = checkoutController.completeCheckout(request);
+        ResponseEntity<String> response = checkoutController.completeCheckout(request, 1L);
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Checkout completed successfully", response.getBody());
@@ -47,5 +48,21 @@ class CheckoutControllerTest {
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertEquals("Checkout canceled successfully", response.getBody());
+    }
+
+    @Test
+    void openSale_Success() {
+        // Arrange
+        doNothing().when(checkoutService).openSale();
+
+        // Act
+        ResponseEntity<String> response = checkoutController.openSale();
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("Sale opened successfully", response.getBody());
+
+        // Verify that the openSale method of checkoutService was called
+        verify(checkoutService).openSale();
     }
 }

@@ -22,9 +22,12 @@ public class CheckoutController {
      * @param completeCheckoutReq the request body containing the details required to complete the checkout
      * @return ResponseEntity indicating the status of the operation
      */
-    @PostMapping("/complete-checkout")
-    public ResponseEntity<String> completeCheckout(@RequestBody CompleteCheckoutReq completeCheckoutReq) {
-        checkoutService.completeCheckout(completeCheckoutReq);
+    @PostMapping("/complete-checkout/{checkoutId}")
+    public ResponseEntity<String> completeCheckout(@RequestBody CompleteCheckoutReq completeCheckoutReq, @PathVariable Long checkoutId) {
+        // Call the checkout service to complete the checkout process
+        checkoutService.completeCheckout(completeCheckoutReq, checkoutId);
+
+        // Return response with status code 200 (OK) and a success message
         return ResponseEntity.status(HttpStatus.OK).body("Checkout completed successfully");
     }
 
@@ -36,7 +39,19 @@ public class CheckoutController {
      */
     @PostMapping("/cancel-checkout/{checkoutId}")
     public ResponseEntity<String> cancelCheckout(@PathVariable Long checkoutId) {
+        // Call the checkout service to cancel the checkout process
         checkoutService.cancelCheckout(checkoutId);
+
+        // Return response with status code 200 (OK) and a success message
         return ResponseEntity.status(HttpStatus.OK).body("Checkout canceled successfully");
+    }
+
+    @PostMapping("/open-sale")
+    public ResponseEntity<String> openSale() {
+        // Call the checkout service to open a sale
+        checkoutService.openSale();
+
+        // Return response with status code 200 (OK) and a success message
+        return ResponseEntity.status(HttpStatus.OK).body("Sale opened successfully");
     }
 }

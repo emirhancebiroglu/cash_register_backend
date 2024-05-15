@@ -2,10 +2,15 @@ package bit.salesservice.validators;
 
 import bit.salesservice.dto.AddAndUpdateCampaignReq;
 import bit.salesservice.entity.Campaign;
+import bit.salesservice.entity.DiscountType;
+import bit.salesservice.exceptions.activecampaign.ActiveCampaignException;
+import bit.salesservice.exceptions.campaignalreadyexists.CampaignAlreadyExistsException;
+import bit.salesservice.exceptions.inactivecampaign.InactiveCampaignException;
 import bit.salesservice.exceptions.invaliddiscountamount.InvalidDiscountAmountException;
 import bit.salesservice.exceptions.invaliddiscounttype.InvalidDiscountTypeException;
 import bit.salesservice.exceptions.invaliddurationdays.InvalidDurationDaysException;
 import bit.salesservice.exceptions.invalidquantity.InvalidQuantityException;
+import bit.salesservice.exceptions.invalidstatustype.InvalidStatusTypeException;
 import bit.salesservice.exceptions.multiplecampaign.MultipleCampaignException;
 import bit.salesservice.exceptions.nullcampaignname.NullCampaignNameException;
 import bit.salesservice.repository.CampaignRepository;
@@ -18,8 +23,7 @@ import org.mockito.MockitoAnnotations;
 import java.util.Collections;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
@@ -31,6 +35,7 @@ class CampaignValidatorTest {
     private CampaignValidator campaignValidator;
 
     private AddAndUpdateCampaignReq request;
+    private Campaign campaign;
 
     @BeforeEach
     void setUp() {
@@ -42,6 +47,10 @@ class CampaignValidatorTest {
         request.setDurationDays(30);
         request.setDiscountType("Percentage");
         request.setCodes(Collections.singletonList("product1"));
+
+        campaign = new Campaign();
+        campaign.setId(1L);
+        campaign.setInactive(true);
     }
 
     @Test
@@ -57,6 +66,14 @@ class CampaignValidatorTest {
         when(campaignRepository.findByCodesContaining("product1")).thenReturn(Collections.emptyList());
 
         assertThrows(NullCampaignNameException.class, () -> campaignValidator.validateCampaignDTO(request, campaignRepository));
+    }
+
+    @Test
+    void validateCampaignDTO_NotEmptyName() {
+        request.setName("test name");
+        when(campaignRepository.findByName(request.getName())).thenReturn(campaign);
+
+        assertThrows(CampaignAlreadyExistsException.class, () -> campaignValidator.validateCampaignDTO(request, campaignRepository));
     }
 
     @Test
@@ -146,6 +163,89 @@ class CampaignValidatorTest {
     @Test
     void validateNeededQuantity_ZeroQuantity() {
         assertThrows(InvalidQuantityException.class, () -> campaignValidator.validateNeededQuantity(0));
+    }
+
+    @Test
+    void validateActivation_InactiveCampaign() {
+        // Invoke validateActivation with an inactive campaign
+        assertThrows(InactiveCampaignException.class, () -> campaignValidator.validateActivation(campaign));
+    }
+
+    @Test
+    void validateActivation_ActiveCampaign() {
+        // Invoke validateActivation with an active campaign
+        campaign.setInactive(false);
+        assertDoesNotThrow(() -> campaignValidator.validateActivation(campaign));
+    }
+
+    @Test
+    void validateInactivation_InactiveCampaign() {
+        // Invoke validateInactivation with an inactive campaign
+        assertDoesNotThrow(() -> campaignValidator.validateInactivation(campaign));
+    }
+
+    @Test
+    void validateInactivation_ActiveCampaign() {
+        // Invoke validateInactivation with an active campaign
+        campaign.setInactive(false);
+        assertThrows(ActiveCampaignException.class, () -> campaignValidator.validateInactivation(campaign));
+    }
+
+    @Test
+    void validateDiscountTypeAndStatus_ValidTypes() {
+        // Act
+        DiscountType discountType = campaignValidator.validateDiscountTypeAndStatus("percentage", "active");
+
+        // Assert
+        assertEquals(DiscountType.PERCENTAGE, discountType);
+    }
+
+    @Test
+    void validateDiscountTypeAndStatus_InvalidDiscountType() {
+        // Act & Assert
+        assertThrows(InvalidDiscountTypeException.class, () ->
+                campaignValidator.validateDiscountTypeAndStatus("invalidType", "active"));
+    }
+
+    @Test
+    void validateDiscountTypeAndStatus_InvalidStatusType() {
+        // Act & Assert
+        assertThrows(InvalidStatusTypeException.class, () ->
+                campaignValidator.validateDiscountTypeAndStatus("percentage", "invalidStatus"));
+    }
+
+    @Test
+    void validateDiscountTypeAndStatus_InvalidTypes() {
+        // Act & Assert
+        assertThrows(InvalidDiscountTypeException.class, () ->
+                campaignValidator.validateDiscountTypeAndStatus("invalidType", "invalidStatus"));
+    }
+
+    @Test
+    void validateDiscountTypeAndStatus_NullDiscountType() {
+        // Act
+        DiscountType discountType = campaignValidator.validateDiscountTypeAndStatus(null, "active");
+
+        // Assert
+        assertNull(discountType);
+    }
+
+    @Test
+    void validateDiscountTypeAndStatus_NullStatus() {
+        // Act
+        DiscountType discountType = campaignValidator.validateDiscountTypeAndStatus("percentage", null);
+
+        // Assert
+        assertEquals(DiscountType.PERCENTAGE, discountType);
+    }
+
+    @Test
+    void validateDiscountTypeAndStatus_NullTypes() {
+        // Act
+        DiscountType discountType = campaignValidator.validateDiscountTypeAndStatus(null, null);
+
+        // Assert
+        assertNull(discountType);
     }
 
     private void validateProductCodes() {

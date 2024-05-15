@@ -3,11 +3,11 @@ package bit.salesservice.service;
 import bit.salesservice.config.WebClientConfig;
 import bit.salesservice.dto.AddAndListProductReq;
 import bit.salesservice.dto.ProductInfo;
+import bit.salesservice.dto.RemoveOrReturnProductFromBagReq;
 import bit.salesservice.entity.Campaign;
 import bit.salesservice.entity.Checkout;
 import bit.salesservice.entity.DiscountType;
 import bit.salesservice.entity.Product;
-import bit.salesservice.exceptions.invalidquantity.InvalidQuantityException;
 import bit.salesservice.exceptions.notinstocks.NotInStocksException;
 import bit.salesservice.exceptions.productnotfound.ProductNotFoundException;
 import bit.salesservice.exceptions.uncompletedcheckoutexception.UncompletedCheckoutException;
@@ -17,6 +17,7 @@ import bit.salesservice.repository.ShoppingBagRepository;
 import bit.salesservice.service.serviceimpl.ShoppingBagServiceImpl;
 import bit.salesservice.utils.ProductInfoHttpRequest;
 import bit.salesservice.utils.SaleReportProducer;
+import bit.salesservice.validators.BagValidator;
 import lombok.Getter;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -55,6 +56,10 @@ class ShoppingBagServiceTest {
     @Getter
     @Mock
     private SaleReportProducer saleReportProducer;
+
+    @Getter
+    @Mock
+    private BagValidator bagValidator;
     @Mock
     private ProductInfoHttpRequest request;
     @InjectMocks
@@ -65,6 +70,8 @@ class ShoppingBagServiceTest {
     private Product product;
     private Checkout checkout;
     private Campaign campaign;
+    private Long checkoutId;
+    private RemoveOrReturnProductFromBagReq req;
 
     @BeforeEach
     public void setUp(){
@@ -93,7 +100,7 @@ class ShoppingBagServiceTest {
 
 
         checkout = new Checkout();
-        when(checkoutRepository.findFirstByOrderByIdDesc()).thenReturn(checkout);
+        when(checkoutRepository.findById(1L)).thenReturn(Optional.of(checkout));
         checkout.setTotalPrice(0D);
 
         product = new Product();
@@ -103,6 +110,13 @@ class ShoppingBagServiceTest {
 
         campaign = new Campaign();
         campaign.setDiscountType(DiscountType.PERCENTAGE);
+
+        checkoutId = 1L;
+
+        req = new RemoveOrReturnProductFromBagReq();
+        req.setCheckoutId(checkoutId);
+        req.setCode("productCode");
+        req.setQuantity(2);
     }
 
     @AfterAll
@@ -111,25 +125,18 @@ class ShoppingBagServiceTest {
     }
 
     @Test
-    void addProductToBag_InvalidQuantity_ThrowsInvalidQuantityException() {
-        addAndListProductReq.setQuantity(-1);
-
-        assertThrows(InvalidQuantityException.class, () -> shoppingBagService.addProductToBag(addAndListProductReq));
-    }
-
-    @Test
     void addProductToBag_ProductNotFound_ThrowsProductNotFoundException() {
         productInfo.setExists(false);
         productInfo.setStockAmount(0);
 
-        assertThrows(ProductNotFoundException.class, () -> shoppingBagService.addProductToBag(addAndListProductReq));
+        assertThrows(ProductNotFoundException.class, () -> shoppingBagService.addProductToBag(addAndListProductReq, checkoutId));
     }
 
     @Test
     void addProductToBag_NotInStocks_ThrowsNotInStocksException() {
         productInfo.setStockAmount(addAndListProductReq.getQuantity() - 1);
 
-        assertThrows(NotInStocksException.class, () -> shoppingBagService.addProductToBag(addAndListProductReq));
+        assertThrows(NotInStocksException.class, () -> shoppingBagService.addProductToBag(addAndListProductReq, checkoutId));
     }
 
     @Test
@@ -137,7 +144,7 @@ class ShoppingBagServiceTest {
         when(shoppingBagRepository.findByCodeAndCheckout(addAndListProductReq.getCode(), checkout)).thenReturn(product);
         product.setRemoved(true);
 
-        shoppingBagService.addProductToBag(addAndListProductReq);
+        shoppingBagService.addProductToBag(addAndListProductReq, checkoutId);
 
         verify(shoppingBagRepository, times(1)).save(product);
     }
@@ -146,7 +153,7 @@ class ShoppingBagServiceTest {
     void addProductToBag_WithUnRemovedProduct() {
         when(shoppingBagRepository.findByCodeAndCheckout(addAndListProductReq.getCode(), checkout)).thenReturn(product);
         productInfo.setStockAmount(20);
-        shoppingBagService.addProductToBag(addAndListProductReq);
+        shoppingBagService.addProductToBag(addAndListProductReq, checkoutId);
 
         verify(shoppingBagRepository, times(1)).save(product);
     }
@@ -156,14 +163,14 @@ class ShoppingBagServiceTest {
         when(shoppingBagRepository.findByCodeAndCheckout(addAndListProductReq.getCode(), checkout)).thenReturn(product);
         productInfo.setStockAmount(product.getQuantity() + addAndListProductReq.getQuantity() - 1);
 
-        assertThrows(NotInStocksException.class, () -> shoppingBagService.addProductToBag(addAndListProductReq));
+        assertThrows(NotInStocksException.class, () -> shoppingBagService.addProductToBag(addAndListProductReq, checkoutId));
     }
 
     @Test
     void addProductToBag_WithNewProduct() {
         when(shoppingBagRepository.findByCodeAndCheckout(addAndListProductReq.getCode(), checkout)).thenReturn(null);
 
-        shoppingBagService.addProductToBag(addAndListProductReq);
+        shoppingBagService.addProductToBag(addAndListProductReq, checkoutId);
 
         verify(shoppingBagRepository, times(1)).save(any(Product.class));
     }
@@ -176,7 +183,7 @@ class ShoppingBagServiceTest {
 
         when(campaignRepository.findFirstByCodesContaining(product.getCode())).thenReturn(campaign);
 
-        shoppingBagService.addProductToBag(addAndListProductReq);
+        shoppingBagService.addProductToBag(addAndListProductReq, checkoutId);
 
         verify(shoppingBagRepository, times(1)).save(any(Product.class));
     }
@@ -189,7 +196,7 @@ class ShoppingBagServiceTest {
 
         when(campaignRepository.findFirstByCodesContaining(product.getCode())).thenReturn(campaign);
 
-        shoppingBagService.addProductToBag(addAndListProductReq);
+        shoppingBagService.addProductToBag(addAndListProductReq, checkoutId);
 
         verify(shoppingBagRepository, times(1)).save(any(Product.class));
     }
@@ -203,18 +210,9 @@ class ShoppingBagServiceTest {
 
         when(campaignRepository.findFirstByCodesContaining(product.getCode())).thenReturn(campaign);
 
-        shoppingBagService.addProductToBag(addAndListProductReq);
+        shoppingBagService.addProductToBag(addAndListProductReq, checkoutId);
 
         verify(shoppingBagRepository, times(1)).save(any(Product.class));
-    }
-
-    @Test
-    void addProductToBag_WithNullCheckout() {
-        when(checkoutRepository.findFirstByOrderByIdDesc()).thenReturn(null);
-
-        shoppingBagService.addProductToBag(addAndListProductReq);
-
-        verify(checkoutRepository, times(2)).save(any(Checkout.class));
     }
 
     @Test
@@ -224,7 +222,7 @@ class ShoppingBagServiceTest {
         List<AddAndListProductReq> expectedProducts = Arrays.asList(new AddAndListProductReq(), new AddAndListProductReq());
         when(shoppingBagRepository.findProductReqByCheckoutAndRemoved(checkout)).thenReturn(expectedProducts);
 
-        List<AddAndListProductReq> actualProducts = shoppingBagService.getProductsInBagForCurrentCheckout();
+        List<AddAndListProductReq> actualProducts = shoppingBagService.getProductsInBag(checkoutId);
 
         assertEquals(expectedProducts, actualProducts);
     }
@@ -233,7 +231,7 @@ class ShoppingBagServiceTest {
     void getProductsInBagForCurrentCheckout_CompletedCheckout() {
         checkout.setCompleted(true);
 
-        List<AddAndListProductReq> actualProducts = shoppingBagService.getProductsInBagForCurrentCheckout();
+        List<AddAndListProductReq> actualProducts = shoppingBagService.getProductsInBag(checkoutId);
 
         assertEquals(Collections.emptyList(), actualProducts);
     }
@@ -241,11 +239,11 @@ class ShoppingBagServiceTest {
     @Test
     void removeAll_RemovesAllProducts() {
         checkout.setId(1L);
-        when(checkoutRepository.findFirstByOrderByIdDesc()).thenReturn(checkout);
+        when(checkoutRepository.findById(1L)).thenReturn(Optional.of(checkout));
 
         when(shoppingBagRepository.findByCheckoutId(checkout.getId())).thenReturn(List.of(product));
 
-        shoppingBagService.removeAll();
+        shoppingBagService.removeAll(checkoutId);
 
         assertTrue(product.isRemoved());
         assertEquals(0, product.getQuantity());
@@ -259,11 +257,11 @@ class ShoppingBagServiceTest {
     @Test
     void removeAll_NoProductsInShoppingBag() {
         checkout.setId(1L);
-        when(checkoutRepository.findFirstByOrderByIdDesc()).thenReturn(checkout);
+        when(checkoutRepository.findById(1L)).thenReturn(Optional.of(checkout));
 
         when(shoppingBagRepository.findByCheckoutId(checkout.getId())).thenReturn(Collections.emptyList());
 
-        shoppingBagService.removeAll();
+        shoppingBagService.removeAll(checkoutId);
 
         assertEquals(0D, checkout.getTotalPrice());
         verify(checkoutRepository).save(checkout);
@@ -271,9 +269,11 @@ class ShoppingBagServiceTest {
 
     @Test
     void removeProductFromBag_QuantityAndProductQuantityEquals() {
-        when(shoppingBagRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(shoppingBagRepository.findByCode(req.getCode())).thenReturn(Optional.of(product));
 
-        shoppingBagService.removeProductFromBag(1L, 3);
+        req.setQuantity(3);
+
+        shoppingBagService.removeProductFromBag(req);
 
         assertTrue(product.isRemoved());
 
@@ -282,9 +282,9 @@ class ShoppingBagServiceTest {
 
     @Test
     void removeProductFromBag_ProductExistsAndQuantityValid() {
-        when(shoppingBagRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(shoppingBagRepository.findByCode(req.getCode())).thenReturn(Optional.of(product));
 
-        shoppingBagService.removeProductFromBag(1L, 2);
+        shoppingBagService.removeProductFromBag(req);
 
         assertEquals(1, product.getQuantity());
         assertFalse(product.isRemoved());
@@ -300,10 +300,12 @@ class ShoppingBagServiceTest {
         campaign.setNeededQuantity(neededQuantity);
         campaign.setDiscountType(DiscountType.PERCENTAGE);
 
-        when(shoppingBagRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(shoppingBagRepository.findByCode(req.getCode())).thenReturn(Optional.of(product));
         when(campaignRepository.findFirstByCodesContaining(product.getCode())).thenReturn(campaign);
 
-        shoppingBagService.removeProductFromBag(1L, quantityToRemove);
+        req.setQuantity(quantityToRemove);
+
+        shoppingBagService.removeProductFromBag(req);
 
         verify(shoppingBagRepository).save(product);
     }
@@ -321,10 +323,10 @@ class ShoppingBagServiceTest {
         campaign.setNeededQuantity(1);
         campaign.setDiscountType(DiscountType.FIXED_AMOUNT);
 
-        when(shoppingBagRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(shoppingBagRepository.findByCode(req.getCode())).thenReturn(Optional.of(product));
         when(campaignRepository.findFirstByCodesContaining(product.getCode())).thenReturn(campaign);
 
-        shoppingBagService.removeProductFromBag(1L, 2);
+        shoppingBagService.removeProductFromBag(req);
 
         verify(shoppingBagRepository).save(product);
     }
@@ -333,28 +335,14 @@ class ShoppingBagServiceTest {
     void removeProductFromBag_ProductNotFound_ThrowsProductNotFoundException() {
         when(shoppingBagRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(ProductNotFoundException.class, () -> shoppingBagService.removeProductFromBag(1L, 2));
-    }
-
-    @Test
-    void removeProductFromBag_ProductExistsAndInvalidQuantity_Quantity0() {
-        when(shoppingBagRepository.findById(1L)).thenReturn(Optional.of(product));
-
-        assertThrows(InvalidQuantityException.class, () -> shoppingBagService.removeProductFromBag(1L, 0));
-    }
-
-    @Test
-    void removeProductFromBag_ProductExistsAndInvalidQuantity_QuantityBiggerThanProductQuantity() {
-        when(shoppingBagRepository.findById(1L)).thenReturn(Optional.of(product));
-
-        assertThrows(InvalidQuantityException.class, () -> shoppingBagService.removeProductFromBag(1L, 4));
+        assertThrows(ProductNotFoundException.class, () -> shoppingBagService.removeProductFromBag(req));
     }
 
     @Test
     void returnProductFromBag_ProductNotFound() {
         when(shoppingBagRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(ProductNotFoundException.class, () -> shoppingBagService.returnProductFromBag(1L, 3));
+        assertThrows(ProductNotFoundException.class, () -> shoppingBagService.returnProductFromBag(req));
     }
 
     @Test
@@ -362,10 +350,11 @@ class ShoppingBagServiceTest {
         product.setId(1L);
         product.setCheckout(checkout);
 
-        when(shoppingBagRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(shoppingBagRepository.findByCode(req.getCode())).thenReturn(Optional.of(product));
+
         product.getCheckout().setCompleted(false);
 
-        assertThrows(UncompletedCheckoutException.class, () -> shoppingBagService.returnProductFromBag(1L, 3));
+        assertThrows(UncompletedCheckoutException.class, () -> shoppingBagService.returnProductFromBag(req));
     }
 
     @Test
@@ -377,18 +366,7 @@ class ShoppingBagServiceTest {
         when(shoppingBagRepository.findById(1L)).thenReturn(Optional.of(product));
         product.getCheckout().setCompleted(true);
 
-        assertThrows(ProductNotFoundException.class, () -> shoppingBagService.returnProductFromBag(1L, 3));
-    }
-
-    @Test
-    void returnProductFromBag_CompletedCheckout_QuantityToReturnIsBiggerThanProductQuantity() {
-        product.setId(1L);
-        product.setCheckout(checkout);
-
-        when(shoppingBagRepository.findById(1L)).thenReturn(Optional.of(product));
-        product.getCheckout().setCompleted(true);
-
-        assertThrows(InvalidQuantityException.class, () -> shoppingBagService.returnProductFromBag(1L, 13));
+        assertThrows(ProductNotFoundException.class, () -> shoppingBagService.returnProductFromBag(req));
     }
 
     @ParameterizedTest
@@ -399,10 +377,13 @@ class ShoppingBagServiceTest {
         product.setId(1L);
         product.setCheckout(checkout);
 
-        when(shoppingBagRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(shoppingBagRepository.findByCode(req.getCode())).thenReturn(Optional.of(product));
+
         product.getCheckout().setCompleted(true);
 
-        shoppingBagService.returnProductFromBag(1L, quantityToReturn);
+        req.setQuantity(quantityToReturn);
+
+        shoppingBagService.returnProductFromBag(req);
 
         verify(shoppingBagRepository).save(product);
     }
