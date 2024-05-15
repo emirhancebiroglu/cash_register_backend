@@ -2,10 +2,15 @@ package bit.salesservice.validators;
 
 import bit.salesservice.dto.AddAndUpdateCampaignReq;
 import bit.salesservice.entity.Campaign;
+import bit.salesservice.entity.DiscountType;
+import bit.salesservice.exceptions.activecampaign.ActiveCampaignException;
+import bit.salesservice.exceptions.campaignalreadyexists.CampaignAlreadyExistsException;
+import bit.salesservice.exceptions.inactivecampaign.InactiveCampaignException;
 import bit.salesservice.exceptions.invaliddiscountamount.InvalidDiscountAmountException;
 import bit.salesservice.exceptions.invaliddiscounttype.InvalidDiscountTypeException;
 import bit.salesservice.exceptions.invaliddurationdays.InvalidDurationDaysException;
 import bit.salesservice.exceptions.invalidquantity.InvalidQuantityException;
+import bit.salesservice.exceptions.invalidstatustype.InvalidStatusTypeException;
 import bit.salesservice.exceptions.multiplecampaign.MultipleCampaignException;
 import bit.salesservice.exceptions.nullcampaignname.NullCampaignNameException;
 import bit.salesservice.repository.CampaignRepository;
@@ -42,7 +47,7 @@ public class CampaignValidator {
         checkIfDurationDaysNull(addAndUpdateCampaignReq.getDurationDays());
         validateProductCodes(addAndUpdateCampaignReq.getCodes(), campaignRepository);
         validateDurationDays(addAndUpdateCampaignReq);
-        validateCampaignName(addAndUpdateCampaignReq.getName());
+        validateCampaignName(addAndUpdateCampaignReq, campaignRepository);
         validateDiscountAmount(addAndUpdateCampaignReq.getDiscountAmount());
         validateDiscountType(addAndUpdateCampaignReq.getDiscountType());
         validateNeededQuantity(addAndUpdateCampaignReq.getNeededQuantity());
@@ -140,13 +145,20 @@ public class CampaignValidator {
     /**
      * Validates the campaign name.
      *
-     * @param name The campaign name to be validated.
+     * @param req The request object containing campaign parameters.
+     * @param repository The repository for accessing campaign data.
      * @throws NullCampaignNameException If the campaign name is not provided.
+     * @throws CampaignAlreadyExistsException If a campaign with the same name already exists.
      */
-    private void validateCampaignName(String name) {
-        if (name.isEmpty()) {
+    private void validateCampaignName(AddAndUpdateCampaignReq req, CampaignRepository repository) {
+        if (req.getName().isEmpty()) {
             logger.error("No campaign name provided");
             throw new NullCampaignNameException("No campaign name provided");
+        }
+
+        if (repository.findByName(req.getName()) != null){
+            logger.error("Campaign with name {} already exists.", req.getName());
+            throw new CampaignAlreadyExistsException("Campaign wit the name " + req.getName() + " already exists");
         }
     }
 
@@ -161,5 +173,62 @@ public class CampaignValidator {
             logger.error("Duration of the campaign is not provided");
             throw new InvalidDurationDaysException("Duration of the campaign is not provided");
         }
+    }
+
+    /**
+     * Validates the activation status of a campaign.
+     *
+     * @param existingCampaign The campaign to be validated.
+     * @throws InactiveCampaignException If the campaign is inactive.
+     */
+    public void validateActivation(Campaign existingCampaign){
+        if (existingCampaign.isInactive()){
+            logger.error("Campaign is inactivated");
+            throw new InactiveCampaignException("Campaign is inactivated");
+        }
+    }
+
+    /**
+     * Validates the inactivation of a campaign.
+     *
+     * @param existingCampaign The campaign to be validated.
+     * @throws ActiveCampaignException If the campaign is already active.
+     */
+    public void validateInactivation(Campaign existingCampaign){
+        if (!existingCampaign.isInactive()){
+            logger.error("Campaign is already active");
+            throw new ActiveCampaignException("Campaign is already active");
+        }
+    }
+
+    /**
+     * Validates the discount type and status parameters.
+     *
+     * @param discountType the discount type
+     * @param status       the status
+     * @return the parsed discount type if valid, null otherwise
+     * @throws InvalidDiscountTypeException if an invalid discount type is provided
+     * @throws InvalidStatusTypeException   if an invalid status type is provided
+     */
+    public DiscountType validateDiscountTypeAndStatus(String discountType, String status) {
+        DiscountType parsedDiscountType = null;
+
+        // Validate discount type
+        if (discountType != null){
+            try {
+                parsedDiscountType = DiscountType.valueOf(discountType.toUpperCase());
+            } catch (IllegalArgumentException ex) {
+                logger.error("Invalid discount type : {}", discountType);
+                throw new InvalidDiscountTypeException("Invalid discount type: " + discountType);
+            }
+        }
+
+        // Validate status
+        if (status != null && (!status.equalsIgnoreCase("active") && !status.equalsIgnoreCase("inactive"))) {
+            logger.error("Invalid status type : {}", status);
+            throw new InvalidStatusTypeException("Invalid status type");
+        }
+
+        return parsedDiscountType;
     }
 }

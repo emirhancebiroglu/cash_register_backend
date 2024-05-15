@@ -27,7 +27,10 @@ public class ShoppingBagController {
      */
     @PostMapping("/bag/add-product/{checkoutId}")
     public ResponseEntity<String> addProductToShoppingBag(@RequestBody AddAndListProductReq req, @PathVariable Long checkoutId) {
+        // Call the shopping bag service to add a product to the bag
         shoppingBagService.addProductToBag(req, checkoutId);
+
+        // Return response with status code 201 (CREATED) and a success message
         return ResponseEntity.status(HttpStatus.CREATED).body("Product added successfully");
     }
 
@@ -38,7 +41,10 @@ public class ShoppingBagController {
      */
     @PostMapping("/bag/remove-product")
     public ResponseEntity<String> removeProductFromShoppingBag(@RequestBody RemoveOrReturnProductFromBagReq request) {
+        // Call the shopping bag service to remove a product from the bag
         shoppingBagService.removeProductFromBag(request);
+
+        // Return response with status code 200 (OK) and a success message
         return ResponseEntity.status(HttpStatus.OK).body("Product removed successfully");
     }
 
@@ -49,7 +55,10 @@ public class ShoppingBagController {
      */
     @PostMapping("/bag/return-product")
     public ResponseEntity<String> returnProductFromShoppingBag(@RequestBody RemoveOrReturnProductFromBagReq request) {
+        // Call the shopping bag service to return a product to the bag
         shoppingBagService.returnProductFromBag(request);
+
+        // Return response with status code 200 (OK) and a success message
         return ResponseEntity.status(HttpStatus.OK).body("Product returned successfully");
     }
 
@@ -60,7 +69,10 @@ public class ShoppingBagController {
      */
     @PostMapping("/bag/remove-all/{checkoutId}")
     public ResponseEntity<String> removeAll(@PathVariable Long checkoutId) {
+        // Call the shopping bag service to remove all products from the bag
         shoppingBagService.removeAll(checkoutId);
+
+        // Return response with status code 200 (OK) and a success message
         return ResponseEntity.status(HttpStatus.OK).body("Bag is cleaned successfully");
     }
 
@@ -71,6 +83,7 @@ public class ShoppingBagController {
      */
     @GetMapping("/bag/get-products/{checkoutId}")
     public List<AddAndListProductReq> getProductsInShoppingBag(@PathVariable Long checkoutId) {
+        // Call the shopping bag service to retrieve products in the bag
         return shoppingBagService.getProductsInBag(checkoutId);
     }
 }

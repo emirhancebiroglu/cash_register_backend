@@ -15,8 +15,10 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Configuration
 @RequiredArgsConstructor
 public class WebClientConfig {
+    // Logger for logging WebClient setup
     private static final Logger logger = LogManager.getLogger(WebClientConfig.class);
 
+    // Value fetched from application.properties for the base URL of the product service
     @Value("${product.service.base.url}")
     private String productServiceBaseUrl;
 
@@ -28,6 +30,7 @@ public class WebClientConfig {
     @Bean
     @LoadBalanced
     public WebClient.Builder webClientBuilder(){
+        // Create and return a load-balanced WebClient builder
         return WebClient.builder();
     }
 
@@ -38,9 +41,16 @@ public class WebClientConfig {
      */
     @Bean
     public WebClient webClient(){
-        logger.debug("Creating WebClient instance.");
+        // Log the creation of WebClient instance
+        logger.trace("Creating WebClient instance.");
+
+        // Build a WebClient instance with the configured base URL
         WebClient webClient = webClientBuilder().baseUrl(productServiceBaseUrl).build();
-        logger.debug("WebClient instance created successfully.");
+
+        // Log the successful creation of WebClient instance
+        logger.trace("WebClient instance created successfully.");
+
+        // Return the configured WebClient
         return webClient;
     }
 }

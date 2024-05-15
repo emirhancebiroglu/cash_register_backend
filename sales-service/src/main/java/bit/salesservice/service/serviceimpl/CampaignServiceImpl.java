@@ -5,13 +5,9 @@ import bit.salesservice.dto.ListCampaignsReq;
 import bit.salesservice.dto.kafka.CampaignDTO;
 import bit.salesservice.entity.Campaign;
 import bit.salesservice.entity.DiscountType;
-import bit.salesservice.exceptions.activecampaign.ActiveCampaignException;
-import bit.salesservice.exceptions.campaignalreadyexists.CampaignAlreadyExistsException;
 import bit.salesservice.exceptions.campaignnotfound.CampaignNotFoundException;
 import bit.salesservice.exceptions.fixedamountdiscounttypewithprovidedquantity.FixedAmountDiscountTypeWithProvidedQuantityException;
-import bit.salesservice.exceptions.inactivecampaign.InactiveCampaignException;
 import bit.salesservice.exceptions.invaliddiscounttype.InvalidDiscountTypeException;
-import bit.salesservice.exceptions.invalidstatustype.InvalidStatusTypeException;
 import bit.salesservice.exceptions.productnotfound.ProductNotFoundException;
 import bit.salesservice.repository.CampaignRepository;
 import bit.salesservice.service.CampaignService;
@@ -21,9 +17,8 @@ import bit.salesservice.validators.CampaignValidator;
 import lombok.RequiredArgsConstructor;
 import org.apache.http.HttpHeaders;
 import org.apache.logging.log4j.LogManager;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -51,17 +46,12 @@ public class CampaignServiceImpl implements CampaignService {
 
     private static final String NOT_FOUND = "Campaign not found";
     private static final String STATUS_ACTIVE = "active";
-    private static final String END_DATE = "endDate";
 
     @Override
     public void addCampaign(AddAndUpdateCampaignReq addAndUpdateCampaignReq) {
-        logger.info("Adding campaign...");
+        logger.trace("Adding campaign...");
 
-        if (campaignRepository.findByName(addAndUpdateCampaignReq.getName()) != null){
-            logger.error("Campaign with name {} already exists.", addAndUpdateCampaignReq.getName());
-            throw new CampaignAlreadyExistsException("Campaign wit the name " + addAndUpdateCampaignReq.getName() + " already exists");
-        }
-
+        // Check if the required products for the campaign are available
         checkIfProductsAvailable(addAndUpdateCampaignReq)
                 .doOnError(error -> {
                     logger.error("Error occurred while checking products availability: {}", error.getMessage());
@@ -69,32 +59,45 @@ public class CampaignServiceImpl implements CampaignService {
                 })
                 .block();
 
+        // Validate the campaign DTO
         campaignValidator.validateCampaignDTO(addAndUpdateCampaignReq, campaignRepository);
 
+        // Log the validation success as debug information
+        logger.debug("Campaign DTO validation successful");
+
+        // Map DTO to Campaign entity
         Campaign campaign = mapToCampaign(addAndUpdateCampaignReq);
 
+        // Save the campaign
         campaignRepository.save(campaign);
 
+        // Send campaign information to reporting service
         sendCampaignInfoToReportingService(campaign);
 
-        logger.info("Campaign added successfully");
+        logger.trace("Campaign added successfully");
     }
 
     @Override
     public void updateCampaign(AddAndUpdateCampaignReq addAndUpdateCampaignReq, Long campaignId) {
-        logger.info("Updating campaign...");
+        logger.trace("Updating campaign...");
 
+        // Retrieve the existing campaign from the repository
         Campaign existingCampaign = campaignRepository.findById(campaignId)
                 .orElseThrow(() -> {
                     logger.error(NOT_FOUND);
                     return new CampaignNotFoundException(NOT_FOUND);
                 });
 
-        if (existingCampaign.isInactive()){
-            logger.error("Campaign is inactivated or has reached its end date, please reactivate the campaign to update it.");
-            throw new InactiveCampaignException("Campaign is inactivated or has reached its end date, please reactivate the campaign to update it.");
-        }
+        // Log the retrieved campaign details for debugging purposes
+        logger.debug("Retrieved existing campaign: {}", existingCampaign);
 
+        // Ensure the campaign is active before proceeding with the update
+        campaignValidator.validateActivation(existingCampaign);
+
+        // Log the validation success as debug information
+        logger.debug("Campaign activation validation successful");
+
+        // Check and update product codes if provided
         if (!addAndUpdateCampaignReq.getCodes().isEmpty()){
             checkIfProductsAvailable(addAndUpdateCampaignReq)
                     .doOnError(error -> {
@@ -105,128 +108,183 @@ public class CampaignServiceImpl implements CampaignService {
 
             campaignValidator.validateProductCodes(addAndUpdateCampaignReq.getCodes(), campaignRepository);
             existingCampaign.setCodes(addAndUpdateCampaignReq.getCodes());
+
+            // Log the updated product codes for debugging purposes
+            logger.debug("Updated product codes: {}", addAndUpdateCampaignReq.getCodes());
         }
 
+        // Update campaign name if provided and different from the current name
         if (!Objects.equals(existingCampaign.getName(), addAndUpdateCampaignReq.getName()) && !addAndUpdateCampaignReq.getName().isEmpty()){
             existingCampaign.setName(addAndUpdateCampaignReq.getName());
+
+            // Log the updated campaign name for debugging purposes
+            logger.debug("Updated campaign name: {}", addAndUpdateCampaignReq.getName());
         }
 
+        // Update campaign duration and end date if provided and different from the current duration
         if (addAndUpdateCampaignReq.getDurationDays() != null && (!Objects.equals(existingCampaign.getEndDate(), existingCampaign.getStartDate().plusDays(addAndUpdateCampaignReq.getDurationDays())))){
-                existingCampaign.setDurationDays(addAndUpdateCampaignReq.getDurationDays());
-                existingCampaign.setEndDate(existingCampaign.getStartDate().plusDays(addAndUpdateCampaignReq.getDurationDays()));
+            logger.debug("Updating campaign duration and end date...");
+
+            existingCampaign.setDurationDays(addAndUpdateCampaignReq.getDurationDays());
+            existingCampaign.setEndDate(existingCampaign.getStartDate().plusDays(addAndUpdateCampaignReq.getDurationDays()));
+
+            // Log the updated campaign duration and end date for debugging purposes
+            logger.debug("Updated campaign duration: {} days", addAndUpdateCampaignReq.getDurationDays());
+            logger.debug("Updated campaign end date: {}", existingCampaign.getEndDate());
         }
 
+        // Update discount type if provided and different from the current type
         if (!addAndUpdateCampaignReq.getDiscountType().isEmpty()){
+            logger.debug("Updating discount type...");
             DiscountType discountType = getDiscountType(addAndUpdateCampaignReq);
 
             if (!Objects.equals(existingCampaign.getDiscountType(), discountType)){
                 existingCampaign.setDiscountType(discountType);
+
+                // Log the updated discount type for debugging purposes
+                logger.debug("Updated discount type: {}", discountType);
             }
         }
 
+        // Update discount amount if provided and different from the current amount
         if (addAndUpdateCampaignReq.getDiscountAmount() != null && !Objects.equals(existingCampaign.getDiscountAmount(), addAndUpdateCampaignReq.getDiscountAmount())){
+            logger.debug("Updating discount amount...");
             campaignValidator.validateDiscountAmount(addAndUpdateCampaignReq.getDiscountAmount());
             existingCampaign.setDiscountAmount(addAndUpdateCampaignReq.getDiscountAmount());
+
+            // Log the updated discount amount for debugging purposes
+            logger.debug("Updated discount amount: {}", addAndUpdateCampaignReq.getDiscountAmount());
         }
 
+        // Update needed quantity if provided and different from the current quantity
         if (addAndUpdateCampaignReq.getNeededQuantity() != null && !Objects.equals(existingCampaign.getNeededQuantity(), addAndUpdateCampaignReq.getNeededQuantity())){
+            logger.debug("Updating needed quantity...");
             existingCampaign.setNeededQuantity(addAndUpdateCampaignReq.getNeededQuantity());
+
+            // Log the updated needed quantity for debugging purposes
+            logger.debug("Updated needed quantity: {}", addAndUpdateCampaignReq.getNeededQuantity());
         }
 
+        // Update the updated date and save the changes to the repository
         existingCampaign.setUpdatedDate(LocalDateTime.now());
         campaignRepository.save(existingCampaign);
 
+        // Send updated campaign information to the reporting service
         sendCampaignInfoToReportingService(existingCampaign);
 
-        logger.info("Campaign updated successfully");
+        logger.trace("Campaign updated successfully");
     }
 
     @Override
     public void inactivateCampaign(Long campaignId) {
-        logger.info("Inactivating campaign...");
+        logger.trace("Inactivating campaign...");
 
+        // Retrieve the campaign from the repository
         Campaign campaign = campaignRepository.findById(campaignId)
                 .orElseThrow(() -> {
                     logger.error(NOT_FOUND);
                     return new CampaignNotFoundException(NOT_FOUND);
                 });
 
-        if (campaign.isInactive()){
-            logger.error("Campaign is already inactivated");
-            throw new InactiveCampaignException("Campaign is already inactivated");
-        }
+        // Log the retrieved campaign details for debugging purposes
+        logger.debug("Retrieved campaign: {}", campaign);
 
+        // Check if the campaign is already inactive
+        campaignValidator.validateActivation(campaign);
+
+        // Log the validation success as debug information
+        logger.debug("Campaign activation validation successful");
+
+        // Set the campaign as inactive
         campaign.setInactive(true);
 
+        // Save the changes to the repository
         campaignRepository.save(campaign);
 
-        logger.info("Campaign inactivated successfully");
+        logger.trace("Campaign inactivated successfully");
     }
 
     @Override
     public void reactivateCampaign(Long campaignId, Integer durationDays) {
-        logger.info("Reactivating campaign...");
+        logger.trace("Reactivating campaign...");
 
+        // Retrieve the campaign from the repository
         Campaign campaign = campaignRepository.findById(campaignId)
                 .orElseThrow(() -> {
                     logger.error(NOT_FOUND);
                     return new CampaignNotFoundException(NOT_FOUND);
                 });
 
-        if (!campaign.isInactive()){
-            logger.error("Campaign is already active");
-            throw new ActiveCampaignException("Campaign is already active");
-        }
+        // Log the retrieved campaign details for debugging purposes
+        logger.debug("Retrieved campaign: {}", campaign);
 
+        // Check if the campaign is already inactive
+        campaignValidator.validateInactivation(campaign);
+
+        // Log the validation success as debug information
+        logger.debug("Campaign inactivation validation successful");
+
+        // Set the campaign as inactive
         campaign.setInactive(false);
         campaign.setDurationDays(durationDays);
         campaign.setEndDate(LocalDateTime.now().plusDays(durationDays));
         campaign.setStartDate(LocalDateTime.now());
         campaign.setUpdatedDate(LocalDateTime.now());
 
+        // Save the changes to the repository
         campaignRepository.save(campaign);
 
-        logger.info("Campaign reactivated successfully");
+        logger.trace("Campaign reactivated successfully");
     }
 
     @Override
     public List<ListCampaignsReq> getCampaigns(int pageNo, int pageSize, String discountType, String status, String searchingTerm, String sortBy, String sortOrder) {
-        logger.info("Getting campaigns...");
+        logger.trace("Getting campaigns...");
 
+        // Apply pagination and sorting parameters
         Pageable pageable = applySort(pageNo, pageSize, sortBy, sortOrder);
 
+        // Variables to store query results
         Page<Campaign> campaignPage;
 
-        DiscountType parsedDiscountType = validateDiscountTypeAndStatus(discountType, status);
+        DiscountType parsedDiscountType = campaignValidator.validateDiscountTypeAndStatus(discountType, status);
 
+        // Log the validated discount type and status for debugging purposes
+        logger.debug("Validated discount type: {}, status: {}", parsedDiscountType, status);
+
+        // Determine the appropriate query based on input parameters
         if (parsedDiscountType != null && status != null && searchingTerm != null) {
+            logger.debug("Querying campaigns by discount type, status, and searching term...");
             campaignPage = campaignRepository.findAllByDiscountTypeAndIsInactiveAndNameContaining(parsedDiscountType, !status.equals(STATUS_ACTIVE), searchingTerm, pageable);
         } else if (parsedDiscountType != null && status != null) {
+            logger.debug("Querying campaigns by discount type and status...");
             campaignPage = campaignRepository.findAllByDiscountTypeAndIsInactive(parsedDiscountType, !status.equals(STATUS_ACTIVE), pageable);
         } else if (parsedDiscountType != null && searchingTerm != null) {
+            logger.debug("Querying campaigns by discount type and searching term...");
             campaignPage = campaignRepository.findAllByDiscountTypeAndNameContaining(parsedDiscountType, searchingTerm, pageable);
         } else if (status != null && searchingTerm != null) {
+            logger.debug("Querying campaigns by status and searching term...");
             campaignPage = campaignRepository.findAllByisInactiveAndNameContaining(status.equals(STATUS_ACTIVE), searchingTerm, pageable);
         } else if (parsedDiscountType != null) {
+            logger.debug("Querying campaigns by discount type...");
             campaignPage = campaignRepository.findAllByDiscountType(parsedDiscountType, pageable);
         } else if (status != null){
-            if (status.equals(STATUS_ACTIVE)){
-                campaignPage = campaignRepository.findAllByisInactive(false, pageable);
-            }
-            else{
-                campaignPage = campaignRepository.findAllByisInactive(true, pageable);
-            }
+            logger.debug("Querying campaigns by status...");
+            campaignPage = (status.equals(STATUS_ACTIVE)) ? campaignRepository.findAllByisInactive(false, pageable) : campaignRepository.findAllByisInactive(true, pageable);
         } else if (searchingTerm != null) {
+            logger.debug("Querying campaigns by searching term...");
             campaignPage = campaignRepository.findByNameContaining(pageable, searchingTerm);
         } else{
+            logger.debug("Querying all campaigns...");
             campaignPage = campaignRepository.findAll(pageable);
         }
 
+        // Map the retrieved campaigns to DTOs\
         List<ListCampaignsReq> listCampaignsReqList = campaignPage.getContent().stream()
                 .map(this::mapToCampaignReq)
                 .toList();
 
-        logger.info("Campaigns retrieved successfully");
+        logger.trace("Campaigns retrieved successfully");
 
         return listCampaignsReqList;
     }
@@ -242,45 +300,21 @@ public class CampaignServiceImpl implements CampaignService {
      */
     @NotNull
     private static Pageable applySort(int pageNo, int pageSize, String sortBy, String sortOrder) {
-        Pageable pageable;
+        // Default sort by name if sortBy is not specified or invalid
+        Sort sort = Sort.by(Sort.Direction.ASC, "name");
 
-        if (sortBy.equalsIgnoreCase("name")) {
-            pageable = PageRequest.of(pageNo, pageSize, sortOrder.equalsIgnoreCase("ASC") ? Sort.by(Sort.Direction.ASC, "name") : Sort.by(Sort.Direction.DESC, "name"));
-        } else if (sortBy.equalsIgnoreCase(END_DATE)) {
-            pageable = PageRequest.of(pageNo, pageSize, sortOrder.equalsIgnoreCase("ASC") ? Sort.by(Sort.Direction.ASC, END_DATE) : Sort.by(Sort.Direction.DESC, END_DATE));
-        } else {
-            pageable = PageRequest.of(pageNo, pageSize, Sort.by(Sort.Direction.ASC, "name"));
+        if (sortBy != null) {
+            sort = switch (sortBy.toLowerCase()) {
+                case "name" ->
+                        Sort.by(sortOrder.equalsIgnoreCase("ASC") ? Sort.Direction.ASC : Sort.Direction.DESC, "name");
+                case "end_date" ->
+                        Sort.by(sortOrder.equalsIgnoreCase("ASC") ? Sort.Direction.ASC : Sort.Direction.DESC, "endDate");
+                default -> sort;
+            };
         }
 
-        return pageable;
-    }
-
-    /**
-     * Validates the discount type and status parameters.
-     *
-     * @param discountType the discount type
-     * @param status       the status
-     * @return the parsed discount type if valid, null otherwise
-     * @throws InvalidDiscountTypeException if an invalid discount type is provided
-     * @throws InvalidStatusTypeException   if an invalid status type is provided
-     */
-    @Nullable
-    private static DiscountType validateDiscountTypeAndStatus(String discountType, String status) {
-        DiscountType parsedDiscountType = null;
-
-        if (discountType != null){
-            try {
-                parsedDiscountType = DiscountType.valueOf(discountType.toUpperCase());
-            } catch (IllegalArgumentException ex) {
-                logger.error("Invalid discount type : {}", discountType);
-                throw new InvalidDiscountTypeException("Invalid discount type: " + discountType);
-            }
-        }
-        if (status != null && (!status.equalsIgnoreCase(STATUS_ACTIVE) && !status.equalsIgnoreCase("inactive"))) {
-            logger.error("Invalid status type : {}", status);
-            throw new InvalidStatusTypeException("Invalid status type");
-        }
-        return parsedDiscountType;
+        // Create pageable object with sorting parameters
+        return PageRequest.of(pageNo, pageSize, sort);
     }
 
     /**
@@ -332,11 +366,15 @@ public class CampaignServiceImpl implements CampaignService {
      * @throws ProductNotFoundException if a product is not found while checking availability
      */
     private Mono<Void> checkIfProductsAvailable(AddAndUpdateCampaignReq addAndUpdateCampaignReq) {
+        // Check the availability of each product code asynchronously
         return Flux.fromIterable(addAndUpdateCampaignReq.getCodes())
                 .flatMap(code -> {
                     final String productCode = code;
+
+                    // Fetch product information for the given code
                     return Mono.just(info.getProductInfo(productCode, jwtToken))
                             .flatMap(productInfo -> {
+                                // If product does not exist, throw ProductNotFoundException
                                 if (!productInfo.isExists()) {
                                     logger.error("Product not found : {}", productCode);
                                     return Mono.error(new ProductNotFoundException("Product not found: " + productCode));
@@ -344,6 +382,7 @@ public class CampaignServiceImpl implements CampaignService {
                                 return Mono.empty();
                             });
                 })
+                // Combine all results into a single Mono<Void> indicating completion
                 .then();
     }
 
@@ -355,11 +394,16 @@ public class CampaignServiceImpl implements CampaignService {
      * @throws FixedAmountDiscountTypeWithProvidedQuantityException if a fixed amount discount type is provided with a quantity greater than 1
      */
     private Campaign mapToCampaign(AddAndUpdateCampaignReq addAndUpdateCampaignReq) {
+        // Extract discount type from the request
         DiscountType discountType = getDiscountType(addAndUpdateCampaignReq);
+
+        // Extract duration days from the request
         Integer durationDays = addAndUpdateCampaignReq.getDurationDays();
 
+        // Create a new Campaign entity
         Campaign campaign = new Campaign();
 
+        // Set campaign details from the request
         campaign.setCodes(addAndUpdateCampaignReq.getCodes());
         campaign.setName(addAndUpdateCampaignReq.getName());
         campaign.setStartDate(LocalDateTime.now());
@@ -369,6 +413,7 @@ public class CampaignServiceImpl implements CampaignService {
         campaign.setDiscountType(discountType);
         campaign.setDiscountAmount(addAndUpdateCampaignReq.getDiscountAmount());
 
+        // Set needed quantity for the campaign, with validation for fixed amount discount type
         if (addAndUpdateCampaignReq.getNeededQuantity() != null){
             if (discountType == DiscountType.FIXED_AMOUNT && addAndUpdateCampaignReq.getNeededQuantity() > 1){
                 logger.error("Fixed amount discount type should not require more than 1 quantity for the campaign");
@@ -388,6 +433,7 @@ public class CampaignServiceImpl implements CampaignService {
      * @param campaign the Campaign entity containing campaign information
      */
     private void sendCampaignInfoToReportingService(Campaign campaign){
+        // Create a CampaignDTO object from the Campaign entity
         CampaignDTO campaignDTO = new CampaignDTO(
                 campaign.getName(),
                 campaign.getDiscountType(),
@@ -395,6 +441,7 @@ public class CampaignServiceImpl implements CampaignService {
                 campaign.getNeededQuantity()
         );
 
+        // Send the campaign information to the reporting service
         campaignProducer.sendCampaign("campaign", campaignDTO);
     }
 }

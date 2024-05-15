@@ -3,10 +3,8 @@ package bit.salesservice.validators;
 import bit.salesservice.dto.CompleteCheckoutReq;
 import bit.salesservice.entity.Checkout;
 import bit.salesservice.entity.Product;
-import bit.salesservice.exceptions.checkoutnotfound.CheckoutNotFoundException;
 import bit.salesservice.exceptions.completedcheckout.CompletedCheckoutException;
 import bit.salesservice.exceptions.invalidmoneytaken.InvalidMoneyTakenException;
-import bit.salesservice.exceptions.invalidpaymentmethod.InvalidPaymentMethodException;
 import bit.salesservice.exceptions.productnotfound.ProductNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -31,9 +29,11 @@ class CheckoutValidatorTest {
         checkout = new Checkout();
         checkout.setCompleted(false);
         checkout.setProducts(Collections.singletonList(new Product()));
+        checkout.setTotalPrice(20D);
 
         completeCheckoutReq = new CompleteCheckoutReq();
-        completeCheckoutReq.setPaymentMethod("CREDIT_CARD");
+        completeCheckoutReq.setMoneyTakenFromCard(11D);
+        completeCheckoutReq.setMoneyTakenFromCash(11D);
     }
 
     @Test
@@ -43,27 +43,28 @@ class CheckoutValidatorTest {
 
     @Test
     void validateMoneyTaken_InvalidMoneyTakenException_With_Cash_NullField() {
-        completeCheckoutReq.setPaymentMethod("CASH");
+        completeCheckoutReq.setMoneyTakenFromCash(0D);
+        completeCheckoutReq.setMoneyTakenFromCard(0D);
         assertThrows(InvalidMoneyTakenException.class, () -> checkoutValidator.validateCheckout(checkout, completeCheckoutReq));
     }
 
     @Test
     void validateMoneyTaken_InvalidMoneyTakenException_With_Cash_ZeroOrNegativeField() {
-        completeCheckoutReq.setPaymentMethod("CASH");
-        completeCheckoutReq.setMoneyTaken(0D);
+        completeCheckoutReq.setMoneyTakenFromCard(null);
         assertThrows(InvalidMoneyTakenException.class, () -> checkoutValidator.validateCheckout(checkout, completeCheckoutReq));
     }
 
     @Test
     void validateMoneyTaken_InvalidMoneyTakenException_With_Credit_Card() {
-        completeCheckoutReq.setPaymentMethod("CREDIT_CARD");
-        completeCheckoutReq.setMoneyTaken(25D);
+        completeCheckoutReq.setMoneyTakenFromCash(null);
         assertThrows(InvalidMoneyTakenException.class, () -> checkoutValidator.validateCheckout(checkout, completeCheckoutReq));
     }
 
     @Test
     void validateMoneyTaken_CheckoutNotFoundException() {
-        assertThrows(CheckoutNotFoundException.class, () -> checkoutValidator.validateCheckout(null, completeCheckoutReq));
+        completeCheckoutReq.setMoneyTakenFromCard(5D);
+        completeCheckoutReq.setMoneyTakenFromCash(5D);
+        assertThrows(InvalidMoneyTakenException.class, () -> checkoutValidator.validateCheckout(checkout, completeCheckoutReq));
     }
 
     @Test
@@ -79,14 +80,8 @@ class CheckoutValidatorTest {
     }
 
     @Test
-    void validateMoneyTaken_InvalidPaymentMethodException_WithNullPaymentMethod() {
-        completeCheckoutReq.setPaymentMethod(null);
-        assertThrows(InvalidPaymentMethodException.class, () -> checkoutValidator.validateCheckout(checkout, completeCheckoutReq));
-    }
-
-    @Test
     void validateMoneyTaken_InvalidPaymentMethodException_WithInvalidPaymentMethod() {
-        completeCheckoutReq.setPaymentMethod("Invalid");
-        assertThrows(InvalidPaymentMethodException.class, () -> checkoutValidator.validateCheckout(checkout, completeCheckoutReq));
+        completeCheckoutReq.setMoneyTakenFromCard(22D);
+        assertThrows(InvalidMoneyTakenException.class, () -> checkoutValidator.validateCheckout(checkout, completeCheckoutReq));
     }
 }

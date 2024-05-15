@@ -11,12 +11,12 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ProductDTO {
-    private Long id;
-    private String code;
-    private String name;
-    private String appliedCampaign;
-    private Integer quantity;
-    private Integer returnedQuantity;
-    private boolean isReturned;
-    private double price;
+    private Long id; // ID of the product
+    private String code; // Code or identifier of the product
+    private String name; // Name of the product
+    private String appliedCampaign; // Name of the campaign applied to the product (if any)
+    private Integer quantity; // Quantity of the product
+    private Integer returnedQuantity; // Quantity of the product returned
+    private boolean isReturned; // Indicates whether the product is returned
+    private double price; // Price of the product
 }

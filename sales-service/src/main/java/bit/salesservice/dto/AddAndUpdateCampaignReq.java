@@ -9,10 +9,10 @@ import java.util.List;
  */
 @Data
 public class AddAndUpdateCampaignReq {
-    private String name;
-    private Integer durationDays;
-    private List<String> codes;
-    private String discountType;
-    private Double discountAmount;
-    private Integer neededQuantity;
+    private String name; // Name of the campaign
+    private Integer durationDays; // Duration of the campaign in days
+    private List<String> codes; // List of codes associated with the campaign
+    private String discountType; // Type of discount offered by the campaign
+    private Double discountAmount; // Amount of discount offered by the campaign
+    private Integer neededQuantity; // Needed quantity for the campaign
 }

@@ -24,6 +24,6 @@ public class CampaignProducer {
      */
     public void sendCampaign(String topic, CampaignDTO campaignDTO){
         kafkaTemplate.send(topic, campaignDTO);
-        logger.info("Sale report sent to kafka topic: {}", topic);
+        logger.trace("Sale report sent to kafka topic: {}", topic);
     }
 }

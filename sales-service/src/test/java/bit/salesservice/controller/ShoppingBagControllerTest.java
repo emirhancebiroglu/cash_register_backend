@@ -1,6 +1,7 @@
 package bit.salesservice.controller;
 
 import bit.salesservice.dto.AddAndListProductReq;
+import bit.salesservice.dto.RemoveOrReturnProductFromBagReq;
 import bit.salesservice.service.ShoppingBagService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,9 +24,16 @@ class ShoppingBagControllerTest {
     @InjectMocks
     private ShoppingBagController shoppingBagController;
 
+    private RemoveOrReturnProductFromBagReq req;
+
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+
+        req = new RemoveOrReturnProductFromBagReq();
+        req.setCheckoutId(1L);
+        req.setCode("test");
+        req.setQuantity(2);
     }
 
     @Test
@@ -40,48 +48,42 @@ class ShoppingBagControllerTest {
         assertEquals("Product added successfully", response.getBody());
     }
 
-//    @Test
-//    void removeProductFromShoppingBag_Success() {
-//        Long productId = 1L;
-//        Integer quantity = 2;
-//
-//        doNothing().when(shoppingBagService).removeProductFromBag(productId, quantity);
-//
-//        ResponseEntity<String> response = shoppingBagController.removeProductFromShoppingBag(productId, quantity);
-//
-//        assertEquals(HttpStatus.OK, response.getStatusCode());
-//        assertEquals("Product removed successfully", response.getBody());
-//    }
+    @Test
+    void removeProductFromShoppingBag_Success() {
+        doNothing().when(shoppingBagService).removeProductFromBag(req);
 
-//    @Test
-//    void returnProductFromShoppingBag_Success() {
-//        Long productId = 1L;
-//        Integer quantityToReturn = 2;
-//
-//        doNothing().when(shoppingBagService).returnProductFromBag(productId, quantityToReturn);
-//
-//        ResponseEntity<String> response = shoppingBagController.returnProductFromShoppingBag(productId, quantityToReturn);
-//
-//        assertEquals(HttpStatus.OK, response.getStatusCode());
-//        assertEquals("Product returned successfully", response.getBody());
-//    }
+        ResponseEntity<String> response = shoppingBagController.removeProductFromShoppingBag(req);
 
-//    @Test
-//    void removeAll_Success() {
-//        doNothing().when(shoppingBagService).removeAll(checkoutId);
-//
-//        ResponseEntity<String> response = shoppingBagController.removeAll();
-//
-//        assertEquals(HttpStatus.OK, response.getStatusCode());
-//        assertEquals("Bag is cleaned successfully", response.getBody());
-//    }
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("Product removed successfully", response.getBody());
+    }
+
+    @Test
+    void returnProductFromShoppingBag_Success() {
+        doNothing().when(shoppingBagService).returnProductFromBag(req);
+
+        ResponseEntity<String> response = shoppingBagController.returnProductFromShoppingBag(req);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("Product returned successfully", response.getBody());
+    }
+
+    @Test
+    void removeAll_Success() {
+        doNothing().when(shoppingBagService).removeAll(1L);
+
+        ResponseEntity<String> response = shoppingBagController.removeAll(1L);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals("Bag is cleaned successfully", response.getBody());
+    }
 
     @Test
     void getProductsInShoppingBagForCurrentCheckout_Success() {
         List<AddAndListProductReq> productsInBag = List.of(new AddAndListProductReq(), new AddAndListProductReq());
-        when(shoppingBagService.getProductsInBagForCurrentCheckout()).thenReturn(productsInBag);
+        when(shoppingBagService.getProductsInBag(1L)).thenReturn(productsInBag);
 
-        List<AddAndListProductReq> response = shoppingBagController.getProductsInShoppingBagForCurrentCheckout();
+        List<AddAndListProductReq> response = shoppingBagController.getProductsInShoppingBag(1L);
 
         assertEquals(productsInBag, response);
     }

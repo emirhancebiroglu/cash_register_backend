@@ -11,8 +11,8 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @AllArgsConstructor
 public class ProductInfo {
-    private boolean exists;
-    private double price;
-    private String name;
-    private int stockAmount;
+    private boolean exists; // Indicates whether the product exists
+    private double price; // Price of the product
+    private String name; // Name of the product
+    private int stockAmount; // Stock amount or quantity of the product
 }

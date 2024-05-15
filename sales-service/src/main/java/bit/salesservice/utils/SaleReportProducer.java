@@ -26,7 +26,7 @@ public class SaleReportProducer {
      */
     public void sendSaleReport(String topic, SaleReportDTO saleReportDTO){
         kafkaTemplate.send(topic, saleReportDTO);
-        logger.info("Sale report sent to kafka topic: {}", topic);
+        logger.trace("Sale report sent to kafka topic: {}", topic);
     }
 
     /**
@@ -37,7 +37,7 @@ public class SaleReportProducer {
      */
     public void sendCancelledSaleReport(String topic, CancelledSaleReportDTO cancelledSaleReportDTO){
         kafkaTemplate.send(topic, cancelledSaleReportDTO);
-        logger.info("Cancelled sale report sent to kafka topic: {}", topic);
+        logger.trace("Cancelled sale report sent to kafka topic: {}", topic);
     }
 
     /**
@@ -48,6 +48,6 @@ public class SaleReportProducer {
      */
     public void sendReturnedProductInfoToReportingService(String topic, ReturnedProductInfoDTO returnedProductInfoDTO){
         kafkaTemplate.send(topic, returnedProductInfoDTO);
-        logger.info("Returned product info sent to kafka topic: {}", topic);
+        logger.trace("Returned product info sent to kafka topic: {}", topic);
     }
 }

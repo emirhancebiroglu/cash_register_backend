@@ -11,13 +11,6 @@ import java.util.Map;
 @Data
 @AllArgsConstructor
 public class UpdateStockRequest {
-    /**
-     * A map containing product IDs as keys and corresponding quantities as values.
-     */
-    private Map<String, Integer> productsIdWithQuantity;
-
-    /**
-     * A boolean indicating whether the stock quantities should be decreased.
-     */
-    private boolean shouldDecrease;
+    private Map<String, Integer> productsIdWithQuantity; // Map containing product IDs as keys and quantities as values
+    private boolean shouldDecrease; // Indicates whether the stock quantities should be decreased
 }

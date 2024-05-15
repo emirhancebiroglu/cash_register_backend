@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class RemoveOrReturnProductFromBagReq {
-    private Long checkoutId;
-    private String code;
-    private Integer quantity;
+    private Long checkoutId; // ID of the checkout associated with the shopping bag
+    private String code; // Code or identifier of the product to be removed or returned
+    private Integer quantity; // Quantity of the product to be removed or returned
 }
