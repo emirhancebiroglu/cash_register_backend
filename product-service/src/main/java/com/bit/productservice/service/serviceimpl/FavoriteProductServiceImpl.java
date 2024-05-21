@@ -38,40 +38,51 @@ public class FavoriteProductServiceImpl implements FavoriteProductService {
 
     @Override
     public void addProductToFavorites(String productId) {
-        logger.info("Adding product with ID {} to favorites for user {}", productId, getUserId(request));
+        logger.trace("Adding product with ID {} to favorites for user {}", productId, getUserId(request));
 
+        // Retrieve the product from the repository
         Product product = productRepository.findById(productId)
                         .orElseThrow(() -> {
                             logger.error("Failed to find product with ID {}", productId);
                             return new ProductNotFoundException("Product with ID {} not found");
                         });
 
+        // Validate if the product exists
         favoriteProductValidator.isProductExist(productRepository, productId);
+
+        // Validate if the product is already a favorite for the user
         favoriteProductValidator.isProductFavorite(productId, getUserId(request), favoriteProductRepository);
 
+        // Save the product as a favorite for the user
         favoriteProductRepository.save(new FavoriteProduct(getUserId(request), product));
 
-        logger.info("Favorite product saved successfully for user {}", getUserId(request));
+        logger.trace("Favorite product saved successfully for user {}", getUserId(request));
     }
 
     @Override
     public void removeProductFromFavorites(String productId) {
-        logger.info("Removing product with ID {} from favorites for user {}", productId, getUserId(request));
+        logger.trace("Removing product with ID {} from favorites for user {}", productId, getUserId(request));
 
+        // Validate if the product exists
         favoriteProductValidator.isProductExist(productRepository, productId);
+
+        // Validate if the product is a favorite for the user
         favoriteProductValidator.isProductNotFavorite(productId, getUserId(request), favoriteProductRepository);
 
+        // Remove the product from favorites
         favoriteProductRepository.deleteByUserIdAndProductId(getUserId(request), productId);
 
-        logger.info("Product removed with ID {} from favorites for user {}", productId, getUserId(request));
+        logger.trace("Product removed with ID {} from favorites for user {}", productId, getUserId(request));
     }
 
     @Override
     public List<ProductDTO> listFavoriteProductsForCurrentUser(Integer pageNo, Integer pageSize, String searchTerm, String stockStatus, String sortBy, String sortOrder) {
+        // Apply pagination and sorting
         Pageable pageable = sortApplier.applySortForFavoriteProducts(pageNo, pageSize, sortBy, sortOrder);
 
-        logger.info("Retrieving favorite products for user {}", getUserId(request));
+        logger.trace("Retrieving favorite products for user {}", getUserId(request));
 
+        // Define the specification for querying favorite products
         Specification<FavoriteProduct> specification = Specification.where((root, query, criteriaBuilder) -> {
             Join<FavoriteProduct, Product> productJoin = root.join("product", JoinType.INNER);
             List<Predicate> predicates = new ArrayList<>();
@@ -85,15 +96,18 @@ public class FavoriteProductServiceImpl implements FavoriteProductService {
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         });
 
+        // Query favorite products
         Page<FavoriteProduct> favoriteProductsPage = favoriteProductRepository.findAll(specification, pageable);
 
+        // Extract favorite products from the page
         List<Product> favoriteProducts = favoriteProductsPage.getContent().stream()
                 .map(FavoriteProduct::getProduct)
                 .filter(product -> !product.isDeleted())
                 .toList();
 
-        logger.info("Favorite products retrieved successfully for user {}", getUserId(request));
+        logger.trace("Favorite products retrieved successfully for user {}", getUserId(request));
 
+        // Convert favorite products to DTOs
         return favoriteProducts.stream()
                 .map(this::convertProductToDTO)
                 .toList();
@@ -106,8 +120,10 @@ public class FavoriteProductServiceImpl implements FavoriteProductService {
      * @return a ProductDTO object
      */
     private ProductDTO convertProductToDTO(Product product) {
+        // Determine the code (use product code if available, otherwise fallback to barcode)
         String code = product.getProductCode() != null ? product.getProductCode() : product.getBarcode();
 
+        // Create and return a new ProductDTO instance
         return new ProductDTO(
                 code,
                 product.getName(),
@@ -124,13 +140,19 @@ public class FavoriteProductServiceImpl implements FavoriteProductService {
      * @return the user ID if found, otherwise null
      */
     private Long getUserId(HttpServletRequest request){
+        // Retrieve the Authorization header from the request
         String authHeader = request.getHeader("Authorization");
-        String token;
+
+        // Check if the Authorization header is present and starts with "Bearer "
         if (authHeader != null && authHeader.startsWith("Bearer ")){
-            token = authHeader.substring(7);
+            // Extract the token from the Authorization header
+            String token = authHeader.substring(7);
+
+            // Extract and return the user ID from the token using jwtUtil
             return jwtUtil.extractUserId(token);
         }
 
+        // Return null if no valid Authorization header is found
         return null;
     }
 }

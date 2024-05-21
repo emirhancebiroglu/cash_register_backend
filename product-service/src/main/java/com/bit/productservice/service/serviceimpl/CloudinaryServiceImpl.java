@@ -24,10 +24,8 @@ public class CloudinaryServiceImpl implements CloudinaryService {
     private static final Logger logger = LogManager.getLogger(CloudinaryServiceImpl.class);
     Cloudinary cloudinary;
 
-    /**
-     * Constructs a CloudinaryServiceImpl and initializes the Cloudinary instance.
-     */
     public CloudinaryServiceImpl() {
+        // Initialize Cloudinary with API credentials
         Map<String, String> valuesMap = new HashMap<>();
         valuesMap.put("cloud_name", "djp1zp1jw");
         valuesMap.put("api_key", "948222386924368");
@@ -37,25 +35,33 @@ public class CloudinaryServiceImpl implements CloudinaryService {
 
     @Override
     public Map upload(MultipartFile multipartFile) throws IOException {
+        // Convert MultipartFile to File
         File file = convert(multipartFile);
-        logger.info("Uploading file: {}", file.getName());
+        logger.trace("Uploading file: {}", file.getName());
+
+        // Upload file to Cloudinary
         var result = cloudinary.uploader().upload(file, ObjectUtils.emptyMap());
+
+        // Delete temporary file after upload
         if (!Files.deleteIfExists(file.toPath())) {
             logger.error("Failed to delete temporary file: {}", file.getAbsolutePath());
             throw new IOException("Failed to delete temporary file: " + file.getAbsolutePath());
         }
-        logger.info("File uploaded successfully with result: {}", result);
+
+        logger.trace("File uploaded successfully with result: {}", result);
         return result;
     }
 
     @Override
     public void delete(String id) throws IOException {
-        logger.info("Deleting image with ID: {}", id);
+        // Delete image from Cloudinary using its ID
+        logger.trace("Deleting image with ID: {}", id);
         cloudinary.uploader().destroy(id, ObjectUtils.emptyMap());
-        logger.info("Image deleted successfully with ID: {}", id);
+        logger.trace("Image deleted successfully with ID: {}", id);
     }
 
     private File convert(MultipartFile multipartFile) throws IOException {
+        // Convert MultipartFile to File
         File file = new File(Objects.requireNonNull(multipartFile.getOriginalFilename()));
         try (FileOutputStream fo = new FileOutputStream(file)) {
             fo.write(multipartFile.getBytes());
