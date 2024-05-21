@@ -23,38 +23,26 @@ public class EmailServiceImpl implements EmailService {
     private final TemplateEngine templateEngine;
     private static final Logger logger = LogManager.getLogger(EmailServiceImpl.class);
 
-    /**
-     * Sends a user code email containing the user code.
-     *
-     * @param to           The recipient email address.
-     * @param subject      The subject of the email.
-     * @param templateName The name of the Thymeleaf template for the email content.
-     * @param userCode     The user code to be included in the email.
-     */
     @Override
     public void sendUserCode(String to, String subject, String templateName, String userCode){
         Context context = new Context();
 
+        // Add user code to the Thymeleaf context
         context.setVariable("userCode", userCode);
 
+        // Send the email using helper method
         setHelper(to, subject, templateName, context);
     }
 
-    /**
-     * Sends a password reset email containing the reset link.
-     *
-     * @param to           The recipient email address.
-     * @param subject      The subject of the email.
-     * @param templateName The name of the Thymeleaf template for the email content.
-     * @param resetLink    The password reset link to be included in the email.
-     */
     @Override
     public void sendPasswordResetEmail(String to, String subject, String templateName, String resetLink) {
         Context context = new Context();
 
+        // Add reset link and subject to the Thymeleaf context
         context.setVariable("resetLink", resetLink);
         context.setVariable("subject", subject);
 
+        // Send the email using helper method
         setHelper(to, subject, templateName, context);
     }
 
@@ -68,10 +56,10 @@ public class EmailServiceImpl implements EmailService {
             String htmlContent = templateEngine.process(templateName, context);
             helper.setText(htmlContent, true);
             mailSender.send(mimeMessage);
-            logger.info("The mail has been successfully sent.");
+            logger.trace("The mail has been successfully sent.");
 
         } catch (MessagingException e) {
-            logger.error(e.getMessage());
+            logger.error("Error occurred while sending email to {}: {}", to, e.getMessage(), e);
         }
     }
 }

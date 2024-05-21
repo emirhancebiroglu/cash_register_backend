@@ -25,8 +25,11 @@ public class PasswordEncoderConfig {
      */
     @Bean
     public PasswordEncoder passwordEncoder(){
+        logger.trace("Creating BCryptPasswordEncoder bean...");
+
         PasswordEncoder encoder = new BCryptPasswordEncoder();
-        logger.info("BCryptPasswordEncoder bean created successfully");
+
+        logger.trace("BCryptPasswordEncoder bean created successfully");
         return encoder;
     }
 }

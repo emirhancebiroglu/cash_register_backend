@@ -30,7 +30,7 @@ public class CredentialsConsumer {
      */
     @KafkaListener(topics = "user-credentials", groupId = "users")
     public void listen(UserCredentialsDTO userCredentials) {
-        logger.info("Synchronizing user credentials");
+        logger.trace("Synchronizing user credentials");
 
         User user = new User(
                 userCredentials.getId(),
@@ -42,7 +42,8 @@ public class CredentialsConsumer {
         );
 
         userRepository.save(user);
-        logger.info("User credentials synchronized successfully: {}", user.getUserCode());
+
+        logger.trace("User credentials synchronized successfully: {}", user.getUserCode());
     }
 
     /**
@@ -52,14 +53,15 @@ public class CredentialsConsumer {
      */
     @KafkaListener(topics = "user-deletion", groupId = "users")
     public void listen(UserSafeDeletionDTO userSafeDeletionDTO) {
-        logger.info("Updating user deletion status");
+        logger.trace("Updating user deletion status");
 
         User user = userRepository.findById(userSafeDeletionDTO.getId()).orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MESSAGE));
 
         user.setDeleted(userSafeDeletionDTO.isDeleted());
 
         userRepository.save(user);
-        logger.info("User deletion status updated successfully: {}", user.getUserCode());
+
+        logger.trace("User deletion status updated successfully: {}", user.getUserCode());
     }
 
     /**
@@ -69,7 +71,7 @@ public class CredentialsConsumer {
      */
     @KafkaListener(topics = "user-update", groupId = "users")
     public void listen(UserUpdateDTO userUpdateDTO) {
-        logger.info("Updating user details");
+        logger.trace("Updating user details");
 
         User user = userRepository.findById(userUpdateDTO.getId()).orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MESSAGE));
 
@@ -78,7 +80,8 @@ public class CredentialsConsumer {
         user.setRoles(userUpdateDTO.getRoles());
 
         userRepository.save(user);
-        logger.info("User details updated successfully: {}", user.getUserCode());
+
+        logger.trace("User details updated successfully: {}", user.getUserCode());
     }
 
     /**
@@ -88,7 +91,7 @@ public class CredentialsConsumer {
      */
     @KafkaListener(topics = "user-reactivate", groupId = "users")
     public void listen(UserReactivateDTO userReactivateDTO) {
-        logger.info("Updating user reactivation status");
+        logger.trace("Updating user reactivation status");
 
         User user = userRepository.findById(userReactivateDTO.getId()).orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND_MESSAGE));
 
@@ -96,6 +99,7 @@ public class CredentialsConsumer {
         user.setDeleted(userReactivateDTO.isDeleted());
 
         userRepository.save(user);
-        logger.info("User reactivation status updated successfully: {}", user.getUserCode());
+
+        logger.trace("User reactivation status updated successfully: {}", user.getUserCode());
     }
 }

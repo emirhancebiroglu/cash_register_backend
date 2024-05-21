@@ -23,7 +23,7 @@ public class TokenStateChanger {
      * @param jwtToken The JWT token to save.
      */
     public void saveUserToken(User user, String jwtToken) {
-        logger.info("Saving JWT token for user {} in the database", user.getUsername());
+        logger.trace("Saving JWT token for user {} in the database", user.getUsername());
 
         var token = Token.builder()
                 .user(user)
@@ -32,7 +32,7 @@ public class TokenStateChanger {
                 .expired(false).build();
 
         tokenRepository.save(token);
-        logger.info("Saved JWT token for user {} in the database", user.getUsername());
+        logger.trace("Saved JWT token for user {} in the database", user.getUsername());
     }
 
     /**
@@ -41,12 +41,12 @@ public class TokenStateChanger {
      * @param user The user for whom to revoke tokens.
      */
     public void revokeAllUserTokens(User user){
-        logger.info("Revoking all tokens for user {}", user.getUsername());
+        logger.trace("Revoking all tokens for user {}", user.getUsername());
 
         List<Token> validUserTokens = tokenRepository.findAllValidTokensByUser(user.getId());
 
         if (validUserTokens.isEmpty()) {
-            logger.info("No valid tokens found for user {}", user.getUsername());
+            logger.trace("No valid tokens found for user {}", user.getUsername());
             return;
         }
 
@@ -56,6 +56,6 @@ public class TokenStateChanger {
         });
 
         tokenRepository.saveAll(validUserTokens);
-        logger.info("Revoked all tokens for user {}", user.getUsername());
+        logger.trace("Revoked all tokens for user {}", user.getUsername());
     }
 }

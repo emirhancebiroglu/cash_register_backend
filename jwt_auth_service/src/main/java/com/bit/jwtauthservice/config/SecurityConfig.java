@@ -28,7 +28,7 @@ public class SecurityConfig {
    */
   @Bean
   SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    logger.info("Configuring security filter chain...");
+    logger.trace("Configuring security filter chain...");
 
     SecurityFilterChain filterChain = http.csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(
@@ -39,7 +39,7 @@ public class SecurityConfig {
                     .logoutSuccessHandler(((request, response, authentication) -> SecurityContextHolder.clearContext())))
             .build();
 
-    logger.info("Security filter chain configured successfully.");
+    logger.trace("Security filter chain configured successfully.");
 
     return filterChain;
   }

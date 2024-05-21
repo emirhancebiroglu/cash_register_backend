@@ -37,35 +37,39 @@ public class EmailConfig {
      */
     @Bean
     public JavaMailSender javaMailSender() throws MailConfigException {
+        logger.trace("Setting up email configuration...");
+
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
         mailSender.setHost(host);
         mailSender.setPort(port);
         mailSender.setUsername(username);
         mailSender.setPassword(password);
 
+        logger.debug("Host: {}", host);
+        logger.debug("Port: {}", port);
+        logger.debug("Username: {}", username);
+
+        // Configure additional mail properties
         Properties props = mailSender.getJavaMailProperties();
         props.put("mail.transport.protocol", "smtp");
         props.put("mail.smtp.auth", "true");
         props.put("mail.smtp.starttls.enable", "true");
         props.put("mail.debug", "true");
 
-        logger.info("Setting up email configuration...");
-        logger.info("Host: {}", host);
-        logger.info("Port: {}", port);
-        logger.info("Username: {}", username);
+        logger.trace("Mail properties set: {}", props);
 
-        if (logger.isDebugEnabled()) {
-            logger.debug("Setting up email password...");
-        }
-
+        // Test the mail server connection
         try {
+            logger.debug("Testing mail server connection...");
             mailSender.testConnection();
+            logger.debug("Mail server connection successful.");
         }
         catch (Exception e){
             logger.error("Failed to establish connection with the mail server: {}", e.getMessage());
             throw new MailConfigException("Failed to configure mail sender");
         }
 
+        logger.trace("Email configuration completed successfully.");
         return mailSender;
     }
 }
