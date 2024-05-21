@@ -26,25 +26,19 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
     private final UserRepository userRepository;
     private static final Logger logger = LogManager.getLogger(RefreshTokenServiceImpl.class);
 
-    /**
-     * Creates a new refresh token for the specified user.
-     *
-     * @param user the user for whom the refresh token is created.
-     * @return the created refresh token.
-     * @throws UserNotFoundException if the user is not found in the repository.
-     */
     @Override
     public RefreshToken createRefreshToken(User user) {
-        logger.info("Creating a new refresh token for user: {}", user.getUserCode());
+        logger.trace("Creating a new refresh token for user: {}", user.getUserCode());
 
         if (userRepository.findByUserCode(user.getUserCode()).isPresent()){
+            // Create a new refresh token
             RefreshToken refreshToken = RefreshToken.builder()
                     .user(userRepository.findByUserCode(user.getUserCode()).get())
                     .token(UUID.randomUUID().toString())
-                    .expiryDate(Instant.now().plusSeconds(7 * 24 * 60 * 60))
+                    .expiryDate(Instant.now().plusSeconds(7 * 24 * 60 * 60)) // 7 days expiry
                     .build();
 
-            logger.info("Created refresh token for user {}", user.getUsername());
+            logger.trace("Created refresh token for user {}", user.getUsername());
             return refreshTokenRepository.save(refreshToken);
         }
 
@@ -52,17 +46,11 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         throw new UserNotFoundException("User not found");
     }
 
-    /**
-     * Verifies if the given refresh token has expired.
-     *
-     * @param token the refresh token to verify.
-     * @return the refresh token if it has not expired.
-     * @throws ExpiredRefreshTokenException if the refresh token has expired.
-     */
     @Override
     public RefreshToken verifyExpiration(RefreshToken token) {
-        logger.info("Verifying if the refresh token has expired for user {}", token.getUser().getUsername());
+        logger.trace("Verifying if the refresh token has expired for user {}", token.getUser().getUsername());
 
+        // Check if token has expired
         if (token.getExpiryDate().compareTo(Instant.now()) < 0){
             refreshTokenRepository.delete(token);
             logger.warn("Refresh token expired for user {}", token.getUser().getUsername());
@@ -71,12 +59,6 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         return token;
     }
 
-    /**
-     * Finds a refresh token by its token string.
-     *
-     * @param token the token string to search for.
-     * @return an optional containing the refresh token if found, empty otherwise.
-     */
     @Override
     public Optional<RefreshToken> findByToken(String token) {
         return refreshTokenRepository.findByToken(token);

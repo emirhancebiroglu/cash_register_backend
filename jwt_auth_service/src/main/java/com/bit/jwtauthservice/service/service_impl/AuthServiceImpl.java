@@ -62,56 +62,51 @@ public class AuthServiceImpl implements AuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final TokenStateChanger tokenStateChanger;
     private static final String USER_NOT_FOUND = "User not found";
-
-    /**
-     * Body of the email to be sent for password reset link.
-     */
+    private final Logger logger = LogManager.getLogger(AuthServiceImpl.class);
     @Value("${password.reset.link.body}")
     private String resetLinkBody;
 
-    private final Logger logger = LogManager.getLogger(AuthServiceImpl.class);
-
-    /**
-     * Authenticates a user based on the provided login credentials.
-     *
-     * @param loginReq The login request containing user credentials.
-     * @return LoginRes object containing access and refresh tokens upon successful authentication.
-     * @throws UserNotFoundException    If the user with the given user code is not found.
-     * @throws BadCredentialsException  If the provided password is incorrect.
-     */
     @Override
     public LoginRes login(LoginReq loginReq) {
-        logger.info("Attempting to authenticate user: {}", loginReq.getUserCode());
+        logger.trace("Attempting to authenticate user: {}", loginReq.getUserCode());
 
         RefreshToken refreshToken;
 
+        // Retrieving user by user code
         User user = userRepository.findByUserCode(loginReq.getUserCode())
                 .orElseThrow(() -> new UserNotFoundException(USER_NOT_FOUND));
 
+        // Checking if the user is deleted
         if (user.isDeleted()) {
             logger.error(USER_NOT_FOUND);
             throw new UserNotFoundException(USER_NOT_FOUND);
         }
 
+        // Validating the password
         if (!passwordEncoderConfig.passwordEncoder().matches(loginReq.getPassword(), user.getPassword())) {
             logger.error("Invalid password");
             throw new BadCredentialsException("Invalid password");
         }
 
+        // Generating JWT token
         var jwtToken = jwtService.generateToken(user);
+        logger.debug("JWT token generated successfully: {}", jwtToken);
 
+        // Deleting existing refresh token if present
         refreshToken = refreshTokenRepository.findByUserId(user.getId());
-
         if (refreshToken != null){
             refreshTokenRepository.delete(refreshToken);
         }
 
+        // Creating new refresh token
         refreshToken = refreshTokenService.createRefreshToken(user);
+        logger.debug("Refresh token created successfully: {}", refreshToken);
 
+        // Revoking all existing user tokens and saving the new JWT token
         tokenStateChanger.revokeAllUserTokens(user);
         tokenStateChanger.saveUserToken(user, jwtToken);
 
-        logger.info("User '{}' authenticated successfully.", loginReq.getUserCode());
+        logger.trace("User '{}' authenticated successfully.", loginReq.getUserCode());
 
         return LoginRes
                 .builder()
@@ -120,166 +115,155 @@ public class AuthServiceImpl implements AuthService {
                 .build();
     }
 
-    /**
-     * Sends the forgotten user code to the specified email address.
-     *
-     * @param forgotUserCodeReq The request containing the email address for sending the user code.
-     * @throws UserNotFoundException If the user with the given email address is not found.
-     */
     @Override
     public void forgotUserCode(ForgotUserCodeReq forgotUserCodeReq) {
-        logger.info("Sending forgotten user code to '{}'", forgotUserCodeReq.getEmail());
+        logger.trace("Sending forgotten user code to '{}'", forgotUserCodeReq.getEmail());
 
+        // Retrieving user by email
         User user = userRepository.findByEmail(forgotUserCodeReq.getEmail())
                 .orElseThrow(() -> {
                     logger.error("User not found for email: {}", forgotUserCodeReq.getEmail());
                     return new UserNotFoundException(USER_NOT_FOUND);
                 });
 
+        // Sending the user code via email
         emailService.sendUserCode(user.getEmail(), "Your user code.", "sendUserCode-mail-template", user.getUserCode());
 
-        logger.info("User code sent.");
+        logger.trace("User code sent.");
     }
 
-    /**
-     * Initiates the process for resetting the user's password.
-     *
-     * @param forgotPasswordReq The request containing the email address for sending the password reset link.
-     * @throws UserNotFoundException If the user with the given email address is not found.
-     */
     @Override
     public void forgotPassword(ForgotPasswordReq forgotPasswordReq) {
-        logger.info("Preparing the password reset link...");
+        logger.trace("Preparing the password reset link...");
 
+        // Retrieving user by email
         User user = userRepository.findByEmail(forgotPasswordReq.getEmail())
                 .orElseThrow(() -> {
                     logger.error("User not found for email: {}", forgotPasswordReq.getEmail());
                     return new UserNotFoundException(USER_NOT_FOUND);
                 });
 
+        // Creating a reset password token
         ResetPasswordToken resetPasswordToken = new ResetPasswordToken();
         resetPasswordToken.setToken(UUID.randomUUID().toString());
         resetPasswordToken.setExpirationDate(LocalDate.now().plusDays(1));
 
+        // Associating the reset password token with the user
         user.setResetPasswordToken(resetPasswordToken);
 
+        // Saving the reset password token and updating the user
         resetPasswordTokenRepository.save(resetPasswordToken);
         userRepository.save(user);
 
+        // Constructing the reset password link
         String resetLink = resetLinkBody + resetPasswordToken.getToken();
+        logger.debug("Reset password link generated: {}", resetLink);
 
+        // Sending the password reset email
         emailService.sendPasswordResetEmail(forgotPasswordReq.getEmail(), "Reset Password", "resetPassword-mail-template", resetLink);
 
-        logger.info("Password reset email sent.");
+        logger.trace("Password reset email sent.");
     }
 
-    /**
-     * Resets the password for the user using the provided token and new password.
-     *
-     * @param token             The token used for password reset.
-     * @param resetPasswordReq The request containing the new password and confirmation.
-     * @throws InvalidResetTokenException If the reset token is invalid or expired.
-     * @throws PasswordMismatchException If the new password and confirmation do not match.
-     * @throws SamePasswordException     If the new password is the same as the old password.
-     * @throws UserNotFoundException    If the user associated with the reset token is not found.
-     */
     @Override
     public void resetPassword(String token, ResetPasswordReq resetPasswordReq) {
-        logger.info("Password resetting process is on...");
+        logger.trace("Password resetting process is on...");
 
+        // Retrieving the reset password token from the repository
         ResetPasswordToken resetPasswordToken = resetPasswordTokenRepository.findByToken(token)
                 .orElseThrow(() -> {
                     logger.error("Invalid token {}", token);
                     return new InvalidResetTokenException("Invalid token");
                 });
 
+        // Checking if the reset token has expired
         if (resetPasswordToken.getExpirationDate().isBefore(LocalDate.now())) {
             logger.error("Token has expired {}", token);
             throw new InvalidResetTokenException("Token has expired");
         }
 
+        // Retrieving the user associated with the reset token
         User user = userRepository.findByResetPasswordToken(resetPasswordToken)
                 .orElseThrow(() -> {
                     logger.error("User not found for this token: {}", resetPasswordToken);
                     return new UserNotFoundException(USER_NOT_FOUND);
                 });
 
+        // Validating new password and confirm password match
         if (!resetPasswordReq.getNewPassword().equals(resetPasswordReq.getConfirmPassword())) {
             logger.error("Passwords do not match");
             throw new PasswordMismatchException("Passwords do not match");
         }
 
+        // Ensuring the new password is different from the old password
         if (passwordEncoderConfig.passwordEncoder().matches(resetPasswordReq.getNewPassword(), user.getPassword())) {
             logger.error("New password cannot be the same as the old password");
             throw new SamePasswordException("New password cannot be the same as the old password");
         }
 
+        // Encrypting and updating the new password, clearing the reset token
         user.setPassword(passwordEncoderConfig.passwordEncoder().encode(resetPasswordReq.getNewPassword()));
         user.setResetPasswordToken(null);
         userRepository.save(user);
 
+        // Deleting the used reset token
         resetPasswordTokenRepository.delete(resetPasswordToken);
 
-        logger.info("Password reset successfully");
+        logger.trace("Password reset successfully");
     }
 
-    /**
-     * Changes the password for the authenticated user.
-     *
-     * @param changePasswordReq The request containing the old and new passwords for password change.
-     * @throws IncorrectOldPasswordException If the old password provided is incorrect.
-     * @throws ConfirmPasswordException      If the new and confirmation passwords do not match.
-     * @throws UserNotFoundException        If the authenticated user is not found.
-     */
     @Override
     public void changePassword(ChangePasswordReq changePasswordReq) {
-        logger.info("Changing the password...");
+        logger.trace("Changing the password...");
 
+        // Extracting user code from the JWT token
         String userCode = jwtService.extractUsername(request.getHeader("Authorization").substring(7));
 
+        // Retrieving user details from the repository
         User user = userRepository.findByUserCode(userCode)
                 .orElseThrow(() -> {
                     logger.error("User not found for user code: {}", userCode);
                     return new UserNotFoundException(USER_NOT_FOUND);
                 });
 
+        // Validating old password
         if (!passwordEncoderConfig.passwordEncoder().matches(changePasswordReq.getOldPassword(), user.getPassword())) {
             logger.error("Incorrect old password");
             throw new IncorrectOldPasswordException("Incorrect old password");
         }
 
+        // Validating new and confirm passwords match
         if (!changePasswordReq.getNewPassword().equals(changePasswordReq.getConfirmPassword())) {
             logger.error("New password and confirm password do not match");
             throw new ConfirmPasswordException("New password and confirm password do not match");
         }
 
+        // Encrypting and updating the new password
         user.setPassword(passwordEncoderConfig.passwordEncoder().encode(changePasswordReq.getNewPassword()));
         userRepository.save(user);
 
+        // Logging out the user after password change
         Authentication authentication  = SecurityContextHolder.getContext().getAuthentication();
         logoutHandler.logout(request, null, authentication);
 
-        logger.info("Password changed successfully");
+        logger.trace("Password changed successfully");
     }
 
-    /**
-     * Validates the JWT token's validity.
-     *
-     * @param jwt The JWT token to validate.
-     * @return A Mono emitting a boolean value indicating the token's validity.
-     * @throws TokenNotFoundException If the token is not found in the database.
-     */
     @Override
     public Mono<Boolean> validateToken(String jwt) {
-        logger.info("Validating token: {}", jwt);
+        logger.trace("Validating token: {}", jwt);
 
+        // Create a Mono that asynchronously retrieves the token from the repository
         return Mono.fromCallable(() -> tokenRepository.findByJwtToken(jwt)
                         .orElseThrow(() -> {
                             logger.error("Token not found");
                             return new TokenNotFoundException("Token not found");
                         }))
+                // Perform the operation on a bounded elastic scheduler
                 .subscribeOn(Schedulers.boundedElastic())
+                // Map the retrieved token to a boolean indicating its validity
                 .map(token -> !token.isExpired() && !token.isRevoked())
-                .doOnSuccess(validity -> logger.info("Token validation result: {}", validity));
+                // Log the result of token validation
+                .doOnSuccess(validity -> logger.trace("Token validation result: {}", validity));
     }
 }

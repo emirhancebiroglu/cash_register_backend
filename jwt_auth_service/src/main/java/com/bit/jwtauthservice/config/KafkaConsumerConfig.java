@@ -45,7 +45,7 @@ public class KafkaConsumerConfig {
                 "userUpdate:com.bit.jwtauthservice.dto.kafka.UserUpdateDTO, " +
                 "userReactivate:com.bit.jwtauthservice.dto.kafka.UserReactivateDTO");
 
-        logger.info("Kafka consumer factory created successfully.");
+        logger.trace("Kafka consumer factory created successfully.");
         return new DefaultKafkaConsumerFactory<>(configProps);
     }
 
@@ -55,11 +55,12 @@ public class KafkaConsumerConfig {
      */
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory() {
-        logger.info("Creating Kafka listener container factory...");
+        logger.trace("Creating Kafka listener container factory...");
+
         ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
 
-        logger.info("Kafka listener container factory created successfully.");
+        logger.trace("Kafka listener container factory created successfully.");
 
         return factory;
     }

@@ -19,17 +19,12 @@ public class CustomUserDetailsServiceImpl implements CustomUserDetailsService {
     private final UserRepository userRepository;
     private static final Logger logger = LogManager.getLogger(CustomUserDetailsServiceImpl.class);
 
-    /**
-     * Retrieves the user details based on the user code provided.
-     *
-     * @return An implementation of the UserDetailsService interface.
-     * @throws UserNotFoundException If the user with the provided user code is not found.
-     */
     @Override
     public UserDetailsService userDetailsService() {
         return userCode -> {
-            logger.info("Loading user details for user code: {}", userCode);
+            logger.trace("Loading user details for user code: {}", userCode);
 
+            // Retrieve user details from the repository based on the user code
             return userRepository.findByUserCode(userCode)
                     .orElseThrow(() -> {
                         logger.error("User not found for user code: {}", userCode);

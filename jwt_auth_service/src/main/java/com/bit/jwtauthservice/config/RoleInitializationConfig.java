@@ -42,10 +42,10 @@ public class RoleInitializationConfig implements CommandLineRunner {
             if(roleRepository.findByName(roleName).isEmpty()){
                 Role role = new Role(roleName);
                 roleRepository.save(role);
-                logger.info("Role '{}' initialized successfully.", roleName);
+                logger.trace("Role '{}' initialized successfully.", roleName);
             }
             else{
-                logger.info("Role '{}' already exists. Skipping initialization.", roleName);
+                logger.trace("Role '{}' already exists. Skipping initialization.", roleName);
             }
         }
     }

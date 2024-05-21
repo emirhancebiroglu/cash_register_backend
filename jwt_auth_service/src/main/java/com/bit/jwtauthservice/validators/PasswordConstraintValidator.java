@@ -34,6 +34,7 @@ public class PasswordConstraintValidator implements ConstraintValidator<ValidPas
     @SneakyThrows
     @Override
     public boolean isValid(String password, ConstraintValidatorContext context) {
+        // Configure Passay password validator with rules
         PasswordValidator passwordValidator = new PasswordValidator(
             Arrays.asList(
             new LengthRule(8, 32),
@@ -48,19 +49,21 @@ public class PasswordConstraintValidator implements ConstraintValidator<ValidPas
         )
         );
 
+        // Validate the password
         RuleResult result = passwordValidator.validate(new PasswordData(password));
 
         if (result.isValid()) {
-            return true;
+            return true; // Password meets all requirements
         }
 
         boolean isMessageExist = passwordValidator.getMessages(result).stream().findFirst().isPresent();
 
+        // If password is invalid, add custom message to context
         if (isMessageExist) {
-            context.buildConstraintViolationWithTemplate(passwordValidator.getMessages(result).stream().findFirst().get())
+            context.buildConstraintViolationWithTemplate(passwordValidator.getMessages(result).stream().findFirst().orElse("Invalid password"))
                     .addConstraintViolation()
                     .disableDefaultConstraintViolation();
         }
-        return false;
+        return false; // Password does not meet all requirements
     }
 }
