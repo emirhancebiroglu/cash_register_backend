@@ -56,21 +56,26 @@ public class ProductServiceImpl implements ProductService {
     public List<ProductDTO> getProducts(Integer pageNo, Integer pageSize, String searchTerm, String lettersToFilter, String existenceStatus, String stockStatus, String sortBy, String sortOrder) {
         logger.info("Fetching products");
 
+        // Apply pagination and sorting
         Pageable pageable = sortApplier.applySortForProducts(pageNo, pageSize, sortBy, sortOrder);
-        Page<Product> pagingProduct;
 
+        // Define the specification for querying products
         Specification<Product> specification = Specification.where((root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
+            // Add search term predicate
             if (searchTerm != null) {
                 predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + searchTerm.toLowerCase() + "%"));
             }
+            // Add existence status predicate
             if (existenceStatus != null) {
                 predicates.add(criteriaBuilder.equal(root.get("isDeleted"), existenceStatus.equalsIgnoreCase("deleted")));
             }
+            // Add stock status predicate
             if (stockStatus != null) {
                 predicates.add(criteriaBuilder.equal(root.get("inStock"), stockStatus.equalsIgnoreCase("inStock")));
             }
+            // Add letters to filter predicate (if applicable)
             if (lettersToFilter != null) {
                 predicates.add(getProductSpecification(lettersToFilter).toPredicate(root, query, criteriaBuilder));
             }
@@ -78,8 +83,10 @@ public class ProductServiceImpl implements ProductService {
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         });
 
-        pagingProduct = productRepository.findAll(specification, pageable);
+        // Query products
+        Page<Product> pagingProduct = productRepository.findAll(specification, pageable);
 
+        // Convert products to DTOs
         List<ProductDTO> products = pagingProduct.getContent().stream()
                 .map(this::convertToDTO)
                 .toList();
@@ -91,55 +98,75 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public void addProduct(AddProductReq addProductReq, MultipartFile file) throws IOException {
-        logger.info("Adding product...");
+        logger.trace("Adding product...");
 
+        // Validate the product request and file
         List<String> errors = productValidator.validateAddProductReq(addProductReq, file);
 
+        // Handle negative field errors
         List<String> negativeFieldErrors = errors.stream()
                 .filter(error -> error.contains("cannot be negative"))
                 .toList();
 
         if (!negativeFieldErrors.isEmpty()) {
+            logger.error("Cannot be negative");
             throw new NegativeFieldException(String.join(", ", negativeFieldErrors));
         }
 
+        // Remove negative field errors
         errors.removeAll(negativeFieldErrors);
         if (!errors.isEmpty()) {
+            logger.error("Cannot be null or empty");
             throw new NullOrEmptyFieldException(String.join(", ", errors));
         }
 
+        // Validate the product
         productValidator.validateProduct(addProductReq, null);
 
+        // Generate a unique ID for the product
         String id = UUID.randomUUID().toString();
 
+        // Upload the image and retrieve its details
         Image image = uploadImage(file, id);
 
+        // Build the product entity
         Product product = buildProduct(id, addProductReq, image);
+        logger.debug("Product: {}", product);
 
+        // Save the product
         productRepository.save(product);
 
-        logger.info("Product added successfully");
+        logger.trace("Product added successfully");
     }
 
     @Override
     public void updateProduct(String productId, UpdateProductReq updateProductReq, MultipartFile multipartFile) throws IOException{
-        logger.info("Updating product...");
+        logger.trace("Updating product...");
 
+        // Retrieve the product by ID
         Product product = getProductById(productId);
+
+        // Validate the update request
         productValidator.validateProduct(null, updateProductReq);
 
+        // Check if the product is deleted
         if (product.isDeleted()){
             logger.error(PRODUCT_NOT_FOUND);
             throw new ProductNotFoundException(PRODUCT_NOT_FOUND);
         }
 
+        // Handle image update if a new file is provided
         Image image = product.getImage();
 
         if (multipartFile != null){
+            // Temporarily set the product image to null before updating
             product.setImage(null);
             productRepository.save(product);
 
+            // Delete the old image from Cloudinary
             cloudinaryService.delete(image.getImageId());
+
+            // Upload the new image to Cloudinary
             var result = cloudinaryService.upload(multipartFile);
 
             image.setName(result.get("original_filename"));
@@ -147,82 +174,99 @@ public class ProductServiceImpl implements ProductService {
             image.setImageId(result.get("public_id"));
             imageRepository.save(image);
 
+            // Reassign the updated image to the product
             product.setImage(image);
         }
 
+        // Update the product details
         updateProductDetails(product, updateProductReq);
     }
 
     @Override
     public void deleteProduct(String productId){
-        logger.info("Deleting product...");
+        logger.trace("Deleting product...");
 
+        // Retrieve the product by ID
         Product product = getProductById(productId);
 
+        // Check if the product is already deleted
         if (!product.isDeleted()){
+            // Mark the product as deleted
             product.setDeleted(true);
             product.setLastUpdateDate(LocalDate.now());
             product.setStockAmount(0);
             product.setInStock(false);
 
+            // Save the updated product state
             productRepository.save(product);
 
-            logger.info("Product deleted successfully");
+            logger.trace("Product deleted successfully");
         }
         else{
+            logger.error("Product already deleted");
             throw new ProductAlreadyDeletedException("Product already deleted");
         }
     }
 
     @Override
     public void reAddProduct(String productId, SpecifyStockNumberReq specifyStockNumberReq) {
-        logger.info("Re-adding product...");
+        logger.trace("Re-adding product...");
 
+        // Retrieve the product by ID
         Product product = getProductById(productId);
 
+        // Validate the specified stock number
         if (specifyStockNumberReq.getStockNumber() < 0){
+            logger.error("Stock amount cannot be negative for product ID {}", productId);
             throw new NegativeFieldException(STOCK_AMOUNT_CANNOT_BE_NEGATIVE);
         }
 
+        // Check if the product is marked as deleted
        if (product.isDeleted()){
+           // Re-add the product to stock
            product.setDeleted(false);
            product.setLastUpdateDate(LocalDate.now());
            product.setStockAmount(specifyStockNumberReq.getStockNumber());
            product.setInStock(specifyStockNumberReq.getStockNumber() > 0);
 
+           // Save the updated product
            productRepository.save(product);
 
-           logger.info("Product re-added successfully");
+           logger.trace("Product re-added successfully");
        }
        else{
+           logger.error("Product already in stocks");
            throw new ProductAlreadyInStocksException("Product already in stocks");
        }
     }
 
     @Override
     public Mono<ProductInfo> checkProduct(String code) {
-        logger.info("Checking product...");
+        logger.trace("Checking product...");
 
         return Mono.fromCallable(() -> {
+            // Find the product by barcode or product code
             Product product = productRepository.findByBarcode(code);
             if (product == null) {
                 product = productRepository.findByProductCode(code);
             }
 
+            // Determine product existence and retrieve its information
             boolean exists = product != null && !product.isDeleted();
             double price = exists ? product.getPrice() : 0.0;
             int stockAmount = exists ? product.getStockAmount() : 0;
             String name = exists ? product.getName() : "";
 
-            logger.info("Product checked successfully.");
+            logger.trace("Product checked successfully.");
 
+            // Return product information wrapped in a ProductInfo object
             return new ProductInfo(exists, name, price, stockAmount);
         }).subscribeOn(Schedulers.boundedElastic());
     }
 
     @Override
     public void updateStocks(Map<String, Integer> productsIdWithQuantity, boolean shouldDecrease) {
-        logger.info("Updating stocks...");
+        logger.trace("Updating stocks...");
 
         for (Map.Entry<String, Integer> entry : productsIdWithQuantity.entrySet()) {
             String code = entry.getKey();
@@ -239,6 +283,7 @@ public class ProductServiceImpl implements ProductService {
             }
 
             if (product == null) {
+                logger.error(PRODUCT_NOT_FOUND);
                 throw new ProductNotFoundException(PRODUCT_NOT_FOUND);
             }
 
@@ -254,7 +299,7 @@ public class ProductServiceImpl implements ProductService {
 
             productRepository.save(product);
 
-            logger.info("Product stock updated successfully");
+            logger.trace("Product stock updated successfully");
         }
     }
 
@@ -286,7 +331,7 @@ public class ProductServiceImpl implements ProductService {
     private Image uploadImage(MultipartFile file, String id) throws IOException {
         var result = cloudinaryService.upload(file);
 
-        logger.info(("Saving image to repository..."));
+        logger.trace(("Saving image to repository..."));
 
         Image image = new Image(id,
                 (result.get("original_filename")),
@@ -295,7 +340,7 @@ public class ProductServiceImpl implements ProductService {
 
         imageRepository.save(image);
 
-        logger.info(("Image saved to repository"));
+        logger.trace(("Image saved to repository"));
 
         return image;
     }
@@ -309,7 +354,7 @@ public class ProductServiceImpl implements ProductService {
      * @return The built Product entity.
      */
     private Product buildProduct(String id, AddProductReq addProductReq, Image image) {
-        logger.info("Building product with ID {}", id);
+        logger.trace("Building product with ID {}", id);
 
         Product product = new Product(
                 id,
@@ -324,7 +369,7 @@ public class ProductServiceImpl implements ProductService {
                 addProductReq.getStockAmount() > 0
         );
 
-        logger.info("Product built successfully with ID {}", id);
+        logger.trace("Product built successfully with ID {}", id);
 
         return product;
     }
@@ -367,7 +412,7 @@ public class ProductServiceImpl implements ProductService {
 
         productRepository.save(product);
 
-        logger.info("Product details updated successfully for product ID {}", product.getId());
+        logger.trace("Product details updated successfully for product ID {}", product.getId());
     }
 
     /**
@@ -378,7 +423,7 @@ public class ProductServiceImpl implements ProductService {
      * @throws ProductNotFoundException If the product with the specified ID is not found.
      */
     private Product getProductById(String productId) {
-        logger.info("Fetching product with ID {}", productId);
+        logger.trace("Fetching product with ID {}", productId);
 
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> {
@@ -386,7 +431,7 @@ public class ProductServiceImpl implements ProductService {
                     return new ProductNotFoundException(PRODUCT_NOT_FOUND);
                 });
 
-        logger.info("Product fetched successfully with ID {}", productId);
+        logger.trace("Product fetched successfully with ID {}", productId);
 
         return product;
     }
