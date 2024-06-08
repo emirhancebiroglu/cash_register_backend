@@ -8,8 +8,22 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+      ZOOKEEPER_MAX_CLIENT_CNXNS: 200
+      ZOOKEEPER_INIT_LIMIT: 20
+      ZOOKEEPER_SYNC_LIMIT: 10
+      ZOOKEEPER_SESSION_TIMEOUT_MS: 60000
+      ZOOKEEPER_OPERATION_TIMEOUT_SEC: 30
     networks:
       - spring-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    healthcheck:
+      test: ["CMD-SHELL", "nc -z localhost 2181"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   kafka:
     image: confluentinc/cp-kafka:latest
@@ -23,10 +37,26 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_HEAP_OPTS: "-Xmx1536M -Xms1536M"
+      KAFKA_LOG_RETENTION_HOURS: 168
+      KAFKA_LOG_RETENTION_BYTES: 1073741824
+      KAFKA_LOG_SEGMENT_BYTES: 1073741824
+      KAFKA_LOG_CLEANER_ENABLE: "true"
+      KAFKA_GC_LOG_OPTS: "-XX:+UseG1GC -XX:MaxGCPauseMillis=20 -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=100M"
     depends_on:
-      - zookeeper
+      zookeeper:
+        condition: service_healthy
     networks:
       - spring-network
+    deploy:
+      resources:
+        limits:
+          memory: 2048MB
+    healthcheck:
+      test: ["CMD", "kafka-topics", "--bootstrap-server", "localhost:9092", "--list"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   eureka-server:
     image: emirhancebiroglu/eureka-server:latest
@@ -35,11 +65,15 @@ services:
       - "8761:8761"
     networks:
       - spring-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8761"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   api-gateway:
     image: emirhancebiroglu/api-gateway:latest
     container_name: api-gateway
-    restart: always
     ports:
       - "9191:9090"
     expose:
@@ -48,14 +82,19 @@ services:
       - SPRING_PROFILES_ACTIVE=docker
       - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY= TRACE
     depends_on:
-      - eureka-server
+      eureka-server:
+        condition: service_healthy
     networks:
       - spring-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:9090/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   user-management-db:
     image: postgres:latest
     container_name: user-management-db
-    restart: always
     environment:
       - POSTGRES_DB=user_management_db
       - POSTGRES_USER=postgres
@@ -70,6 +109,11 @@ services:
     command: [ "postgres", "-c", "search_path=users" ]
     networks:
       - spring-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   jwt-auth-db:
     image: postgres:latest
@@ -79,7 +123,6 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=2165
       - POSTGRES_SCHEMA=user-credentials
-    restart: always
     ports:
       - "5434:5432"
     expose:
@@ -89,11 +132,15 @@ services:
     command: [ "postgres", "-c", "search_path=user-credentials" ]
     networks:
       - spring-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   product-db:
     image: postgres:latest
     container_name: product-db
-    restart: always
     environment:
       - POSTGRES_DB=product_db
       - POSTGRES_USER=postgres
@@ -108,11 +155,15 @@ services:
     command: [ "postgres", "-c", "search_path=products" ]
     networks:
       - spring-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   sales-db:
     image: postgres:latest
     container_name: sales-db
-    restart: always
     environment:
       - POSTGRES_DB=sales_db
       - POSTGRES_USER=postgres
@@ -127,11 +178,15 @@ services:
     command: [ "postgres", "-c", "search_path=sales" ]
     networks:
       - spring-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   sales-reports-db:
     image: postgres:latest
     container_name: sales-reports-db
-    restart: always
     environment:
       - POSTGRES_DB=sales_reports_db
       - POSTGRES_USER=postgres
@@ -146,6 +201,11 @@ services:
     command: [ "postgres", "-c", "search_path=reports" ]
     networks:
       - spring-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   user-management-service:
     image: emirhancebiroglu/user_management_service:latest
@@ -155,13 +215,23 @@ services:
     ports:
       - "8081:8081"
     depends_on:
-      - eureka-server
-      - user-management-db
-      - api-gateway
-      - kafka
-      - jwt-auth-service
+      eureka-server:
+        condition: service_healthy
+      user-management-db:
+        condition: service_healthy
+      api-gateway:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      jwt-auth-service:
+        condition: service_healthy
     networks:
       - spring-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   jwt-auth-service:
     image: emirhancebiroglu/jwt_auth_service:latest
@@ -173,10 +243,19 @@ services:
     networks:
       - spring-network
     depends_on:
-      - eureka-server
-      - jwt-auth-db
-      - api-gateway
-      - kafka
+      eureka-server:
+        condition: service_healthy
+      jwt-auth-db:
+        condition: service_healthy
+      api-gateway:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   product-service:
     image: emirhancebiroglu/product-service:latest
@@ -186,11 +265,19 @@ services:
     ports:
       - "8083:8083"
     depends_on:
-      - eureka-server
-      - product-db
-      - api-gateway
+      eureka-server:
+        condition: service_healthy
+      product-db:
+        condition: service_healthy
+      api-gateway:
+        condition: service_healthy
     networks:
       - spring-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8083/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
   
   sales-service:
     image: emirhancebiroglu/sales-service:latest
@@ -200,13 +287,23 @@ services:
     ports:
       - "8084:8084"
     depends_on:
-      - eureka-server
-      - sales-reports-db
-      - api-gateway
-      - kafka
-      - reporting-service
+      eureka-server:
+        condition: service_healthy
+      sales-db:
+        condition: service_healthy
+      api-gateway:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      reporting-service:
+        condition: service_healthy
     networks:
       - spring-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8084/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
   reporting-service:
     image: emirhancebiroglu/reporting-service:latest
@@ -216,12 +313,21 @@ services:
     ports:
       - "8085:8085"
     depends_on:
-      - eureka-server
-      - sales-db
-      - api-gateway
-      - kafka
+      eureka-server:
+        condition: service_healthy
+      sales-reports-db:
+        condition: service_healthy
+      api-gateway:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
     networks:
       - spring-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
 
 networks:
   spring-network:
