@@ -24,17 +24,6 @@ public class EmailServiceImpl implements EmailService {
     private final TemplateEngine templateEngine;
     private static final Logger logger = LogManager.getLogger(EmailServiceImpl.class);
 
-    /**
-     * Sends an email with user details including user code and password.
-     *
-     * @param to the recipient email address.
-     * @param subject the subject of the email.
-     * @param templateName the name of the email template to use.
-     * @param userCode the user code to include in the email.
-     * @param userPassword the user password to include in the email.
-     * @param firstName the first name of the user.
-     * @param lastName the last name of the user.
-     */
     @Override
     public void sendEmail(String to, String subject, String templateName, String userCode, String userPassword,
                           String firstName, String lastName){
@@ -47,16 +36,6 @@ public class EmailServiceImpl implements EmailService {
         setHelper(to, subject, templateName, context);
     }
 
-    /**
-     * Sends an email with user details including user code.
-     *
-     * @param to the recipient email address.
-     * @param subject the subject of the email.
-     * @param templateName the name of the email template to use.
-     * @param userCode the user code to include in the email.
-     * @param firstName the first name of the user.
-     * @param lastName the last name of the user.
-     */
     @Override
     public void sendEmail(String to, String subject, String templateName,
                           String userCode, String firstName, String lastName) {
@@ -68,15 +47,6 @@ public class EmailServiceImpl implements EmailService {
         setHelper(to, subject, templateName, context);
     }
 
-    /**
-     * Sends an email with user details.
-     *
-     * @param to the recipient email address.
-     * @param subject the subject of the email.
-     * @param templateName the name of the email template to use.
-     * @param firstName the first name of the user.
-     * @param lastName the last name of the user.
-     */
     @Override
     public void sendEmail(String to, String subject, String templateName, String firstName, String lastName) {
         Context context = new Context();
@@ -86,25 +56,60 @@ public class EmailServiceImpl implements EmailService {
         setHelper(to, subject, templateName, context);
     }
 
+     /**
+     * This method is used to set up and send an email using the provided parameters.
+     *
+     * @param to The recipient's email address.
+     * @param subject The subject of the email.
+     * @param templateName The name of the Thymeleaf template to be used for the email content.
+     * @param context The context object containing variables to be used in the template.
+     *
+      */
     private void setHelper (String to, String subject, String templateName, Context context) {
+        // Create a new MimeMessage object
         MimeMessage mimeMessage = mailSender.createMimeMessage();
+
+        // Create a MimeMessageHelper object to handle email-specific operations
         MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "UTF-8");
 
         try {
+            // Set the recipient's email address
             helper.setTo(to);
+
+            // Set the subject of the email
             helper.setSubject(subject);
+
+            // Process the Thymeleaf template and get the HTML content
             String htmlContent = templateEngine.process(templateName, context);
+
+            // Set the email content as HTML
             helper.setText(htmlContent, true);
+
+            // Send the email
             mailSender.send(mimeMessage);
+
+            // Log a success message
             logger.info("The mail has been successfully sent.");
 
         } catch (MessagingException e) {
+            // Log any MessagingException errors
             logger.error(e.getMessage());
         }
     }
 
+     /**
+     * This method is used to set the context variables for the email template.
+     *
+     * @param firstName The first name of the recipient.
+     * @param lastName The last name of the recipient.
+     * @param context The context object to store the variables.
+     *
+      */
     private void setContext(String firstName, String lastName, Context context){
+        // Set the first name variable in the context
         context.setVariable("firstName", firstName);
+
+        // Set the last name variable in the context
         context.setVariable("lastName", lastName);
     }
 }

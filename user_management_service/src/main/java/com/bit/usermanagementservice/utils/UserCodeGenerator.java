@@ -30,7 +30,7 @@ public class UserCodeGenerator {
      * @return the generated user code.
      */
     public String createUserCode(Set<String> roles, Long userId){
-        logger.info("Creating user code");
+        logger.trace("Creating user code");
 
         StringBuilder userCode = new StringBuilder();
 
@@ -56,7 +56,7 @@ public class UserCodeGenerator {
 
         userCode.append(generateRandomDigits());
 
-        logger.info("User Code created");
+        logger.trace("User Code created");
         return userCode.toString();
     }
 

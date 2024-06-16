@@ -29,10 +29,10 @@ public class EmailValidator {
         boolean isValid = matcher.matches();
 
         if (isValid){
-            logger.info("Email '{}' is valid", email);
+            logger.trace("Email '{}' is valid", email);
         }
         else{
-            logger.error("Email '{}' is not valid", email);
+            logger.trace("Email '{}' is not valid", email);
         }
 
         return isValid;

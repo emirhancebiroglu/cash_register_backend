@@ -11,9 +11,6 @@ import com.bit.usermanagementservice.dto.kafka.UserUpdateDTO;
 import com.bit.usermanagementservice.dto.updateuser.UpdateUserReq;
 import com.bit.usermanagementservice.entity.Role;
 import com.bit.usermanagementservice.entity.User;
-import com.bit.usermanagementservice.exceptions.atleastoneroleneeded.AtLeastOneRoleNeededException;
-import com.bit.usermanagementservice.exceptions.invalidemail.InvalidEmailException;
-import com.bit.usermanagementservice.exceptions.invalidname.InvalidNameException;
 import com.bit.usermanagementservice.exceptions.invalidstatustype.InvalidStatusTypeException;
 import com.bit.usermanagementservice.exceptions.rolenotfound.RoleNotFoundException;
 import com.bit.usermanagementservice.exceptions.useralreadyactive.UserAlreadyActiveException;
@@ -64,119 +61,79 @@ public class UserServiceImpl implements UserService {
     private static final String DELETED = "deleted";
     private static final String FIRST_NAME = "firstName";
 
-
-    /**
-     * Adds a new user based on the provided user request.
-     * This method performs the following steps:
-     * 1. Checks if the user already exists.
-     * 2. Validates the user data.
-     * 3. Maps the user roles.
-     * 4. Handles initial admin if required.
-     * 5. Generates a unique user code.
-     * 6. Generates a password for the user.
-     * 7. Encodes the password.
-     * 8. Builds the user entity.
-     * 9. Saves the user entity to the repository.
-     * 10. Sends user credentials to the authentication service.
-     * 11. Sends user credentials to the user via email.
-     *
-     * @param addUserReq The request object containing user information to be added.
-     * @throws UserAlreadyExistsException If the user already exists in the system.
-     * @throws InvalidEmailException If the email provided is invalid.
-     * @throws InvalidNameException If the first or last name provided is invalid.
-     * @throws AtLeastOneRoleNeededException If no roles are specified for the user.
-     * @throws RoleNotFoundException If any of the specified roles are not found in the system.
-     */
     @Override
     public void addUser(AddUserReq addUserReq) {
-        logger.info("Adding user...");
+        logger.trace("Adding user...");
 
         checkIfUserExists(addUserReq);
         userValidator.validateUserData(addUserReq);
 
+        // Map roles for the new user and handle the initial admin setup.
         Set<Role> roles = mapRolesForAddUser(addUserReq);
         handleInitialAdmin(roles);
+        logger.debug("Mapped roles and handled initial admin: {}", roles);
 
+        // Generate a unique user code and password.
         String userCode = userCodeGenerator.createUserCode(addUserReq.getRoles(), findMaxId() + 1);
+        logger.debug("Generated user code: {}", userCode);
 
         String password = generatePassword(addUserReq.getEmail(), findMaxId() + 1);
         String encodedPassword = passwordEncoderConfig.passwordEncoder().encode(password);
+        logger.debug("Generated and encoded password for new user.");
 
         User newUser = buildUser(addUserReq, userCode, encodedPassword, roles);
 
         userRepository.save(newUser);
-        logger.info("User added successfully: {}", newUser.getUserCode());
+        logger.trace("User added successfully: {}", newUser.getUserCode());
 
+        // Send user credentials to the authentication service and by email.
         sendUserCredentialsToAuthService(newUser);
-
         sendUserCredentialsByEmail(newUser, password);
     }
 
-    /**
-     * Updates an existing user with the provided user ID and update request.
-     * This method performs the following steps:
-     * 1. Retrieves the existing user by ID.
-     * 2. Checks if the user is already deleted. If deleted, throws a UserNotFoundException.
-     * 3. Maps the updated user roles.
-     * 4. Updates the existing user with the new information.
-     * 5. Initializes the admin configuration.
-     * 6. Handles initial admin if required.
-     *
-     * @param userId       The ID of the user to be updated.
-     * @param updateUserReq The request object containing the updated user information.
-     * @throws UserNotFoundException     If the user with the provided ID is not found or is already deleted.
-     * @throws InvalidEmailException      If the email provided in the update request is invalid.
-     * @throws InvalidNameException       If the first or last name provided in the update request is invalid.
-     * @throws RoleNotFoundException      If any of the specified roles in the update request are not found in the system.
-     */
     @Override
     public void updateUser(Long userId, UpdateUserReq updateUserReq){
-        logger.info("Updating user...");
+        logger.trace("Updating user...");
 
         User existingUser = findUserByIdOrThrow(userId);
 
+        // Check if the user is marked as deleted.
         if(existingUser.isDeleted()){
             logger.error("This user no longer exists : {}", existingUser.getEmail());
             throw new UserNotFoundException("This user no longer exists: " + existingUser.getEmail());
         }
 
+        // Map roles for the update and update the existing user entity.
         Set<Role> roles = mapRolesForUpdateUser(updateUserReq);
+        logger.debug("Mapped roles for update: {}", roles);
 
         updateExistingUser(existingUser, updateUserReq, roles);
+
+        // Initialize admin if needed and handle initial admin setup.
         adminInitializationConfig.initializeAdmin();
         handleInitialAdmin(roles);
 
-        logger.info("User with ID {} updated successfully", userId);
+        logger.trace("User with ID {} updated successfully", userId);
     }
 
-    /**
-     * Deletes a user with the provided user ID.
-     * This method performs the following steps:
-     * 1. Retrieves the existing user by ID.
-     * 2. Checks if the user is already deleted. If not, sets the user's deleted status to true and saves the changes.
-     * 3. Initializes the admin configuration.
-     * 4. Sends information about the deleted user to the authentication service.
-     * 5. Sends an email to inform the user about the termination of their relationship.
-     *
-     * @param userId The ID of the user to be deleted.
-     * @throws UserNotFoundException         If the user with the provided ID is not found.
-     * @throws UserAlreadyDeletedException   If the user is already deleted.
-     */
     @Override
     public void deleteUser(Long userId){
-        logger.info("Deleting user...");
+        logger.trace("Deleting user...");
 
         User existingUser = findUserByIdOrThrow(userId);
+        logger.debug("Found existing User entity: {}", existingUser);
 
+        // Mark the user as deleted if not already deleted.
         if (!existingUser.isDeleted()){
             existingUser.setDeleted(true);
             userRepository.save(existingUser);
+            logger.debug("Marked User entity as deleted: {}", existingUser);
+
             adminInitializationConfig.initializeAdmin();
 
+            // Notify the authentication service and send termination info by email.
             sendDeletedUserInfoToAuthService(existingUser.getId(), existingUser.isDeleted());
-
-            logger.info("User with ID {} deleted successfully", userId);
-
+            logger.trace("User with ID {} deleted successfully", userId);
             sendTerminationInfoByEmail(existingUser);
         }
         else{
@@ -185,39 +142,28 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    /**
-     * Reactivates a user with the provided user ID.
-     * This method performs the following steps:
-     * 1. Retrieves the existing user by ID.
-     * 2. Checks if the user is already deleted. If deleted, sets the deleted status to false.
-     * 3. Generates a new password for the reactivated user.
-     * 4. Saves the changes to the user entity.
-     * 5. Sends information about the reactivated user to the authentication service.
-     * 6. Initializes the admin configuration.
-     * 7. Sends a welcome-back email to the reactivated user.
-     *
-     * @param userId The ID of the user to be reactivated.
-     * @throws UserNotFoundException      If the user with the provided ID is not found.
-     * @throws UserAlreadyActiveException If the user is already active.
-     */
     @Override
     public void reactivateUser(Long userId) {
-        logger.info("Reactivating user...");
+        logger.trace("Reactivating user...");
 
         User existingUser = findUserByIdOrThrow(userId);
 
+        // Reactivate the user if they are marked as deleted.
         if (existingUser.isDeleted()){
             existingUser.setDeleted(false);
 
+            // Reset the user's password and save the updated user entity.
             String newPassword = resetUserPassword(existingUser);
-
             userRepository.save(existingUser);
+            logger.debug("User entity saved with reactivated status: {}", existingUser);
 
+            // Notify the authentication service and handle initial admin setup.
             sendReactivatedUserInfoToAuthService(existingUser.getId(), existingUser.isDeleted(), existingUser.getPassword());
-
             handleInitialAdmin(existingUser.getRoles());
-            logger.info("An existing user has been re-added to the system: {}", existingUser.getEmail());
 
+            logger.trace("An existing user has been re-added to the system: {}", existingUser.getEmail());
+
+            // Send a welcome back message by email.
             sendWelcomeBackMessageByEmail(existingUser, newPassword);
         }
         else{
@@ -226,44 +172,42 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    /**
-     * Retrieves a list of active or inactive users with pagination support.
-     * This method fetches users from the database based on the provided page number and page size.
-     *
-     * @param pageNo        The page number of the results to retrieve.
-     * @param pageSize      The number of users per page.
-     * @param status        Lists the users by their status (deleted or not)
-     * @param searchingTerm The search term to receive users by their names
-     * @param sortBy        Declares how to sort users
-     * @return A list of UserDTO objects representing the users on the specified page.
-     */
     @Override
     public List<UserDTO> getUsers(int pageNo, int pageSize, String status, String searchingTerm, String sortBy, String sortOrder) {
-        logger.info("Getting users...");
+        logger.trace("Getting users...");
 
+        // Apply pagination and sorting parameters.
         Pageable pageable = applySort(pageNo, pageSize, sortBy, sortOrder);
         Page<User> userPage;
 
+        // Validate the status parameter.
         validateStatus(status);
+        logger.debug("Status validated: {}", status);
 
+        // Fetch users based on status and/or searching term.
         if (status != null && searchingTerm != null){
             userPage = userRepository.findAllByisDeletedAndFirstNameContainingIgnoreCase(status.equalsIgnoreCase(DELETED), searchingTerm, pageable);
+            logger.debug("Fetching users with status: {} and searching term: {}", status, searchingTerm);
         }
         else if(status != null){
             userPage = userRepository.findAllByisDeleted(status.equalsIgnoreCase(DELETED), pageable);
+            logger.debug("Fetching users with status: {}", status);
         }
         else if(searchingTerm != null){
             userPage = userRepository.findAllByFirstNameContainingIgnoreCase(searchingTerm, pageable);
+            logger.debug("Fetching users with searching term: {}", searchingTerm);
         }
         else{
             userPage = userRepository.findAll(pageable);
+            logger.debug("Fetching all users");
         }
 
+        // Map the user entities to UserDTOs.
         List<UserDTO> listUserDTOList = userPage.getContent().stream()
                 .map(this::mapUserToDTO)
                 .toList();
 
-        logger.info("Users fetched successfully");
+        logger.trace("Users fetched successfully");
 
         return listUserDTOList;
     }

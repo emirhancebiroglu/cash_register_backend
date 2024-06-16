@@ -62,7 +62,7 @@ public class NameValidator {
             return false;
         }
 
-        logger.info("Valid {} name: {}", type, name);
+        logger.trace("Valid {} name: {}", type, name);
         return true;
     }
 }

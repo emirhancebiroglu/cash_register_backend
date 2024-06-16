@@ -23,7 +23,7 @@ public class PasswordGenerator {
      * @return the generated password.
      */
     public String createPassword(String email, Long userId){
-        logger.info("Creating password");
+        logger.trace("Creating password");
 
         StringBuilder password = new StringBuilder();
 
@@ -36,7 +36,7 @@ public class PasswordGenerator {
 
         password.append(generateRandomSpecialCharacter());
 
-        logger.info("Password created");
+        logger.trace("Password created");
         return password.toString();
     }
 

@@ -1,5 +1,6 @@
 version: '3.10'
 services:
+  # Zookeper and Kafka
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
     container_name: zookeeper
@@ -38,11 +39,7 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_HEAP_OPTS: "-Xmx1536M -Xms1536M"
-      KAFKA_LOG_RETENTION_HOURS: 168
-      KAFKA_LOG_RETENTION_BYTES: 1073741824
-      KAFKA_LOG_SEGMENT_BYTES: 1073741824
       KAFKA_LOG_CLEANER_ENABLE: "true"
-      KAFKA_GC_LOG_OPTS: "-XX:+UseG1GC -XX:MaxGCPauseMillis=20 -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=100M"
     depends_on:
       zookeeper:
         condition: service_healthy
@@ -58,6 +55,37 @@ services:
       timeout: 10s
       retries: 5
 
+  # Observation with Prometheus, Grafana and Zipkin
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - spring-network
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    networks:
+      - spring-network
+
+  zipkin:
+    image: openzipkin/zipkin:latest
+    container_name: zipkin
+    ports:
+      - "9411:9411"
+    networks:
+      - spring-network
+
+  #Service registry and Gateway
   eureka-server:
     image: emirhancebiroglu/eureka-server:latest
     container_name: eureka-server
@@ -75,23 +103,25 @@ services:
     image: emirhancebiroglu/api-gateway:latest
     container_name: api-gateway
     ports:
-      - "9191:9090"
+      - "9191:8086"
     expose:
       - "9191"
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
-      - LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY= TRACE
+      SPRING_PROFILES_ACTIVE: docker
+      MANAGEMENT.ZIPKIN.TRACING.ENDPOINT: http://zipkin:9411/api/v2/spans
+      LOGGING_LEVEL_ORG_SPRINGFRAMEWORK_SECURITY: TRACE
     depends_on:
       eureka-server:
         condition: service_healthy
     networks:
       - spring-network
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://127.0.0.1:9090/actuator/health"]
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8086/actuator/health"]
       interval: 30s
       timeout: 10s
       retries: 5
 
+  #Databases
   user-management-db:
     image: postgres:latest
     container_name: user-management-db
@@ -207,11 +237,13 @@ services:
       timeout: 10s
       retries: 5
 
+  #Services
   user-management-service:
     image: emirhancebiroglu/user_management_service:latest
     container_name: user-management-service
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      SPRING_PROFILES_ACTIVE: docker
+      MANAGEMENT.ZIPKIN.TRACING.ENDPOINT: http://zipkin:9411/api/v2/spans
     ports:
       - "8081:8081"
     depends_on:
@@ -237,7 +269,8 @@ services:
     image: emirhancebiroglu/jwt_auth_service:latest
     container_name: jwt-auth-service
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      SPRING_PROFILES_ACTIVE: docker
+      MANAGEMENT.ZIPKIN.TRACING.ENDPOINT: http://zipkin:9411/api/v2/spans
     ports:
       - "8082:8082"
     networks:
@@ -261,7 +294,8 @@ services:
     image: emirhancebiroglu/product-service:latest
     container_name: product-service
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      SPRING_PROFILES_ACTIVE: docker
+      MANAGEMENT.ZIPKIN.TRACING.ENDPOINT: http://zipkin:9411/api/v2/spans
     ports:
       - "8083:8083"
     depends_on:
@@ -283,7 +317,8 @@ services:
     image: emirhancebiroglu/sales-service:latest
     container_name: sales-service
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      SPRING_PROFILES_ACTIVE: docker
+      MANAGEMENT.ZIPKIN.TRACING.ENDPOINT: http://zipkin:9411/api/v2/spans
     ports:
       - "8084:8084"
     depends_on:
@@ -309,7 +344,8 @@ services:
     image: emirhancebiroglu/reporting-service:latest
     container_name: reporting-service
     environment:
-      - SPRING_PROFILES_ACTIVE=docker
+      SPRING_PROFILES_ACTIVE: docker
+      MANAGEMENT.ZIPKIN.TRACING.ENDPOINT: http://zipkin:9411/api/v2/spans
     ports:
       - "8085:8085"
     depends_on:

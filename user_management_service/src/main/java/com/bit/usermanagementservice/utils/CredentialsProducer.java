@@ -28,7 +28,7 @@ public class CredentialsProducer {
      */
     public void sendMessage(String topic, UserCredentialsDTO userCredentials) {
         kafkaTemplate.send(topic, userCredentials);
-        logger.info("Sent message for UserCredentialsDTO to topic: {}", topic);
+        logger.trace("Sent message for UserCredentialsDTO to topic: {}", topic);
     }
 
     /**
@@ -39,7 +39,7 @@ public class CredentialsProducer {
      */
     public void sendMessage(String topic, UserSafeDeletionDTO userSafeDeletionDTO) {
         kafkaTemplate.send(topic, userSafeDeletionDTO);
-        logger.info("Sent message for UserSafeDeletionDTO to topic: {}", topic);
+        logger.trace("Sent message for UserSafeDeletionDTO to topic: {}", topic);
     }
 
     /**
@@ -50,7 +50,7 @@ public class CredentialsProducer {
      */
     public void sendMessage(String topic, UserUpdateDTO userUpdateDTO) {
         kafkaTemplate.send(topic, userUpdateDTO);
-        logger.info("Sent message for UserUpdateDTO to topic: {}", topic);
+        logger.trace("Sent message for UserUpdateDTO to topic: {}", topic);
     }
 
     /**
@@ -61,6 +61,6 @@ public class CredentialsProducer {
      */
     public void sendMessage(String topic, UserReactivateDTO userReactivateDTO) {
         kafkaTemplate.send(topic, userReactivateDTO);
-        logger.info("Sent message for UserReactivateDTO to topic: {}", topic);
+        logger.trace("Sent message for UserReactivateDTO to topic: {}", topic);
     }
 }
