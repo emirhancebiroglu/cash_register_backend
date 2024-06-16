@@ -6,14 +6,19 @@ import com.bit.productservice.dto.SpecifyStockNumberReq;
 import com.bit.productservice.dto.UpdateStockRequest;
 import com.bit.productservice.dto.addproduct.AddProductReq;
 import com.bit.productservice.dto.updateproduct.UpdateProductReq;
+import com.bit.productservice.service.ExcelReportService;
 import com.bit.productservice.service.ProductService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Mono;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.List;
 
@@ -25,6 +30,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class ProductController {
     private final ProductService productService;
+    private final ExcelReportService excelReportService;
 
     /**
      * Endpoint to retrieve all products.
@@ -122,5 +128,27 @@ public class ProductController {
     @PostMapping("/update-stocks")
     public void updateStocks(@RequestBody UpdateStockRequest request){
         productService.updateStocks(request.getProductsIdWithQuantity(), request.isShouldDecrease());
+    }
+
+     /**
+     * Endpoint to export product data to an Excel file.
+     *
+     * @return ResponseEntity containing the exported Excel file as an InputStreamResource.
+     *         The response has appropriate headers for file download and content type.
+     */
+    @GetMapping("/export")
+    public ResponseEntity<InputStreamResource> exportProductDataToExcel(){
+        // Generate the Excel file from product data using the ExcelReportService
+        ByteArrayInputStream in = excelReportService.exportProductDataToExcel();
+
+        // Prepare HTTP headers for file download
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Disposition", "attachment; filename=products.xlsx");
+
+        // Return the response with appropriate headers, content type, and the generated Excel file
+        return ResponseEntity.ok()
+                .headers(headers)
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(new InputStreamResource(in));
     }
 }
