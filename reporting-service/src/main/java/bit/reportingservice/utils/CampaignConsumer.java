@@ -27,7 +27,7 @@ public class CampaignConsumer {
      */
     @KafkaListener(topics = "campaign", groupId = "sales")
     public void receiveCampaign(CampaignDTO campaignDTO) {
-        logger.info("Received Sale Report: {}", campaignDTO);
+        logger.trace("Received Sale Report: {}", campaignDTO);
 
         reportingService.saveCampaign(campaignDTO);
     }

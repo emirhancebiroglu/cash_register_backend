@@ -42,151 +42,160 @@ public class ReportingServiceImpl implements ReportingService {
     private final CampaignRepository campaignRepository;
     private final ReceiptGenerator receiptGenerator;
     private static final Logger logger = LogManager.getLogger(ReportingServiceImpl.class);
+    private static final String CANCELLED = "cancelled";
 
-    /**
-     * This method saves a sale report. It maps the provided SaleReportDTO to a SaleReport object and saves it using the saleReportRepository.
-     *
-     * @param saleReportDTO The SaleReportDTO containing the details of the sale report to be saved.
-     */
     @Override
     public void saveSaleReport(SaleReportDTO saleReportDTO) {
-        logger.info("Saving sale report...");
+        logger.trace("Saving sale report...");
 
+        // Map the SaleReportDTO object to a SaleReport entity.
         SaleReport saleReport = mapToSaleReport(saleReportDTO);
+        logger.debug("Mapped SaleReport entity: {}", saleReport);
 
         saleReportRepository.save(saleReport);
+        logger.debug("SaleReport entity saved with ID: {}", saleReport.getId());
 
-        logger.info("Sale report saved");
+        logger.trace("Sale report saved");
     }
 
-    /**
-     * This method saves a cancelled state of a sale report. It retrieves the sale report by its ID, sets its cancelled status, cancelled date, returned money, and total price to 0, and saves it using the saleReportRepository.
-     *
-     * @param cancelledSaleReportDTO The CancelledSaleReportDTO containing the details of the sale report to be cancelled.
-     */
     @Override
     public void saveCancelledStateOfSaleReport(CancelledSaleReportDTO cancelledSaleReportDTO) {
-        logger.info("Saving cancelled sale report...");
+        logger.trace("Saving cancelled sale report...");
 
         SaleReport saleReport = saleReportRepository.findById(cancelledSaleReportDTO.getId())
                 .orElseThrow(() -> {
                     logger.error("Report not found for id {}", cancelledSaleReportDTO.getId());
                     return new ReportNotFoundException("Report not found");
                 });
+        logger.debug("SaleReport entity found: {}", saleReport);
 
+        // Update the SaleReport entity with the cancelled status and related details.
         saleReport.setCancelled(true);
         saleReport.setCancelledDate(cancelledSaleReportDTO.getCanceledDate());
         saleReport.setReturnedMoney(cancelledSaleReportDTO.getReturnedMoney());
         saleReport.setTotalPrice(0D);
+        logger.debug("Updated SaleReport entity with cancelled status: {}", saleReport);
 
+        // Iterate through each product in the sale report to update its status.
         for (Product product : saleReport.getProducts()) {
             product.setReturned(true);
             product.setReturnedQuantity(product.getQuantity());
             product.setQuantity(0);
+            logger.debug("Updated Product entity: {}", product);
         }
 
         saleReportRepository.save(saleReport);
+        logger.debug("Cancelled SaleReport entity saved with ID: {}", saleReport.getId());
 
-        logger.info("Cancelled sale report saved");
+        logger.trace("Cancelled sale report saved");
     }
 
-    /**
-     * This method updates a product and its associated sale report. It retrieves the product by its ID, updates its returned status, quantity, returned quantity, and sale report's returned money and total price, and saves both the product and the sale report using the respective repositories.
-     *
-     * @param returnedProductInfoDTO The ReturnedProductInfoDTO containing the details of the product and sale report to be updated.
-     */
     @Override
     public void updateProductAndSaleReport(ReturnedProductInfoDTO returnedProductInfoDTO) {
-        logger.info("Updating product and sale report...");
+        logger.trace("Updating product and sale report...");
 
         Product product = productRepository.findById(returnedProductInfoDTO.getId())
                 .orElseThrow(() -> {
                     logger.error("Product not found for id {}", returnedProductInfoDTO.getId());
                     return new ProductNotFoundException("Product not found");
                 });
+        logger.debug("Product entity found: {}", product);
 
+        // Update the Product entity with the returned product information.
         product.setReturned(returnedProductInfoDTO.getReturned());
         product.setQuantity(returnedProductInfoDTO.getQuantity());
         product.setReturnedQuantity(returnedProductInfoDTO.getReturnedQuantity());
+        logger.debug("Updated Product entity: {}", product);
+
+        // Update the SaleReport entity associated with the Product.
         product.getSaleReport().setReturnedMoney(returnedProductInfoDTO.getReturnedMoney());
         product.getSaleReport().setTotalPrice(product.getSaleReport().getTotalPrice() - returnedProductInfoDTO.getReturnedMoney());
+        logger.debug("Updated SaleReport entity in Product: {}", product.getSaleReport());
 
         productRepository.save(product);
+        logger.debug("Product entity saved: {}", product);
         saleReportRepository.save(product.getSaleReport());
+        logger.debug("SaleReport entity saved: {}", product.getSaleReport());
 
-        logger.info("Product and sale report updated");
+        logger.trace("Product and sale report updated");
     }
 
     @Override
     public List<ListReportsReq> listReports(int page, int size, String cancelledStatus, String paymentStatus, String sortBy, String sortOrder) {
-            logger.info("Listing reports...");
+        logger.trace("Listing reports...");
 
-            Pageable pageable = applySort(page, size, sortBy, sortOrder);
+        // Apply pagination and sorting parameters.
+        Pageable pageable = applySort(page, size, sortBy, sortOrder);
+        logger.debug("Constructed Pageable: {}", pageable);
 
-            Page<SaleReport> saleReportsPage;
+        Page<SaleReport> saleReportsPage;
 
-            Specification<SaleReport> specification = Specification.where((root, query, criteriaBuilder) -> {
-                List<Predicate> predicates = new ArrayList<>();
+        // Define the specification for filtering sale reports.
+        Specification<SaleReport> specification = Specification.where((root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
 
-                if (paymentStatus != null) {
-                    if (paymentStatus.equalsIgnoreCase("cash")) {
-                        predicates.add(criteriaBuilder.equal(root.get("paymentMethod"), PaymentMethod.CASH));
-                    } else if (paymentStatus.equalsIgnoreCase("credit-card")) {
-                        predicates.add(criteriaBuilder.equal(root.get("paymentMethod"), PaymentMethod.CREDIT_CARD));
-                    }
+            // Add predicate for payment status, if provided.
+            if (paymentStatus != null) {
+                if (paymentStatus.equalsIgnoreCase("cash")) {
+                    predicates.add(criteriaBuilder.equal(root.get("paymentMethod"), PaymentMethod.CASH));
+                    logger.debug("Added predicate for payment method: CASH");
+                } else if (paymentStatus.equalsIgnoreCase("credit-card")) {
+                    predicates.add(criteriaBuilder.equal(root.get("paymentMethod"), PaymentMethod.CREDIT_CARD));
+                    logger.debug("Added predicate for payment method: CREDIT_CARD");
                 }
-                if (cancelledStatus != null) {
-                    predicates.add(criteriaBuilder.equal(root.get("cancelled"), cancelledStatus.equalsIgnoreCase("cancelled")));
-                }
+            }
+            // Add predicate for cancelled status, if provided.
+            if (cancelledStatus != null) {
+                predicates.add(criteriaBuilder.equal(root.get(CANCELLED), cancelledStatus.equalsIgnoreCase(CANCELLED)));
+                logger.debug("Added predicate for cancelled status: {}", cancelledStatus.equalsIgnoreCase(CANCELLED));
+            }
 
-                return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
-            });
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        });
 
-            saleReportsPage = saleReportRepository.findAll(specification, pageable);
+        // Retrieve the sale reports matching the specification and pageable parameters.
+        saleReportsPage = saleReportRepository.findAll(specification, pageable);
+        logger.debug("Found {} sale reports", saleReportsPage.getTotalElements());
 
-            List<ListReportsReq> reports =saleReportsPage.getContent().stream()
-                            .map(this::mapToListReportReq)
-                            .toList();
+        // Map the retrieved sale reports to ListReportsReq DTOs.
+        List<ListReportsReq> reports =saleReportsPage.getContent().stream()
+                .map(this::mapToListReportReq)
+                .toList();
+        logger.debug("Mapped {} sale reports to ListReportsReq", reports.size());
 
-            logger.info("Reports listed");
+        logger.trace("Reports listed");
 
-            return reports;
+        return reports;
         }
 
-    /**
-     * This method generates a PDF receipt for a given sale report. It retrieves the sale report by its ID, generates the PDF receipt using the receiptGenerator, and returns the generated PDF byte array.
-     *
-     * @param reportId The ID of the sale report for which the PDF receipt needs to be generated.
-     * @return A byte array representing the generated PDF receipt.
-     * @throws IOException If an error occurs while generating the PDF receipt.
-     */
     @Override
     public byte[] generatePdfReceipt(Long reportId) throws IOException {
-        logger.info("Generating pdf receipt...");
+        logger.trace("Generating pdf receipt...");
 
         SaleReport saleReport = saleReportRepository.findById(reportId)
                 .orElseThrow(() -> {
                     logger.error("Report not found for id {}", reportId);
                     return new ReportNotFoundException("Report not found");
                 });
+        logger.debug("Found SaleReport: {}", saleReport);
 
-        logger.info("Receipt generated");
+        // Generate the PDF receipt bytes using the provided SaleReport.
+        byte[] pdfBytes = receiptGenerator.generate(saleReport);
 
-        return receiptGenerator.generate(saleReport);
+        logger.trace("Receipt generated");
+
+        return pdfBytes;
     }
 
-    /**
-     * This method saves a campaign. It retrieves the campaign by its name, and if it does not exist, creates a new campaign with the provided details. If the campaign already exists, it updates its needed quantity based on the provided details.
-     *
-     * @param campaignDTO The CampaignDTO containing the details of the campaign to be saved or updated.
-     */
     @Override
     public void saveCampaign(CampaignDTO campaignDTO) {
-        logger.info("Saving campaign...");
+        logger.trace("Saving campaign...");
 
         Optional<Campaign> campaign = campaignRepository.findByName(campaignDTO.getName());
+        logger.debug("Retrieved Campaign: {}", campaign);
 
         if (campaign.isEmpty()){
+            // If the campaign doesn't exist, create a new one and save it.
             Campaign newCampaign = new Campaign();
             newCampaign.setName(campaignDTO.getName());
             newCampaign.setDiscountAmount(campaignDTO.getDiscountAmount());
@@ -196,6 +205,7 @@ public class ReportingServiceImpl implements ReportingService {
             campaignRepository.save(newCampaign);
         }
         else{
+            // If the campaign exists, update its properties and save it.
             campaign.get().setNeededQuantity(campaignDTO.getNeededQuantity());
             campaign.get().setDiscountAmount(campaignDTO.getDiscountAmount());
             campaign.get().setDiscountType(campaignDTO.getDiscountType());
@@ -203,22 +213,22 @@ public class ReportingServiceImpl implements ReportingService {
             campaignRepository.save(campaign.get());
         }
 
-        logger.info("Campaign saved");
+        logger.trace("Campaign saved");
     }
 
     /**
- * Applies the specified sorting criteria to the given pageable object.
- *
- * @param pageNo The number of the page to be sorted.
- * @param pageSize The size of the page to be sorted.
- * @param sortBy The field by which the data should be sorted.
- * @param sortOrder The order in which the data should be sorted (ASC or DESC).
- * @return A Pageable object with the specified sorting criteria applied.
- */
-private Pageable applySort(Integer pageNo, Integer pageSize, String sortBy, String sortOrder) {
-    Sort sort = sortOrder.equalsIgnoreCase("ASC") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
-    return PageRequest.of(pageNo, pageSize, sort);
-}
+     * Applies the specified sorting criteria to the given pageable object.
+     *
+     * @param pageNo The number of the page to be sorted.
+     * @param pageSize The size of the page to be sorted.
+     * @param sortBy The field by which the data should be sorted.
+     * @param sortOrder The order in which the data should be sorted (ASC or DESC).
+     * @return A Pageable object with the specified sorting criteria applied.
+     */
+    private Pageable applySort(Integer pageNo, Integer pageSize, String sortBy, String sortOrder) {
+        Sort sort = sortOrder.equalsIgnoreCase("ASC") ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        return PageRequest.of(pageNo, pageSize, sort);
+    }
 
     /**
      * Maps a SaleReport object to a ListReportsReq object.
