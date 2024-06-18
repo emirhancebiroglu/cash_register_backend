@@ -27,6 +27,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class ReceiptGenerator {
     private final CampaignRepository campaignRepository;
+    private final DecimalFormat decimalFormat = new DecimalFormat("0.00");
     private static final float BORDER_WIDTH = 1;
     private static final float BORDER_RADIUS = 25;
     private static final float OPACITY = 0.44f;
@@ -106,8 +107,6 @@ public class ReceiptGenerator {
     }
 
     private void drawBody(PDPageContentStream contentStream, PDType0Font fontSemiBold, PDType0Font fontRegular, SaleReport saleReport) throws IOException {
-        DecimalFormat decimalFormat = new DecimalFormat("0.00");
-
         int totalProductInfoHeight = saleReport.getProducts().size() * PRODUCT_INFO_HEIGHT;
         int bodyHeight = FIXED_HEADER_HEIGHT + TITLE_HEIGHT + totalProductInfoHeight + BOTTOM_MARGIN;
 
@@ -216,7 +215,7 @@ public class ReceiptGenerator {
         float dateOffset = dateTitleWidth - formattedDateWidth;
 
         // Calculate the width of the "Change" title and the change value
-        String changeText = saleReport.getChange() + "TL";
+        String changeText = decimalFormat.format(saleReport.getChange()) + "TL";
         float changeTitleWidth = fontSemiBold.getStringWidth("Change") / 1000 * 12;
         float changeValueWidth = fontRegular.getStringWidth(changeText) / 1000 * 12;
 

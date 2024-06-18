@@ -2,8 +2,6 @@ package com.bit.jwtauthservice.config;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,8 +19,6 @@ import java.util.Map;
  */
 @Configuration
 public class KafkaConsumerConfig {
-    private static final Logger logger = LogManager.getLogger(KafkaConsumerConfig.class);
-
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;
 
@@ -32,8 +28,6 @@ public class KafkaConsumerConfig {
      */
     @Bean
     public ConsumerFactory<String, Object> consumerFactory() {
-        logger.info("Creating Kafka consumer factory...");
-
         Map<String, Object> configProps = new HashMap<>();
         configProps.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
         configProps.put(ConsumerConfig.GROUP_ID_CONFIG, "users");
@@ -45,7 +39,6 @@ public class KafkaConsumerConfig {
                 "userUpdate:com.bit.jwtauthservice.dto.kafka.UserUpdateDTO, " +
                 "userReactivate:com.bit.jwtauthservice.dto.kafka.UserReactivateDTO");
 
-        logger.trace("Kafka consumer factory created successfully.");
         return new DefaultKafkaConsumerFactory<>(configProps);
     }
 
@@ -55,13 +48,9 @@ public class KafkaConsumerConfig {
      */
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, Object> kafkaListenerContainerFactory() {
-        logger.trace("Creating Kafka listener container factory...");
-
         ConcurrentKafkaListenerContainerFactory<String, Object> factory = new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
-
-        logger.trace("Kafka listener container factory created successfully.");
-
+        factory.getContainerProperties().setPollTimeout(3000);
         return factory;
     }
 }

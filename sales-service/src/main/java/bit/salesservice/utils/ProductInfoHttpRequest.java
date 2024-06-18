@@ -3,6 +3,8 @@ package bit.salesservice.utils;
 import bit.salesservice.config.WebClientConfig;
 import bit.salesservice.dto.ProductInfo;
 import bit.salesservice.dto.UpdateStockRequest;
+import bit.salesservice.exceptions.unavailableservice.UnavailableServiceException;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import org.apache.http.HttpHeaders;
 import org.apache.logging.log4j.LogManager;
@@ -24,10 +26,11 @@ public class ProductInfoHttpRequest {
     /**
      * Retrieves product information from the backend API using the provided product code and authentication token.
      *
-     * @param code      The product code for which to retrieve information.
+     * @param code The product code for which to retrieve information.
      * @param authToken The authentication token used for authorization.
      * @return The product information retrieved from the backend API.
      */
+    @CircuitBreaker(name = "productService", fallbackMethod = "getProductInfoFallback")
     public ProductInfo getProductInfo(String code, String authToken){
         logger.trace("Retrieving product information from the backend");
 
@@ -50,10 +53,11 @@ public class ProductInfoHttpRequest {
     /**
      * Updates the stock levels of products in the backend API using the provided authentication token and product quantity map.
      *
-     * @param authToken               The authentication token used for authorization.
-     * @param productsIdWithQuantity  A map containing product IDs and their corresponding quantities.
-     * @param shouldDecrease          A boolean indicating whether to decrease the stock level (true) or increase it (false).
+     * @param authToken The authentication token used for authorization.
+     * @param productsIdWithQuantity A map containing product IDs and their corresponding quantities.
+     * @param shouldDecrease A boolean indicating whether to decrease the stock level (true) or increase it (false).
      */
+    @CircuitBreaker(name = "productService", fallbackMethod = "updateStocksFallback")
     public void updateStocks(String authToken, Map<String, Integer> productsIdWithQuantity, boolean shouldDecrease){
         logger.trace("Updating stock levels of products in the backend");
 
@@ -67,5 +71,15 @@ public class ProductInfoHttpRequest {
                 .subscribe();
 
         logger.trace("Stock levels updated successfully");
+    }
+
+     private ProductInfo getProductInfoFallback(Exception e){
+        logger.warn("Fallback triggered due to error: {}", e.getMessage());
+        throw new UnavailableServiceException("Product Service is not available");
+    }
+
+    private void updateStocksFallback(Exception e){
+        logger.warn("Fallback triggered due to error: {}", e.getMessage());
+        throw new UnavailableServiceException("Product Service is not available");
     }
 }
