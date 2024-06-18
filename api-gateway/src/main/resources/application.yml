@@ -10,6 +10,10 @@ spring:
             - name: AuthenticationFilter
               args:
                 roles: [ROLE_ADMIN]
+            - name: CircuitBreaker
+              args:
+                name: USER-MANAGEMENT-SERVICE
+                fallbackUri: forward:/userManagementServiceFallBack
 
         - id: jwt_auth_service
           uri: lb://JWT-AUTH-SERVICE
@@ -19,6 +23,10 @@ spring:
             - name: AuthenticationFilter
               args:
                 roles: [ROLE_ADMIN, ROLE_CASHIER, ROLE_STORE_MANAGER]
+            - name: CircuitBreaker
+              args:
+                name: JWT-AUTH-SERVICE
+                fallbackUri: forward:/jwtAuthServiceFallBack
 
         - id: product-service
           uri: lb://PRODUCT-SERVICE
@@ -28,6 +36,10 @@ spring:
             - name: AuthenticationFilter
               args:
                 roles: [ROLE_ADMIN, ROLE_CASHIER, ROLE_STORE_MANAGER]
+            - name: CircuitBreaker
+              args:
+                name: PRODUCT-SERVICE
+                fallbackUri: forward:/productServiceFallBack
 
         - id: sales-service
           uri: lb://SALES-SERVICE
@@ -37,6 +49,10 @@ spring:
             - name: AuthenticationFilter
               args:
                 roles: [ROLE_CASHIER]
+            - name: CircuitBreaker
+              args:
+                name: SALES-SERVICE
+                fallbackUri: forward:/salesServiceFallBack
 
         - id: reporting-service
           uri: lb://REPORTING-SERVICE
@@ -46,6 +62,10 @@ spring:
             - name: AuthenticationFilter
               args:
                 roles: [ ROLE_STORE_MANAGER ]
+            - name: CircuitBreaker
+              args:
+                name: REPORTING-SERVICE
+                fallbackUri: forward:/reportingServiceFallBack
 
   application:
     name: GATEWAY-SERVICE

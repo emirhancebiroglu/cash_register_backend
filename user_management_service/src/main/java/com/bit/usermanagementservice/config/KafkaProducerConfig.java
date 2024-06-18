@@ -40,6 +40,14 @@ public class KafkaProducerConfig {
                 "userUpdate:com.bit.usermanagementservice.dto.kafka.UserUpdateDTO, " +
                 "userReactivate:com.bit.usermanagementservice.dto.kafka.UserReactivateDTO");
 
+        configProps.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
+        configProps.put(ProducerConfig.ACKS_CONFIG, "all");
+        configProps.put(ProducerConfig.RETRIES_CONFIG, Integer.MAX_VALUE);
+        configProps.put(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, 5);
+        configProps.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, "snappy");
+        configProps.put(ProducerConfig.BATCH_SIZE_CONFIG, 32 * 1024);
+        configProps.put(ProducerConfig.LINGER_MS_CONFIG, 20);
+
         logProducerConfiguration(configProps);
 
         return new DefaultKafkaProducerFactory<>(configProps);

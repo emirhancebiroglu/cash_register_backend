@@ -35,8 +35,7 @@ public class BagValidator {
             throw new NotInStocksException(NOT_IN_STOCKS);
         }
 
-
-        if (checkout.isCancelled()){
+        if (checkout.isCancelled() || checkout.isCompleted()){
             logger.error(CHECKOUT_NOT_FOUND);
             throw new CheckoutNotFoundException(CHECKOUT_NOT_FOUND);
         }

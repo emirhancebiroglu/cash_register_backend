@@ -46,6 +46,14 @@ public class KafkaProducerConfig {
                 "cancelledSaleReport:bit.salesservice.dto.kafka.CancelledSaleReportDTO, " +
                 "campaign:bit.salesservice.dto.kafka.CampaignDTO");
 
+        configProps.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, true);
+        configProps.put(ProducerConfig.ACKS_CONFIG, "all");
+        configProps.put(ProducerConfig.RETRIES_CONFIG, Integer.MAX_VALUE);
+        configProps.put(ProducerConfig.MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION, 5);
+        configProps.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, "snappy");
+        configProps.put(ProducerConfig.BATCH_SIZE_CONFIG, 32 * 1024);
+        configProps.put(ProducerConfig.LINGER_MS_CONFIG, 20);
+
         // Log Kafka producer configuration
         logProducerConfiguration(configProps);
 
