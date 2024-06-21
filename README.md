@@ -1,6 +1,6 @@
 # Cash-Register-Backend Project For 32Bit-2024
 
-Cash Register Backend is a collection of microservices built with Spring Boot to manage transactions and inventory for a retail cash register system.
+The Cash Register Backend is an integrated suite of microservices and essential backend technologies designed to support a retail cash register system. Developed using Spring Boot, this project facilitates the management of transactions and inventory. It enables role-based user management, supporting roles such as admin, cashier, and store manager. Additionally, the project offers comprehensive features for product management, including CDN support and stock tracking. It also provides robust functionalities for handling orders and generating order reports.
 
 ## Microservices
 
@@ -49,6 +49,12 @@ Cash Register Backend is a collection of microservices built with Spring Boot to
 - Cloudinary (for image management)
 - WebClient (for reactive programming)
 - Jacoco (for test coverage)
+- Zipkin (for distributed tracing)
+- Grafana (for monitoring and visualization)
+- Prometheus (for metrics collection and monitoring)
+- Actuator (for application monitoring and management)
+- Apache Poi (for exporting data to an excel file)
+- Resilience4j (for fault tolerance and resilience patterns)
   
 ## Getting Started
 

@@ -136,18 +136,20 @@ public class ReceiptGenerator {
         float priceX;
 
         for (Product product : saleReport.getProducts()) {
-            contentStream.beginText();
-            contentStream.newLineAtOffset(bodyX + 15, productY);
-            contentStream.showText(product.getName().toUpperCase());
-            contentStream.newLineAtOffset(180, 0);
-            contentStream.showText(product.getQuantity() + "X");
-            // Calculate the x-coordinate for the price
-            priceX = bodyX + 350 - tlWidth - fontRegular.getStringWidth(decimalFormat.format(product.getPrice())) / 1000 * 12;
-            contentStream.newLineAtOffset(priceX - (bodyX + 180), 0);
-            double priceWithCampaign = calcDiscount(product);
-            contentStream.showText(decimalFormat.format(priceWithCampaign) + "TL");
-            contentStream.endText();
-            productY -= 30;
+            if (product.getQuantity() > 0){
+                contentStream.beginText();
+                contentStream.newLineAtOffset(bodyX + 15, productY);
+                contentStream.showText(product.getName().toUpperCase());
+                contentStream.newLineAtOffset(180, 0);
+                contentStream.showText(product.getQuantity() + "X");
+                // Calculate the x-coordinate for the price
+                priceX = bodyX + 350 - tlWidth - fontRegular.getStringWidth(decimalFormat.format(product.getPrice())) / 1000 * 12;
+                contentStream.newLineAtOffset(priceX - (bodyX + 180), 0);
+                double priceWithCampaign = calcDiscount(product);
+                contentStream.showText(decimalFormat.format(priceWithCampaign) + "TL");
+                contentStream.endText();
+                productY -= 30;
+            }
         }
 
         float lineY = productY + 15;

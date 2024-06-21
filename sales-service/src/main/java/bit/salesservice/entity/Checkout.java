@@ -45,6 +45,7 @@ public class Checkout {
 
     @Column(name = "created_date")
     private LocalDateTime createdDate; // Date and time when the checkout was created
+
     @Column(name = "updated_date")
     private LocalDateTime updatedDate; // Date and time when the checkout was last updated
 

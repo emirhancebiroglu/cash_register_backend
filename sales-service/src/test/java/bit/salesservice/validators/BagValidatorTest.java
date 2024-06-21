@@ -27,6 +27,7 @@ class BagValidatorTest {
     private ProductInfo productInfo;
     private RemoveOrReturnProductFromBagReq removeOrReturnProductFromBagReq;
     private Product product;
+    private Checkout checkout;
 
     @BeforeEach
     void setUp() {
@@ -42,11 +43,11 @@ class BagValidatorTest {
         removeOrReturnProductFromBagReq.setQuantity(2);
 
         product = new Product();
+        checkout = new Checkout();
     }
 
     @Test
     void validationForAddingToBag_ValidInputs() {
-        Checkout checkout = new Checkout();
         checkout.setCancelled(false);
 
         assertDoesNotThrow(() -> bagValidator.validationForAddingToBag(addAndListProductReq, productInfo, checkout));
@@ -68,7 +69,6 @@ class BagValidatorTest {
 
     @Test
     void validationForAddingToBag_CancelledCheckout() {
-        Checkout checkout = new Checkout();
         checkout.setCancelled(true);
 
         assertThrows(CheckoutNotFoundException.class, () -> bagValidator.validationForAddingToBag(addAndListProductReq, productInfo, checkout));
@@ -76,22 +76,23 @@ class BagValidatorTest {
 
     @Test
     void validationForRemoveProductFromBag_ValidInputs() {
+        checkout.setCancelled(false);
 
-        assertDoesNotThrow(() -> bagValidator.validationForRemoveProductFromBag(removeOrReturnProductFromBagReq, 5));
+        assertDoesNotThrow(() -> bagValidator.validationForRemoveProductFromBag(removeOrReturnProductFromBagReq, 5, checkout));
     }
 
     @Test
     void validationForRemoveProductFromBag_InvalidQuantity() {
         removeOrReturnProductFromBagReq.setQuantity(-2);
 
-        assertThrows(InvalidQuantityException.class, () -> bagValidator.validationForRemoveProductFromBag(removeOrReturnProductFromBagReq, 5));
+        assertThrows(InvalidQuantityException.class, () -> bagValidator.validationForRemoveProductFromBag(removeOrReturnProductFromBagReq, 5, checkout));
     }
 
     @Test
     void validationForRemoveProductFromBag_QuantityOutOfRange() {
         removeOrReturnProductFromBagReq.setQuantity(10);
 
-        assertThrows(InvalidQuantityException.class, () -> bagValidator.validationForRemoveProductFromBag(removeOrReturnProductFromBagReq, 5));
+        assertThrows(InvalidQuantityException.class, () -> bagValidator.validationForRemoveProductFromBag(removeOrReturnProductFromBagReq, 5, checkout));
     }
 
     @Test

@@ -78,6 +78,7 @@ class CampaignServiceTest {
 
         ProductInfo productInfo = new ProductInfo();
         productInfo.setExists(true);
+        productInfo.setPrice(1000D);
         mono = Mono.just(productInfo);
     }
 
