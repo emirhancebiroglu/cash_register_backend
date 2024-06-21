@@ -127,12 +127,18 @@ class CampaignValidatorTest {
 
     @Test
     void validateDiscountAmount_Success() {
-        assertDoesNotThrow(() -> campaignValidator.validateDiscountAmount(10.0));
+        AddAndUpdateCampaignReq addAndUpdateCampaignReq = new AddAndUpdateCampaignReq();
+        addAndUpdateCampaignReq.setDiscountAmount(10D);
+
+        assertDoesNotThrow(() -> campaignValidator.validateDiscountAmount(addAndUpdateCampaignReq));
     }
 
     @Test
     void validateDiscountAmount_NegativeAmount() {
-        assertThrows(InvalidDiscountAmountException.class, () -> campaignValidator.validateDiscountAmount(-10.0));
+        AddAndUpdateCampaignReq addAndUpdateCampaignReq = new AddAndUpdateCampaignReq();
+        addAndUpdateCampaignReq.setDiscountAmount(-10D);
+
+        assertThrows(InvalidDiscountAmountException.class, () -> campaignValidator.validateDiscountAmount(addAndUpdateCampaignReq));
     }
 
     @Test

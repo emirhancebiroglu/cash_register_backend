@@ -54,13 +54,11 @@ public class CheckoutValidator {
         if (moneyTakenFromCash != null && moneyTakenFromCard == null && (moneyTakenFromCash < totalPrice)) {
                 logger.error("Money taken from cash cannot be less than total price: {}", totalPrice);
                 throw new InvalidMoneyTakenException("Money taken from cash cannot be less than total price: " + totalPrice);
-
         }
 
         if (moneyTakenFromCard != null && moneyTakenFromCash == null && (!Objects.equals(moneyTakenFromCard, totalPrice))) {
                 logger.error("Money taken from card should be equal to total price: {}", totalPrice);
                 throw new InvalidMoneyTakenException("Money taken from card should be equal to total price: " + totalPrice);
-
         }
 
         if (moneyTakenFromCard != null && moneyTakenFromCash != null) {

@@ -48,7 +48,7 @@ public class CampaignValidator {
         validateProductCodes(addAndUpdateCampaignReq.getCodes(), campaignRepository);
         validateDurationDays(addAndUpdateCampaignReq);
         validateCampaignName(addAndUpdateCampaignReq, campaignRepository);
-        validateDiscountAmount(addAndUpdateCampaignReq.getDiscountAmount());
+        validateDiscountAmount(addAndUpdateCampaignReq);
         validateDiscountType(addAndUpdateCampaignReq.getDiscountType());
         validateNeededQuantity(addAndUpdateCampaignReq.getNeededQuantity());
     }
@@ -90,16 +90,25 @@ public class CampaignValidator {
         }
     }
 
+
     /**
      * Validates the discount amount of a campaign.
      *
-     * @param amount The discount amount to be validated.
-     * @throws InvalidDiscountAmountException If the discount amount is not positive.
+     * @param addAndUpdateCampaignReq The request object containing campaign parameters.
+     *                               This object must contain a non-null and positive discount amount.
+     *                               If the discount type is "PERCENTAGE", the discount amount must not exceed 100.
+     * @throws InvalidDiscountAmountException If the discount amount is not provided, is 0 or negative,
+     *                                       or if it exceeds 100 when the discount type is "PERCENTAGE".
      */
-    public void validateDiscountAmount(Double amount) {
-        if (amount <= 0) {
+    public void validateDiscountAmount(AddAndUpdateCampaignReq addAndUpdateCampaignReq) {
+        if (addAndUpdateCampaignReq.getDiscountAmount() <= 0) {
             logger.error("Discount amount cannot be 0 or negative");
             throw new InvalidDiscountAmountException("Discount amount cannot be 0 or negative");
+        }
+
+        if (addAndUpdateCampaignReq.getDiscountAmount() >= 100 && addAndUpdateCampaignReq.getDiscountType().equals("PERCENTAGE")){
+            logger.error("Discount amount cannot be greater than 100");
+            throw new InvalidDiscountAmountException("Discount amount cannot be greater than 100");
         }
     }
 

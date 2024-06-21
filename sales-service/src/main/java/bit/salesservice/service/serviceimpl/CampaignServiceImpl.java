@@ -7,6 +7,7 @@ import bit.salesservice.entity.Campaign;
 import bit.salesservice.entity.DiscountType;
 import bit.salesservice.exceptions.campaignnotfound.CampaignNotFoundException;
 import bit.salesservice.exceptions.fixedamountdiscounttypewithprovidedquantity.FixedAmountDiscountTypeWithProvidedQuantityException;
+import bit.salesservice.exceptions.invaliddiscountamount.InvalidDiscountAmountException;
 import bit.salesservice.exceptions.invaliddiscounttype.InvalidDiscountTypeException;
 import bit.salesservice.exceptions.productnotfound.ProductNotFoundException;
 import bit.salesservice.repository.CampaignRepository;
@@ -31,9 +32,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * Service implementation for managing campaign operations.
- */
 @Service
 @RequiredArgsConstructor
 public class CampaignServiceImpl implements CampaignService {
@@ -62,9 +60,6 @@ public class CampaignServiceImpl implements CampaignService {
         // Validate the campaign DTO
         campaignValidator.validateCampaignDTO(addAndUpdateCampaignReq, campaignRepository);
 
-        // Log the validation success as debug information
-        logger.debug("Campaign DTO validation successful");
-
         // Map DTO to Campaign entity
         Campaign campaign = mapToCampaign(addAndUpdateCampaignReq);
 
@@ -88,14 +83,10 @@ public class CampaignServiceImpl implements CampaignService {
                     return new CampaignNotFoundException(NOT_FOUND);
                 });
 
-        // Log the retrieved campaign details for debugging purposes
         logger.debug("Retrieved existing campaign: {}", existingCampaign);
 
         // Ensure the campaign is active before proceeding with the update
         campaignValidator.validateActivation(existingCampaign);
-
-        // Log the validation success as debug information
-        logger.debug("Campaign activation validation successful");
 
         // Check and update product codes if provided
         if (!addAndUpdateCampaignReq.getCodes().isEmpty()){
@@ -149,7 +140,7 @@ public class CampaignServiceImpl implements CampaignService {
         // Update discount amount if provided and different from the current amount
         if (addAndUpdateCampaignReq.getDiscountAmount() != null && !Objects.equals(existingCampaign.getDiscountAmount(), addAndUpdateCampaignReq.getDiscountAmount())){
             logger.debug("Updating discount amount...");
-            campaignValidator.validateDiscountAmount(addAndUpdateCampaignReq.getDiscountAmount());
+            campaignValidator.validateDiscountAmount(addAndUpdateCampaignReq);
             existingCampaign.setDiscountAmount(addAndUpdateCampaignReq.getDiscountAmount());
 
             // Log the updated discount amount for debugging purposes
@@ -186,14 +177,10 @@ public class CampaignServiceImpl implements CampaignService {
                     return new CampaignNotFoundException(NOT_FOUND);
                 });
 
-        // Log the retrieved campaign details for debugging purposes
         logger.debug("Retrieved campaign: {}", campaign);
 
         // Check if the campaign is already inactive
         campaignValidator.validateActivation(campaign);
-
-        // Log the validation success as debug information
-        logger.debug("Campaign activation validation successful");
 
         // Set the campaign as inactive
         campaign.setInactive(true);
@@ -215,14 +202,10 @@ public class CampaignServiceImpl implements CampaignService {
                     return new CampaignNotFoundException(NOT_FOUND);
                 });
 
-        // Log the retrieved campaign details for debugging purposes
         logger.debug("Retrieved campaign: {}", campaign);
 
         // Check if the campaign is already inactive
         campaignValidator.validateInactivation(campaign);
-
-        // Log the validation success as debug information
-        logger.debug("Campaign inactivation validation successful");
 
         // Set the campaign as inactive
         campaign.setInactive(false);
@@ -249,33 +232,24 @@ public class CampaignServiceImpl implements CampaignService {
 
         DiscountType parsedDiscountType = campaignValidator.validateDiscountTypeAndStatus(discountType, status);
 
-        // Log the validated discount type and status for debugging purposes
         logger.debug("Validated discount type: {}, status: {}", parsedDiscountType, status);
 
         // Determine the appropriate query based on input parameters
         if (parsedDiscountType != null && status != null && searchingTerm != null) {
-            logger.debug("Querying campaigns by discount type, status, and searching term...");
             campaignPage = campaignRepository.findAllByDiscountTypeAndIsInactiveAndNameContaining(parsedDiscountType, !status.equals(STATUS_ACTIVE), searchingTerm, pageable);
         } else if (parsedDiscountType != null && status != null) {
-            logger.debug("Querying campaigns by discount type and status...");
             campaignPage = campaignRepository.findAllByDiscountTypeAndIsInactive(parsedDiscountType, !status.equals(STATUS_ACTIVE), pageable);
         } else if (parsedDiscountType != null && searchingTerm != null) {
-            logger.debug("Querying campaigns by discount type and searching term...");
             campaignPage = campaignRepository.findAllByDiscountTypeAndNameContaining(parsedDiscountType, searchingTerm, pageable);
         } else if (status != null && searchingTerm != null) {
-            logger.debug("Querying campaigns by status and searching term...");
             campaignPage = campaignRepository.findAllByisInactiveAndNameContaining(status.equals(STATUS_ACTIVE), searchingTerm, pageable);
         } else if (parsedDiscountType != null) {
-            logger.debug("Querying campaigns by discount type...");
             campaignPage = campaignRepository.findAllByDiscountType(parsedDiscountType, pageable);
         } else if (status != null){
-            logger.debug("Querying campaigns by status...");
             campaignPage = (status.equals(STATUS_ACTIVE)) ? campaignRepository.findAllByisInactive(false, pageable) : campaignRepository.findAllByisInactive(true, pageable);
         } else if (searchingTerm != null) {
-            logger.debug("Querying campaigns by searching term...");
             campaignPage = campaignRepository.findByNameContaining(pageable, searchingTerm);
         } else{
-            logger.debug("Querying all campaigns...");
             campaignPage = campaignRepository.findAll(pageable);
         }
 
@@ -290,13 +264,13 @@ public class CampaignServiceImpl implements CampaignService {
     }
 
     /**
-     * Applies sorting parameters to create a pageable object for query pagination.
+     * This method applies sorting parameters to the campaigns retrieved from the database.
      *
-     * @param pageNo     the page number
-     * @param pageSize   the page size
-     * @param sortBy     the field to sort by
-     * @param sortOrder  the sort order (ASC or DESC)
-     * @return a pageable object for query pagination
+     * @param pageNo The page number for pagination.
+     * @param pageSize The number of campaigns per page.
+     * @param sortBy The field to sort the campaigns by. It can be either "name" or "end_date".
+     * @param sortOrder The order to sort the campaigns by. It can be either "ASC" or "DESC".
+     * @return A Pageable object with the applied sorting parameters.
      */
     @NotNull
     private static Pageable applySort(int pageNo, int pageSize, String sortBy, String sortOrder) {
@@ -318,10 +292,10 @@ public class CampaignServiceImpl implements CampaignService {
     }
 
     /**
-     * Maps a Campaign entity to a ListCampaignsReq DTO.
+     * This method maps a Campaign entity to a ListCampaignsReq DTO.
      *
-     * @param campaign the Campaign entity to be mapped
-     * @return a ListCampaignsReq DTO mapped from the Campaign entity
+     * @param campaign The Campaign entity to be mapped.
+     * @return A ListCampaignsReq DTO containing the details of the given Campaign entity.
      */
     private ListCampaignsReq mapToCampaignReq(Campaign campaign) {
         ListCampaignsReq listCampaignsReq = new ListCampaignsReq();
@@ -339,11 +313,11 @@ public class CampaignServiceImpl implements CampaignService {
     }
 
     /**
-     * Retrieves the discount type from the provided request object.
+     * This method converts a string representation of a discount type to its corresponding enum value.
      *
-     * @param addAndUpdateCampaignReq the request object containing campaign details
-     * @return the discount type parsed from the request
-     * @throws InvalidDiscountTypeException if an invalid discount type is provided
+     * @param addAndUpdateCampaignReq The request object containing the discount type as a string.
+     * @return The corresponding enum value of the discount type.
+     * @throws InvalidDiscountTypeException If the provided discount type is not a valid enum value.
      */
     private static DiscountType getDiscountType(AddAndUpdateCampaignReq addAndUpdateCampaignReq) {
         DiscountType discountType;
@@ -359,11 +333,12 @@ public class CampaignServiceImpl implements CampaignService {
     }
 
     /**
-     * Checks the availability of products associated with a campaign request.
+     * This method checks the availability of each product code asynchronously.
+     * It fetches product information for each code and throws a ProductNotFoundException
+     * if a product does not exist.
      *
-     * @param addAndUpdateCampaignReq the request containing campaign details
-     * @return a Mono<Void> indicating completion of the product availability check
-     * @throws ProductNotFoundException if a product is not found while checking availability
+     * @param addAndUpdateCampaignReq The request object containing the product codes.
+     * @return A Mono<Void> indicating completion of the asynchronous checks.
      */
     private Mono<Void> checkIfProductsAvailable(AddAndUpdateCampaignReq addAndUpdateCampaignReq) {
         // Check the availability of each product code asynchronously
@@ -379,6 +354,11 @@ public class CampaignServiceImpl implements CampaignService {
                                     logger.error("Product not found : {}", productCode);
                                     return Mono.error(new ProductNotFoundException("Product not found: " + productCode));
                                 }
+
+                                if (addAndUpdateCampaignReq.getDiscountAmount() >= productInfo.getPrice() && addAndUpdateCampaignReq.getDiscountType().equals("FIXED_AMOUNT")){
+                                    logger.error("The discount amount cannot be equal to or greater than the price of the product");
+                                    return Mono.error(new InvalidDiscountAmountException("The discount amount cannot be equal to or greater than the price of the product"));
+                                }
                                 return Mono.empty();
                             });
                 })
@@ -387,11 +367,11 @@ public class CampaignServiceImpl implements CampaignService {
     }
 
     /**
-     * Maps a request object to a Campaign entity.
+     * This method maps a request object to a Campaign entity.
      *
-     * @param addAndUpdateCampaignReq the request object containing campaign details
-     * @return a Campaign entity mapped from the request object
-     * @throws FixedAmountDiscountTypeWithProvidedQuantityException if a fixed amount discount type is provided with a quantity greater than 1
+     * @param addAndUpdateCampaignReq The request object containing campaign details.
+     * @return A Campaign entity with the details from the request object.
+     * @throws FixedAmountDiscountTypeWithProvidedQuantityException If the discount type is fixed amount and the needed quantity is more than 1.
      */
     private Campaign mapToCampaign(AddAndUpdateCampaignReq addAndUpdateCampaignReq) {
         // Extract discount type from the request
@@ -428,9 +408,9 @@ public class CampaignServiceImpl implements CampaignService {
     }
 
     /**
-     * Sends campaign information to the reporting service.
+     * This method sends campaign information to the reporting service.
      *
-     * @param campaign the Campaign entity containing campaign information
+     * @param campaign The campaign entity from which the information is extracted.
      */
     private void sendCampaignInfoToReportingService(Campaign campaign){
         // Create a CampaignDTO object from the Campaign entity
