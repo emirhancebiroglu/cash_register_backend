@@ -383,9 +383,17 @@ public class ProductServiceImpl implements ProductService {
     private void updateProductDetails(Product product, UpdateProductReq updateProductReq){
         if (updateProductReq.getBarcode() != null){
             product.setBarcode(updateProductReq.getBarcode());
+
+            if (product.getProductCode() != null){
+                product.setProductCode(null);
+            }
         }
         if (updateProductReq.getProductCode() != null){
             product.setProductCode(updateProductReq.getProductCode());
+
+            if (product.getBarcode() != null){
+                product.setBarcode(null);
+            }
         }
         if (updateProductReq.getName() != null){
             product.setName(updateProductReq.getName());

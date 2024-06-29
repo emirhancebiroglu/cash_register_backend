@@ -73,14 +73,12 @@ public class ReportingServiceImpl implements ReportingService {
         saleReport.setCancelled(true);
         saleReport.setCancelledDate(cancelledSaleReportDTO.getCanceledDate());
         saleReport.setReturnedMoney(cancelledSaleReportDTO.getReturnedMoney());
-        saleReport.setTotalPrice(0D);
         logger.debug("Updated SaleReport entity with cancelled status: {}", saleReport);
 
         // Iterate through each product in the sale report to update its status.
         for (Product product : saleReport.getProducts()) {
             product.setReturned(true);
             product.setReturnedQuantity(product.getQuantity());
-            product.setQuantity(0);
             logger.debug("Updated Product entity: {}", product);
         }
 

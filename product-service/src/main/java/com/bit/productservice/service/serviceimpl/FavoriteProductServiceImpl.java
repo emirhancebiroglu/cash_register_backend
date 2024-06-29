@@ -44,7 +44,7 @@ public class FavoriteProductServiceImpl implements FavoriteProductService {
         Product product = productRepository.findById(productId)
                         .orElseThrow(() -> {
                             logger.error("Failed to find product with ID {}", productId);
-                            return new ProductNotFoundException("Product with ID {} not found");
+                            return new ProductNotFoundException("Product with ID : " + productId + " not found");
                         });
 
         // Validate if the product exists

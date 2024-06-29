@@ -159,7 +159,7 @@ public class CampaignValidator {
      * @throws NullCampaignNameException If the campaign name is not provided.
      * @throws CampaignAlreadyExistsException If a campaign with the same name already exists.
      */
-    private void validateCampaignName(AddAndUpdateCampaignReq req, CampaignRepository repository) {
+    public void validateCampaignName(AddAndUpdateCampaignReq req, CampaignRepository repository) {
         if (req.getName().isEmpty()) {
             logger.error("No campaign name provided");
             throw new NullCampaignNameException("No campaign name provided");
