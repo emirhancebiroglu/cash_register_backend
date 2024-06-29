@@ -97,6 +97,10 @@ public class UserServiceImpl implements UserService {
 
         User existingUser = findUserByIdOrThrow(userId);
 
+        if (userRepository.findByEmail(updateUserReq.getEmail()).isPresent()){
+            throw new UserAlreadyExistsException("This user already exists");
+        }
+
         // Check if the user is marked as deleted.
         if(existingUser.isDeleted()){
             logger.error("This user no longer exists : {}", existingUser.getEmail());

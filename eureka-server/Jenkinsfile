@@ -1,0 +1,49 @@
+pipeline {
+
+  environment {
+    dockerimagename = "emirhancebiroglu/eureka-server"
+    dockerImage = ""
+  }
+
+  agent any
+
+  stages {
+
+    stage('Checkout Source') {
+      steps {
+        git 'https://github.com/emirhancebiroglu/cash_register_backend.git'
+      }
+    }
+
+    stage('Build image') {
+      steps{
+        script {
+          dockerImage = docker.build dockerimagename
+        }
+      }
+    }
+
+    stage('Pushing Image') {
+      environment {
+               registryCredential = 'dockerhub-credentials'
+           }
+      steps{
+        script {
+          docker.withRegistry( 'https://registry.hub.docker.com', registryCredential ) {
+            dockerImage.push("latest")
+          }
+        }
+      }
+    }
+
+    stage('Deploying eureka-server container to Kubernetes') {
+      steps {
+        script {
+          kubernetesDeploy(configs: "eureka-server-deployment.yaml", "eureka-server-service.yaml")
+        }
+      }
+    }
+
+  }
+
+}

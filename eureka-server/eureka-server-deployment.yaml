@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eureka-server
+  labels:
+    app: eureka-server
+spec:
+  replicas: 1
+  template:
+    metadata:
+      name: eureka-server
+      labels:
+        app: eureka-server
+    spec:
+      containers:
+        - name: eureka-server
+          image: emirhancebiroglu/eureka-server:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8761
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: k8s
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8761
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8761
+            initialDelaySeconds: 30
+            periodSeconds: 30
+      restartPolicy: Always
+  selector:
+    matchLabels:
+      app: eureka-server

@@ -16,9 +16,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-/**
- * Implementation of Cloudinary service.
- */
 @Service
 public class CloudinaryServiceImpl implements CloudinaryService {
     private static final Logger logger = LogManager.getLogger(CloudinaryServiceImpl.class);

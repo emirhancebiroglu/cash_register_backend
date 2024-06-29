@@ -85,8 +85,9 @@ public class CampaignServiceImpl implements CampaignService {
 
         logger.debug("Retrieved existing campaign: {}", existingCampaign);
 
-        // Ensure the campaign is active before proceeding with the update
+        // Ensure the campaign is active and there is no conflict before proceeding with the update
         campaignValidator.validateActivation(existingCampaign);
+        campaignValidator.validateCampaignName(addAndUpdateCampaignReq, campaignRepository);
 
         // Check and update product codes if provided
         if (!addAndUpdateCampaignReq.getCodes().isEmpty()){
@@ -107,52 +108,39 @@ public class CampaignServiceImpl implements CampaignService {
         // Update campaign name if provided and different from the current name
         if (!Objects.equals(existingCampaign.getName(), addAndUpdateCampaignReq.getName()) && !addAndUpdateCampaignReq.getName().isEmpty()){
             existingCampaign.setName(addAndUpdateCampaignReq.getName());
-
-            // Log the updated campaign name for debugging purposes
             logger.debug("Updated campaign name: {}", addAndUpdateCampaignReq.getName());
         }
 
         // Update campaign duration and end date if provided and different from the current duration
         if (addAndUpdateCampaignReq.getDurationDays() != null && (!Objects.equals(existingCampaign.getEndDate(), existingCampaign.getStartDate().plusDays(addAndUpdateCampaignReq.getDurationDays())))){
-            logger.debug("Updating campaign duration and end date...");
-
+            campaignValidator.validateDurationDays(addAndUpdateCampaignReq);
             existingCampaign.setDurationDays(addAndUpdateCampaignReq.getDurationDays());
             existingCampaign.setEndDate(existingCampaign.getStartDate().plusDays(addAndUpdateCampaignReq.getDurationDays()));
-
-            // Log the updated campaign duration and end date for debugging purposes
-            logger.debug("Updated campaign duration: {} days", addAndUpdateCampaignReq.getDurationDays());
             logger.debug("Updated campaign end date: {}", existingCampaign.getEndDate());
         }
 
         // Update discount type if provided and different from the current type
         if (!addAndUpdateCampaignReq.getDiscountType().isEmpty()){
-            logger.debug("Updating discount type...");
             DiscountType discountType = getDiscountType(addAndUpdateCampaignReq);
 
             if (!Objects.equals(existingCampaign.getDiscountType(), discountType)){
                 existingCampaign.setDiscountType(discountType);
-
-                // Log the updated discount type for debugging purposes
                 logger.debug("Updated discount type: {}", discountType);
             }
         }
 
         // Update discount amount if provided and different from the current amount
         if (addAndUpdateCampaignReq.getDiscountAmount() != null && !Objects.equals(existingCampaign.getDiscountAmount(), addAndUpdateCampaignReq.getDiscountAmount())){
-            logger.debug("Updating discount amount...");
             campaignValidator.validateDiscountAmount(addAndUpdateCampaignReq);
             existingCampaign.setDiscountAmount(addAndUpdateCampaignReq.getDiscountAmount());
 
-            // Log the updated discount amount for debugging purposes
             logger.debug("Updated discount amount: {}", addAndUpdateCampaignReq.getDiscountAmount());
         }
 
         // Update needed quantity if provided and different from the current quantity
         if (addAndUpdateCampaignReq.getNeededQuantity() != null && !Objects.equals(existingCampaign.getNeededQuantity(), addAndUpdateCampaignReq.getNeededQuantity())){
-            logger.debug("Updating needed quantity...");
+            campaignValidator.validateNeededQuantity(addAndUpdateCampaignReq.getNeededQuantity());
             existingCampaign.setNeededQuantity(addAndUpdateCampaignReq.getNeededQuantity());
-
-            // Log the updated needed quantity for debugging purposes
             logger.debug("Updated needed quantity: {}", addAndUpdateCampaignReq.getNeededQuantity());
         }
 
