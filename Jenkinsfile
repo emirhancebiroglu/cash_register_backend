@@ -33,7 +33,7 @@ pipeline {
                             for (service in services) {
                                 // Perform Maven clean compile
                                 dir("${service}") {
-                                    sh "${mvnHome}/bin/mvn clean compile"
+                                    sh "${mvnHome}/bin/mvn clean package"
                                 }
 
                                 if (sh(returnStdout: true, script: "git diff --name-only HEAD~1..HEAD ${service}").trim()) {
