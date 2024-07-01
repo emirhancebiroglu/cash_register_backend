@@ -1,8 +1,6 @@
 package bit.reportingservice.utils;
 
-import bit.reportingservice.entity.Campaign;
-import bit.reportingservice.entity.Product;
-import bit.reportingservice.entity.SaleReport;
+import bit.reportingservice.entity.*;
 import bit.reportingservice.repository.CampaignRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -43,6 +41,7 @@ class ReceiptGeneratorTest {
         saleReport.setChange(10.0);
         saleReport.setTotalPrice(90.0);
         saleReport.setCancelled(false);
+        saleReport.setPaymentMethod(PaymentMethod.PARTIAL);
 
         List<Product> products = new ArrayList<>();
         Product product = new Product();
@@ -60,6 +59,8 @@ class ReceiptGeneratorTest {
         campaign.setName("Campaign1");
         campaign.setDiscountAmount(10.0);
         campaign.setNeededQuantity(2);
+        campaign.setDiscountType(DiscountType.PERCENTAGE);
+
 
         when(campaignRepository.findByName("Campaign1")).thenReturn(Optional.of(campaign));
 

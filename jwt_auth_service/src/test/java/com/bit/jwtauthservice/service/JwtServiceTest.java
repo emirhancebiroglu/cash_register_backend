@@ -1,6 +1,8 @@
 package com.bit.jwtauthservice.service;
 
 
+import com.bit.jwtauthservice.entity.Role;
+import com.bit.jwtauthservice.repository.UserRepository;
 import com.bit.jwtauthservice.service.service_impl.JwtServiceImpl;
 import io.jsonwebtoken.Claims;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,8 +15,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.util.Collections;
-import java.util.Date;
+import java.util.*;
 import java.util.function.Function;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -24,9 +25,10 @@ import static org.mockito.Mockito.when;
 class JwtServiceTest {
     @InjectMocks
     private JwtServiceImpl jwtService;
-
     @Mock
     private UserDetails userDetails;
+    @Mock
+    private UserRepository userRepository;
 
     private String token;
     private String refreshToken;
@@ -41,6 +43,17 @@ class JwtServiceTest {
         userDetails = new User("testUser",
                 "password",
                 Collections.singleton(new SimpleGrantedAuthority("ROLE_ADMIN")));
+
+        // Create a User object with Roles
+        Role roleAdmin = new Role("ROLE_ADMIN"); // Example role
+        Set<Role> roles = Collections.singleton(roleAdmin);
+        com.bit.jwtauthservice.entity.User user = new com.bit.jwtauthservice.entity.User();
+        user.setUserCode("userCode");
+        user.setPassword("password");
+        user.setRoles(roles);
+        user.setId(1L);
+
+        when(userRepository.findByUserCode("testUser")).thenReturn(Optional.of(user));
 
         token = jwtService.generateToken(userDetails);
         refreshToken = jwtService.generateRefreshToken(userDetails);
