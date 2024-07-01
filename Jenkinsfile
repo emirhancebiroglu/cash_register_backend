@@ -31,12 +31,10 @@ pipeline {
                             ]
 
                             for (service in services) {
-                                // Perform Maven clean compile
-                                dir("${service}") {
-                                    sh "${mvnHome}/bin/mvn clean package"
-                                }
-
                                 if (sh(returnStdout: true, script: "git diff --name-only HEAD~1..HEAD ${service}").trim()) {
+                                    dir("${service}") {
+                                        sh "${mvnHome}/bin/mvn clean package"
+                                    }
                                     // Build Docker image
                                     def dockerImage = docker.build("emirhancebiroglu/${service}", "${service}/.")
                                     docker.withRegistry(registryUrl, registryCredential) {
@@ -70,7 +68,8 @@ pipeline {
                             for (service in services) {
                                 if (sh(returnStdout: true, script: "git diff --name-only HEAD~1..HEAD ${service}").trim()) {
                                     // Deploy to Kubernetes
-                                    kubernetesDeploy(configs: "k8s/${service}/${service}-deployment.yaml, k8s/${service}/${service}-service.yaml")
+                                    kubernetesDeploy(configs: "k8s/${service}/${service}-deployment.yaml, k8s/${service}/${service}-service.yaml"),
+                                    kubeconfigId: 'minikube'
                                 } else {
                                     echo "No changes detected in ${service}. Skipping deployment."
                                 }
