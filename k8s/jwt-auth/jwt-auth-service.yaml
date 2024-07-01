@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: jwt-auth
+spec:
+  selector:
+    app: jwt-auth
+  ports:
+    - port: 8082
+      targetPort: 8082
+  type: ClusterIP
