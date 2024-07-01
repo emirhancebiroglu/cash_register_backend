@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-management
+  labels:
+    app: user-management
+spec:
+  replicas: 1
+  template:
+    metadata:
+      name: user-management
+      labels:
+        app: user-management
+    spec:
+      containers:
+        - name: user-management
+          image: emirhancebiroglu/user_management_service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8081
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: k8s
+            - name: MANAGEMENT.ZIPKIN.TRACING.ENDPOINT
+              value: http://zipkin:9411/api/v2/spans
+          livenessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8081
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          readinessProbe:
+            httpGet:
+              path: /actuator/health
+              port: 8081
+            initialDelaySeconds: 30
+            periodSeconds: 30
+      restartPolicy: Always
+  selector:
+    matchLabels:
+      app: user-management
