@@ -9,13 +9,14 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -42,8 +43,10 @@ class CloudinaryServiceTest {
 
     @Test
     void upload_Success() throws IOException {
-        byte[] fileContent = Files.readAllBytes(Paths.get("D:\\Desktop\\upload\\apple.jpg"));
-        MultipartFile multipartFile = new MockMultipartFile("file", "test.jpg", "image/jpeg", fileContent);
+        Resource resource = new ClassPathResource("static/images/apple.jpg");
+        byte[] fileContent = Files.readAllBytes(resource.getFile().toPath());
+
+        MultipartFile multipartFile = new MockMultipartFile("file", "apple.jpg", "image/jpeg", fileContent);
 
         when(cloudinaryMock.uploader()).thenReturn(uploaderMock);
 
