@@ -3,6 +3,7 @@ pipeline {
         registryCredential = 'dockerhub-credentials'
         registryUrl = 'https://registry.hub.docker.com'
         gitCredentials = 'github-credentials'
+        mvnHome = tool 'Maven' // Assuming Maven is configured in Jenkins under this tool name
     }
 
     agent any
@@ -16,106 +17,34 @@ pipeline {
 
         stage('Build and Push Images') {
             parallel {
-                stage('api-gateway') {
+                stage('Build and Push Services') {
                     steps {
                         script {
-                            if (sh(returnStdout: true, script: 'git diff --name-only HEAD~1..HEAD api-gateway').trim()) {
-                                def dockerImage = docker.build("emirhancebiroglu/api-gateway", "api-gateway/.")
-                                docker.withRegistry(registryUrl, registryCredential) {
-                                    dockerImage.push("latest")
-                                }
-                            } else {
-                                echo "No changes detected in api-gateway. Skipping build."
-                            }
-                        }
-                    }
-                }
+                            def services = [
+                                'api-gateway',
+                                'eureka-server',
+                                'jwt_auth_service',
+                                'product-service',
+                                'reporting-service',
+                                'sales-service',
+                                'user_management_service'
+                            ]
 
-                stage('eureka-server') {
-                    steps {
-                        script {
-                            if (sh(returnStdout: true, script: 'git diff --name-only HEAD~1..HEAD eureka-server').trim()) {
-                                def dockerImage = docker.build("emirhancebiroglu/eureka-server", "eureka-server/.")
-                                docker.withRegistry(registryUrl, registryCredential) {
-                                    dockerImage.push("latest")
+                            for (service in services) {
+                                // Perform Maven clean compile
+                                dir("${service}") {
+                                    sh "${mvnHome}/bin/mvn clean compile"
                                 }
-                            } else {
-                                echo "No changes detected in eureka-server. Skipping build."
-                            }
-                        }
-                    }
-                }
 
-                stage('jwt_auth_service') {
-                    steps {
-                        script {
-                            if (sh(returnStdout: true, script: 'git diff --name-only HEAD~1..HEAD jwt_auth_service').trim()) {
-                                def dockerImage = docker.build("emirhancebiroglu/jwt_auth_service", "jwt_auth_service/.")
-                                docker.withRegistry(registryUrl, registryCredential) {
-                                    dockerImage.push("latest")
+                                if (sh(returnStdout: true, script: "git diff --name-only HEAD~1..HEAD ${service}").trim()) {
+                                    // Build Docker image
+                                    def dockerImage = docker.build("emirhancebiroglu/${service}", "${service}/.")
+                                    docker.withRegistry(registryUrl, registryCredential) {
+                                        dockerImage.push("latest")
+                                    }
+                                } else {
+                                    echo "No changes detected in ${service}. Skipping build."
                                 }
-                            } else {
-                                echo "No changes detected in jwt_auth_service. Skipping build."
-                            }
-                        }
-                    }
-                }
-
-                stage('product-service') {
-                    steps {
-                        script {
-                            if (sh(returnStdout: true, script: 'git diff --name-only HEAD~1..HEAD product-service').trim()) {
-                                def dockerImage = docker.build("emirhancebiroglu/product-service", "product-service/.")
-                                docker.withRegistry(registryUrl, registryCredential) {
-                                    dockerImage.push("latest")
-                                }
-                            } else {
-                                echo "No changes detected in product-service. Skipping build."
-                            }
-                        }
-                    }
-                }
-
-                stage('reporting-service') {
-                    steps {
-                        script {
-                            if (sh(returnStdout: true, script: 'git diff --name-only HEAD~1..HEAD reporting-service').trim()) {
-                                def dockerImage = docker.build("emirhancebiroglu/reporting-service", "reporting-service/.")
-                                docker.withRegistry(registryUrl, registryCredential) {
-                                    dockerImage.push("latest")
-                                }
-                            } else {
-                                echo "No changes detected in reporting-service. Skipping build."
-                            }
-                        }
-                    }
-                }
-
-                stage('sales-service') {
-                    steps {
-                        script {
-                            if (sh(returnStdout: true, script: 'git diff --name-only HEAD~1..HEAD sales-service').trim()) {
-                                def dockerImage = docker.build("emirhancebiroglu/sales-service", "sales-service/.")
-                                docker.withRegistry(registryUrl, registryCredential) {
-                                    dockerImage.push("latest")
-                                }
-                            } else {
-                                echo "No changes detected in sales-service. Skipping build."
-                            }
-                        }
-                    }
-                }
-
-                stage('user_management_service') {
-                    steps {
-                        script {
-                            if (sh(returnStdout: true, script: 'git diff --name-only HEAD~1..HEAD user_management_service').trim()) {
-                                def dockerImage = docker.build("emirhancebiroglu/user_management_service", "user_management_service/.")
-                                docker.withRegistry(registryUrl, registryCredential) {
-                                    dockerImage.push("latest")
-                                }
-                            } else {
-                                echo "No changes detected in user_management_service. Skipping build."
                             }
                         }
                     }
@@ -125,85 +54,26 @@ pipeline {
 
         stage('Deploy to Kubernetes') {
             parallel {
-                stage('Deploy api-gateway') {
+                stage('Deploy Services') {
                     steps {
                         script {
-                            if (sh(returnStdout: true, script: 'git diff --name-only HEAD~1..HEAD api-gateway').trim()) {
-                                kubernetesDeploy(configs: "k8s/gateway/api-gateway-deployment.yaml, k8s/gateway/api-gateway-service.yaml")
-                            } else {
-                                echo "No changes detected in api-gateway. Skipping deployment."
-                            }
-                        }
-                    }
-                }
+                            def services = [
+                                'api-gateway',
+                                'eureka-server',
+                                'jwt_auth_service',
+                                'product-service',
+                                'reporting-service',
+                                'sales-service',
+                                'user_management_service'
+                            ]
 
-                stage('Deploy eureka-server') {
-                    steps {
-                        script {
-                            if (sh(returnStdout: true, script: 'git diff --name-only HEAD~1..HEAD eureka-server').trim()) {
-                                kubernetesDeploy(configs: "k8s/eureka/eureka-server-deployment.yaml, k8s/eureka/eureka-server-service.yaml")
-                            } else {
-                                echo "No changes detected in eureka-server. Skipping deployment."
-                            }
-                        }
-                    }
-                }
-
-                stage('Deploy jwt_auth_service') {
-                    steps {
-                        script {
-                            if (sh(returnStdout: true, script: 'git diff --name-only HEAD~1..HEAD jwt_auth_service').trim()) {
-                                kubernetesDeploy(configs: "k8s/jwt-auth/jwt-auth-deployment.yaml, k8s/jwt-auth/jwt-auth-service.yaml")
-                            } else {
-                                echo "No changes detected in jwt_auth_service. Skipping deployment."
-                            }
-                        }
-                    }
-                }
-
-                stage('Deploy product-service') {
-                    steps {
-                        script {
-                            if (sh(returnStdout: true, script: 'git diff --name-only HEAD~1..HEAD product-service').trim()) {
-                                kubernetesDeploy(configs: "k8s/product/product-deployment.yaml, k8s/product/product-service.yaml")
-                            } else {
-                                echo "No changes detected in product-service. Skipping deployment."
-                            }
-                        }
-                    }
-                }
-
-                stage('Deploy reporting-service') {
-                    steps {
-                        script {
-                            if (sh(returnStdout: true, script: 'git diff --name-only HEAD~1..HEAD reporting-service').trim()) {
-                                kubernetesDeploy(configs: "k8s/reporting/reporting-deployment.yaml, k8s/reporting/reporting-service.yaml")
-                            } else {
-                                echo "No changes detected in reporting-service. Skipping deployment."
-                            }
-                        }
-                    }
-                }
-
-                stage('Deploy sales-service') {
-                    steps {
-                        script {
-                            if (sh(returnStdout: true, script: 'git diff --name-only HEAD~1..HEAD sales-service').trim()) {
-                                kubernetesDeploy(configs: "k8s/sales/sales-deployment.yaml, k8s/sales/sales-service.yaml")
-                            } else {
-                                echo "No changes detected in sales-service. Skipping deployment."
-                            }
-                        }
-                    }
-                }
-
-                stage('Deploy user_management_service') {
-                    steps {
-                        script {
-                            if (sh(returnStdout: true, script: 'git diff --name-only HEAD~1..HEAD user_management_service').trim()) {
-                                kubernetesDeploy(configs: "k8s/user-management/user-management-deployment.yaml, k8s/user-management/user-management-service.yaml")
-                            } else {
-                                echo "No changes detected in user_management_service. Skipping deployment."
+                            for (service in services) {
+                                if (sh(returnStdout: true, script: "git diff --name-only HEAD~1..HEAD ${service}").trim()) {
+                                    // Deploy to Kubernetes
+                                    kubernetesDeploy(configs: "k8s/${service}/${service}-deployment.yaml, k8s/${service}/${service}-service.yaml")
+                                } else {
+                                    echo "No changes detected in ${service}. Skipping deployment."
+                                }
                             }
                         }
                     }
