@@ -23,6 +23,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.core.io.Resource;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -35,7 +37,6 @@ import reactor.test.StepVerifier;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -182,9 +183,11 @@ class ProductServiceTest {
     }
 
     @Test
-    void updateProduct_Success_WitImage() throws IOException {
-        byte[] fileContent = Files.readAllBytes(Paths.get("D:\\Desktop\\upload\\apple.jpg"));
-        MultipartFile file = new MockMultipartFile("file", "test.jpg", "image/jpeg", fileContent);
+    void updateProduct_Success_WithImage() throws IOException {
+        Resource resource = new ClassPathResource("static/images/apple.jpg");
+        byte[] fileContent = Files.readAllBytes(resource.getFile().toPath());
+
+        MultipartFile file = new MockMultipartFile("file", "apple.jpg", "image/jpeg", fileContent);
 
         Product dummyProduct = new Product();
         dummyProduct.setId(productId);
