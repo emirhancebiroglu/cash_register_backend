@@ -49,7 +49,7 @@ pipeline {
                 stage('jwt_auth_service') {
                     steps {
                         script {
-                            if (sh(returnStdout: true, script: 'git diff --name-only HEAD~1..HEAD jwt-auth-service').trim()) {
+                            if (sh(returnStdout: true, script: 'git diff --name-only HEAD~1..HEAD jwt_auth_service').trim()) {
                                 def dockerImage = docker.build("emirhancebiroglu/jwt_auth_service", "jwt_auth_service/.")
                                 docker.withRegistry(registryUrl, registryCredential) {
                                     dockerImage.push("latest")
@@ -109,7 +109,7 @@ pipeline {
                 stage('user_management_service') {
                     steps {
                         script {
-                            if (sh(returnStdout: true, script: 'git diff --name-only HEAD~1..HEAD user-management-service').trim()) {
+                            if (sh(returnStdout: true, script: 'git diff --name-only HEAD~1..HEAD user_management_service').trim()) {
                                 def dockerImage = docker.build("emirhancebiroglu/user_management_service", "user_management_service/.")
                                 docker.withRegistry(registryUrl, registryCredential) {
                                     dockerImage.push("latest")
@@ -152,7 +152,7 @@ pipeline {
                 stage('Deploy jwt_auth_service') {
                     steps {
                         script {
-                            if (sh(returnStdout: true, script: 'git diff --name-only HEAD~1..HEAD jwt-auth-service').trim()) {
+                            if (sh(returnStdout: true, script: 'git diff --name-only HEAD~1..HEAD jwt_auth_service').trim()) {
                                 kubernetesDeploy(configs: "k8s/jwt-auth/jwt-auth-deployment.yaml, k8s/jwt-auth/jwt-auth-service.yaml")
                             } else {
                                 echo "No changes detected in jwt_auth_service. Skipping deployment."
@@ -200,7 +200,7 @@ pipeline {
                 stage('Deploy user_management_service') {
                     steps {
                         script {
-                            if (sh(returnStdout: true, script: 'git diff --name-only HEAD~1..HEAD user-management-service').trim()) {
+                            if (sh(returnStdout: true, script: 'git diff --name-only HEAD~1..HEAD user_management_service').trim()) {
                                 kubernetesDeploy(configs: "k8s/user-management/user-management-deployment.yaml, k8s/user-management/user-management-service.yaml")
                             } else {
                                 echo "No changes detected in user_management_service. Skipping deployment."
