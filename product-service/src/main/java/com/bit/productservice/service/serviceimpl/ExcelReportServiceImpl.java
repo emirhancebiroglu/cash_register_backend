@@ -68,6 +68,13 @@ public class ExcelReportServiceImpl implements ExcelReportService {
         }
     }
 
+    /**
+     * This method creates and returns a CellStyle for the header row of the Excel sheet.
+     * The style includes a bold font for better readability.
+     *
+     * @param workbook The Workbook object that will contain the Excel sheet.
+     * @return A CellStyle object with the specified style for the header row.
+     */
     private CellStyle getHeaderCellStyle(Workbook workbook) {
         CellStyle headerCellStyle = workbook.createCellStyle();
         Font font = workbook.createFont();
