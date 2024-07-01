@@ -2,6 +2,7 @@ pipeline {
     environment {
         registryCredential = 'dockerhub-credentials'
         registryUrl = 'https://registry.hub.docker.com'
+        gitCredentials = 'github-credentials'
     }
 
     agent any
@@ -9,7 +10,7 @@ pipeline {
     stages {
         stage('Checkout Source') {
             steps {
-                git 'https://github.com/emirhancebiroglu/cash_register_backend.git'
+                git url: 'https://github.com/emirhancebiroglu/cash_register_backend.git', credentialsId: gitCredentials
             }
         }
 
