@@ -3,7 +3,8 @@ pipeline {
         registryCredential = 'dockerhub-credentials'
         registryUrl = 'https://registry.hub.docker.com'
         gitCredentials = 'github-credentials'
-        mvnHome = tool 'Maven' // Assuming Maven is configured in Jenkins under this tool name
+        mvnHome = tool 'Maven'
+        KUBECONFIG_CREDENTIALS_ID = 'minikube-config'
     }
 
     agent any
@@ -16,34 +17,30 @@ pipeline {
         }
 
         stage('Build and Push Images') {
-            parallel {
-                stage('Build and Push Services') {
-                    steps {
-                        script {
-                            def services = [
-                                'api-gateway',
-                                'eureka-server',
-                                'jwt_auth_service',
-                                'product-service',
-                                'reporting-service',
-                                'sales-service',
-                                'user_management_service'
-                            ]
+            steps {
+                script {
+                    def services = [
+                        'api-gateway',
+                        'eureka-server',
+                        'jwt_auth_service',
+                        'product-service',
+                        'reporting-service',
+                        'sales-service',
+                        'user_management_service'
+                    ]
 
-                            for (service in services) {
-                                if (sh(returnStdout: true, script: "git diff --name-only HEAD~1..HEAD ${service}").trim()) {
-                                    dir("${service}") {
-                                        sh "${mvnHome}/bin/mvn clean package"
-                                    }
-                                    // Build Docker image
-                                    def dockerImage = docker.build("emirhancebiroglu/${service}", "${service}/.")
-                                    docker.withRegistry(registryUrl, registryCredential) {
-                                        dockerImage.push("latest")
-                                    }
-                                } else {
-                                    echo "No changes detected in ${service}. Skipping build."
-                                }
+                    for (service in services) {
+                        if (sh(returnStdout: true, script: "git diff --name-only HEAD~1..HEAD ${service}").trim()) {
+                            dir("${service}") {
+                                sh "${mvnHome}/bin/mvn clean package"
                             }
+                            // Build Docker image
+                            def dockerImage = docker.build("emirhancebiroglu/${service}", "${service}/.")
+                            docker.withRegistry(registryUrl, registryCredential) {
+                                dockerImage.push("latest")
+                            }
+                        } else {
+                            echo "No changes detected in ${service}. Skipping build."
                         }
                     }
                 }
@@ -51,29 +48,28 @@ pipeline {
         }
 
         stage('Deploy to Kubernetes') {
-            parallel {
-                stage('Deploy Services') {
-                    steps {
-                        script {
-                            def services = [
-                                'api-gateway',
-                                'eureka-server',
-                                'jwt_auth_service',
-                                'product-service',
-                                'reporting-service',
-                                'sales-service',
-                                'user_management_service'
-                            ]
+            steps {
+                script {
+                    withCredentials([file(credentialsId: env.KUBECONFIG_CREDENTIALS_ID, variable: 'KUBECONFIG')]) {
+                        def services = [
+                            'api-gateway',
+                            'eureka-server',
+                            'jwt_auth_service',
+                            'product-service',
+                            'reporting-service',
+                            'sales-service',
+                            'user_management_service'
+                        ]
 
-                            for (service in services) {
-                                if (sh(returnStdout: true, script: "git diff --name-only HEAD~1..HEAD ${service}").trim()) {
-                                    // Deploy to Kubernetes
-                                    kubernetesDeploy(configs: "k8s/${service}/${service}-deployment.yaml, k8s/${service}/${service}-service.yaml",
-                                    kubeconfigId: 'minikube'
-                                    )
-                                } else {
-                                    echo "No changes detected in ${service}. Skipping deployment."
-                                }
+                        for (service in services) {
+                            if (sh(returnStdout: true, script: "git diff --name-only HEAD~1..HEAD ${service}").trim()) {
+                                // Deploy to Kubernetes
+                                kubernetesDeploy(
+                                    configs: "k8s/${service}/${service}-deployment.yaml,k8s/${service}/${service}-service.yaml",
+                                    kubeConfig: [path: env.KUBECONFIG]
+                                )
+                            } else {
+                                echo "No changes detected in ${service}. Skipping deployment."
                             }
                         }
                     }
