@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: sales-service
-          image: emirhancebiroglu/sales-service:latest
+          image: emirhancebiroglu/sales-service:v1
           imagePullPolicy: Always
           ports:
             - containerPort: 8084

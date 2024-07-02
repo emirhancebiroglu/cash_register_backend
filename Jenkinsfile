@@ -30,14 +30,14 @@ pipeline {
                     ]
 
                     for (service in services) {
-                        if (sh(returnStdout: true, script: "git diff --name-only HEAD~1..HEAD ${service}").trim()) {
+                        if (bat(script: "git diff --name-only HEAD~1..HEAD ${service}", returnStatus: true) == 0) {
                             dir("${service}") {
-                                sh "${mvnHome}/bin/mvn clean package"
+                                bat "${mvnHome}\\bin\\mvn clean package"
                             }
                             // Build Docker image
                             def dockerImage = docker.build("emirhancebiroglu/${service}", "${service}/.")
                             docker.withRegistry(registryUrl, registryCredential) {
-                                dockerImage.push("latest")
+                                dockerImage.push("v1")
                             }
                         } else {
                             echo "No changes detected in ${service}. Skipping build."
@@ -62,10 +62,10 @@ pipeline {
                         ]
 
                         for (service in services) {
-                            if (sh(returnStdout: true, script: "git diff --name-only HEAD~1..HEAD ${service}").trim()) {
+                            if (bat(script: "git diff --name-only HEAD~1..HEAD ${service}", returnStatus: true) == 0) {
                                 // Deploy to Kubernetes
                                 kubernetesDeploy(
-                                    configs: "k8s/${service}/${service}-deployment.yaml,k8s/${service}/${service}-service.yaml",
+                                    configs: "k8s\\${service}\\${service}-deployment.yaml,k8s\\${service}\\${service}-service.yaml",
                                     kubeConfig: [path: env.KUBECONFIG]
                                 )
                             } else {

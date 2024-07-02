@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: product-service
-          image: emirhancebiroglu/product-service:latest
+          image: emirhancebiroglu/product-service:v1
           imagePullPolicy: Always
           ports:
             - containerPort: 8083

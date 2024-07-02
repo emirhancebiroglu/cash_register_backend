@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: api-gateway
-          image: emirhancebiroglu/api-gateway:latest
+          image: emirhancebiroglu/api-gateway:v1
           imagePullPolicy: Always
           ports:
             - containerPort: 8086

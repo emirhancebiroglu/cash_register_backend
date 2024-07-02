@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: reporting-service
-          image: emirhancebiroglu/reporting-service:latest
+          image: emirhancebiroglu/reporting-service:v1
           imagePullPolicy: Always
           ports:
             - containerPort: 8085

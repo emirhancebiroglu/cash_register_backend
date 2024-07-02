@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: user-management
-          image: emirhancebiroglu/user_management_service:latest
+          image: emirhancebiroglu/user_management_service:v1
           imagePullPolicy: Always
           ports:
             - containerPort: 8081
