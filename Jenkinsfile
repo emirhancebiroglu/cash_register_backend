@@ -62,14 +62,17 @@ pipeline {
                         ]
 
                         for (service in services) {
-                            if (bat(script: "git diff --name-only HEAD~1..HEAD ${service}", returnStatus: true) == 0) {
-                                // Deploy to Kubernetes
+                            def deploymentExists = sh(script: "kubectl get deployment ${service} -n default", returnStatus: true)
+
+                            if (deploymentExists == 0) {
+                                echo "Deployment ${service} already exists. Restarting..."
+                                sh "kubectl rollout restart deployment/${service} -n default"
+                            } else {
+                                echo "No existing deployment found for ${service}. Deploying new..."
                                 kubernetesDeploy(
-                                    configs: "k8s\\${service}\\${service}-deployment.yaml,k8s\\${service}\\${service}-service.yaml",
+                                    configs: "k8s/${service}/${service}-deployment.yaml,k8s/${service}/${service}-service.yaml",
                                     kubeConfig: [path: env.KUBECONFIG]
                                 )
-                            } else {
-                                echo "No changes detected in ${service}. Skipping deployment."
                             }
                         }
                     }
