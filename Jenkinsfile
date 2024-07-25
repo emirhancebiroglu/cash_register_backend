@@ -62,11 +62,11 @@ pipeline {
                         ]
 
                         for (service in services) {
-                            def deploymentExists = sh(script: "kubectl get deployment ${service} -n default", returnStatus: true)
+                            def deploymentExists = bat(script: "kubectl get deployment ${service} -n default", returnStatus: true)
 
                             if (deploymentExists == 0) {
                                 echo "Deployment ${service} already exists. Restarting..."
-                                sh "kubectl rollout restart deployment/${service} -n default"
+                                bat "kubectl rollout restart deployment/${service} -n default"
                             } else {
                                 echo "No existing deployment found for ${service}. Deploying new..."
                                 kubernetesDeploy(

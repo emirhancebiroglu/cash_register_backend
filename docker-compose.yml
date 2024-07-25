@@ -130,7 +130,7 @@ services:
     expose:
       - "5433"
     volumes:
-      - ./user-management-db-init:/docker-entrypoint-initdb.d
+      - ./db-init/user-management-db-init:/docker-entrypoint-initdb.d
     command: [ "postgres", "-c", "search_path=users" ]
     networks:
       - spring-network
@@ -153,7 +153,7 @@ services:
     expose:
       - "5434"
     volumes:
-      - ./jwt-auth-db-init:/docker-entrypoint-initdb.d
+      - ./db-init/jwt-auth-db-init:/docker-entrypoint-initdb.d
     command: [ "postgres", "-c", "search_path=user-credentials" ]
     networks:
       - spring-network
@@ -174,7 +174,7 @@ services:
     ports:
       - "5435:5432"
     volumes:
-      - ./product-db-init:/docker-entrypoint-initdb.d
+      - ./db-init/product-db-init:/docker-entrypoint-initdb.d
     expose:
       - "5435"
     command: [ "postgres", "-c", "search_path=products" ]
@@ -197,7 +197,7 @@ services:
     ports:
       - "5436:5432"
     volumes:
-      - ./sales-db-init:/docker-entrypoint-initdb.d
+      - ./db-init/sales-db-init:/docker-entrypoint-initdb.d
     expose:
       - "5436"
     command: [ "postgres", "-c", "search_path=sales" ]
@@ -220,7 +220,7 @@ services:
     ports:
       - "5437:5432"
     volumes:
-      - ./sales-reports-db-init:/docker-entrypoint-initdb.d
+      - ./db-init/sales-reports-db-init:/docker-entrypoint-initdb.d
     expose:
       - "5437"
     command: [ "postgres", "-c", "search_path=reports" ]

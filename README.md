@@ -26,6 +26,11 @@ The Cash Register Backend is an integrated suite of microservices and essential 
 
 - Docker Compose
 - Google Jib
+- Kubernetes
+
+## CI/CD
+
+- Jenkins
   
 ## Authentication
 
@@ -74,7 +79,7 @@ To get started with the Cash Register Backend, follow these steps:
 
 1. JWT Auth Service: Perform login and obtain JWT token to access to services. Note that there is an admin user craeted by system defaulty so that you can access to User Management Service's endpoints and add your own admin(s). use "admin" as both user code and password to login and obtain the jwt.
 
-   <img width="635" alt="admin" src="https://github.com/emirhancebiroglu/cash_register_backend/assets/152030621/dca9b271-4a1e-4a45-922f-8f97a0128963">
+   <img width="635" alt="admin" src="https://github.com/user-attachments/assets/8f359b86-405c-4d03-92f6-da5d0d4a27cb">
    
 3. User Management Service: Utilize this service to manage user-related operations (CRUD). When registering a user in the system, please use an existing email address, as the login credentials (user code and system-generated password) will be sent to that email. Subsequently, you can log in using this information and change the password using the relevant endpoint.
    
@@ -88,22 +93,22 @@ To get started with the Cash Register Backend, follow these steps:
 
 API documentation for each service is available via Postman collection. Follow these steps to access and import the collection:
 
-Link for the collection : ```https://api.postman.com/collections/30227502-9d39eaf3-a47b-4ff0-9a25-f6141d490ea9?access_key=PMAT-01HWEES7SHM6J62VCSQDBR5MQF```
+Link for the collection : ```https://api.postman.com/collections/30227502-9d39eaf3-a47b-4ff0-9a25-f6141d490ea9?access_key=PMAT-01J3NMGRC9RP3B13NPH76FT8XA```
 
 To import the Postman collection:
 
 1. Copy the provided collection link.
 2. Open Postman and go to the "Import" button in the top-left corner.
 
-   <img width="302" alt="import" src="https://github.com/emirhancebiroglu/cash_register_backend/assets/152030621/06942162-ae9f-485e-a491-58416e692887">
+   <img width="302" alt="import" src="https://github.com/user-attachments/assets/87d7b03d-4fdf-429c-ad82-b1fa551531db">
    
 4. Paste the link and import it into Postman.
    
-   <img width="485" alt="paste" src="https://github.com/emirhancebiroglu/cash_register_backend/assets/152030621/6170d20e-5f5e-4fb0-9c4c-9a349e75925e">
+   <img width="485" alt="paste" src="https://github.com/user-attachments/assets/6492ff1c-aa4f-4f70-b871-f55ae71cc853">
    
 6. Once imported, you'll have access to all the endpoints and can start making requests to the respective services.
 
-   <img width="282" alt="access" src="https://github.com/emirhancebiroglu/cash_register_backend/assets/152030621/d0603ea2-91fa-4f1d-a0ad-74d500f7c9bd">
+   <img width="282" alt="access" src="https://github.com/user-attachments/assets/c726ca18-9c8b-49fe-86ef-5343df297d44">
 
 ## License
 
