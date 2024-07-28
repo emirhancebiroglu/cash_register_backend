@@ -1,119 +1,199 @@
-# Cash-Register-Backend Project For 32Bit-2024
+<p align="center">
+  <img width="400" alt="logo" src="https://github.com/user-attachments/assets/31b45c82-ec96-4e2b-9a2d-401284dc4cd6">
+</p>
 
-The Cash Register Backend is an integrated suite of microservices and essential backend technologies designed to support a retail cash register system. Developed using Spring Boot, this project facilitates the management of transactions and inventory. It enables role-based user management, supporting roles such as admin, cashier, and store manager. Additionally, the project offers comprehensive features for product management, including CDN support and stock tracking. It also provides robust functionalities for handling orders and generating order reports.
+<p align="center">This backend project is an integrated suite of microservices and essential backend technologies designed to support a retail cash register system. </p>
 
-## Microservices
+<p align="center" style="font-size:14px">
+  <a href="#services">Services</a> |
+  <a href="#roles-and-permissions">Roles and Permissions</a> |
+  <a href="#technology-stack">Technology Stack</a> |
+  <a href="#getting-started">Getting Started</a> |
+  <a href="#api-documentation">API Documentation</a> |
+  <a href="#license">License</a> |
+  <a href="#contact">Contact</a>
+</p>
 
-- Product Service
-- User Management Service
-- Sales Service
-- Reporting Service
-- JWT Auth Service
+# Services
 
-## Service Discovery
+- **Product Service**
+  - Manage products and inventory
 
-- Eureka
+  ### Key Features
+  - Add new products with detailed information.
+  - Update product details such as price, image, and stock.
+  - Delete products from the inventory.
+  - Search and filter products based on various criteria.
+  - Add/Remove Products from Favorites.
+  - Export products to excel.
 
-## Gateway
+- **User Management Service**
+  - Manage user-related operations.
 
-- Spring Cloud Gateway
-
-## Storage
-
-- PostgreSQL
-
-## Containerization
-
-- Docker Compose
-- Google Jib
-- Kubernetes
-
-## CI/CD
-
-- Jenkins
+  ### Key Features
+  - Register new users to the system.
+  - Update user details.
+  - Delete users from the system.
+  - Email notifications for user-related activities.
+  - Search and filter users based on various criteria.
   
-## Authentication
+> **Note:** Please use a real email address when registering a new user, as user credentials will be sent to that email.
 
-- Token-based with JWT
+- **Sales Service**
+  - This service allows users to make sales with or without campaigns.
+
+  ### Key Features
+  - Fetch current sales campaigns and promotions.
+  - Add selected products to the shopping bag.
+  - Remove products from the shopping bag.
+  - Process the return of purchased products.
+  - Initiate a new checkout.
+  - Finalize the purchase and complete the checkout process.
+  - Cancel an ongoing checkout process.
+  - Create and add new sales campaigns.
+  - Reactivate a previously inactive campaign.
+  - Modify details of existing sales campaigns.
+  - Deactivate a sales campaign.
+
+
+- **Reporting Service**
+  - Manage sales reports.
+
+  ### Key Features
+  - **List Reports**: View a list of available reports and their details.
+  - **Generate Receipts**: Create and provide receipts based on sales transactions.
+
+- **JWT Auth Service**
+  - Handle authentication for the system.
+
+  ### Key Features
+  - Authenticate users and issue JWT tokens.
+  - Assist users in retrieving their user code.
+  - Help users recover their passwords.
+  - Allow users to update their passwords.
+  - Provide new tokens for authenticated sessions.
+  - End user sessions and invalidate tokens.
   
-## Logs
+> **Note:** A default admin user is created to allow access to the User Management Service and add new users to the system. 
+  > 
+  > **Admin Credentials:**
+  > - **User Code:** `admin`
+  > - **Password:** `admin`
+  >
+  > When a new user with an admin role is added, the default admin user will be deleted.
 
-- Log4j2
-  
-## Testing
+# Roles and Permissions
 
-- JUnit 5
-  
-## Other Technologies
+The Cash Register Backend employs Role-Based Access Control (RBAC) to manage user permissions and access to various services within the system. This ensures that users have appropriate levels of access based on their roles.
 
-- Kafka (for event streaming)
-- Java Mail Sender (for email notifications)
-- Thymeleaf (for email templating)
-- Passay (for password validation)
-- Apache PDFBox (for PDF generation)
-- Cloudinary (for image management)
-- WebClient (for reactive programming)
-- Jacoco (for test coverage)
-- Zipkin (for distributed tracing)
-- Grafana (for monitoring and visualization)
-- Prometheus (for metrics collection and monitoring)
-- Actuator (for application monitoring and management)
-- Apache Poi (for exporting data to an excel file)
-- Resilience4j (for fault tolerance and resilience patterns)
-  
-## Getting Started
+<p align="center">
+    <img width="680" alt="kubernetes" src="https://github.com/user-attachments/assets/f4d376ff-62c4-4fc5-a5a8-68d841fc11d3">
+</p>
 
-To get started with the Cash Register Backend, follow these steps:
+# Technology Stack
+
+## 🔍 **Service Discovery**
+- **Eureka**: Service registration and discovery.
+
+## 🌐 **Gateway**
+- **Spring Cloud Gateway**: Routing and API gateway management.
+
+## 💾 **Storage**
+- **PostgreSQL**: Advanced relational database.
+
+## 🛠️ **Containerization**
+- **Docker Compose**: Multi-container Docker applications.
+- **Google Jib**: Builds Docker images directly from Java applications.
+- **Kubernetes**: Container orchestration and management.
+
+<p align="center">
+    <img width="680" alt="kubernetes" src="https://github.com/user-attachments/assets/ed613c77-ea58-45e2-8903-3b4dbef0767b">
+</p>
+
+## 🚀 **CI/CD**
+- **Jenkins**: Continuous integration and delivery automation.
+
+<p align="center">
+    <img width="680" alt="kubernetes" src="https://github.com/user-attachments/assets/100535d8-1281-4ca0-b498-55109b39d033">
+</p>
+
+## 🔑 **Authentication**
+- **Token-based with JWT**: Secure authentication mechanism.
+
+## 📜 **Logs**
+- **Log4j2**: Flexible logging framework.
+
+## 🧪 **Testing**
+- **JUnit 5**: Modern unit and integration testing framework.
+
+## 🌟 **Additional Technologies**
+
+> This section highlights various tools and libraries used for enhancing different aspects of the backend system:
+
+- **Kafka**: Facilitates real-time event streaming.
+- **Java Mail Sender**: Handles email notifications.
+- **Thymeleaf**: Used for crafting dynamic email templates.
+- **Passay**: Ensures robust password validation.
+- **Apache PDFBox**: Allows creation and manipulation of PDF documents.
+- **Cloudinary**: Manages and transforms images.
+
+<p align="center">
+    <img width="680" alt="kubernetes" src="https://github.com/user-attachments/assets/3150fb17-0df3-409a-870b-736e5652b2e6">
+</p>
+
+- **WebClient**: Supports reactive HTTP requests.
+- **Jacoco**: Measures and reports code coverage.
+- **Zipkin**: Provides distributed tracing for application monitoring.
+- **Grafana**: Offers visualization and dashboards for metrics.
+
+<p align="center">
+    <img width="680" alt="kubernetes" src="https://github.com/user-attachments/assets/ce6f202f-0dab-474a-bd9d-78c9a9eeb6a9">
+</p>
+
+- **Prometheus**: Collects and queries metrics for monitoring.
+- **Actuator**: Manages application health and metrics.
+- **Apache Poi**: Exports data into Excel files.
+- **Resilience4j**: Implements fault tolerance and resilience patterns.
+
+# Getting Started
+
+> Before you begin, ensure that the following tools are installed on your machine:
+>
+>`DOCKER`
+>`JAVA 17`
+
+**To get started with the Cash Register Backend, follow these steps:**
 
 1. Clone the repository: ```git clone https://github.com/emirhancebiroglu/cash_register_backend.git```
 
-2. Navigate to the project directory: 'cd cash-register-backend'
+2. Navigate to the project directory: ```cd cash-register-backend```
 
 3. Configure each service's 'application-docker.properties' file according to your environment and requirements.
-   
-   <img width="241" alt="prop" src="https://github.com/emirhancebiroglu/cash_register_backend/assets/152030621/d03101e2-6163-4027-b0ea-f8464a78fcd0">
 
-5. Build and run the Docker containers using Docker Compose: ```docker-compose up -d```
-   
-## Usage
+4. Build and run the Docker containers using Docker Compose: ```docker-compose up -d```
 
-1. JWT Auth Service: Perform login and obtain JWT token to access to services. Note that there is an admin user craeted by system defaulty so that you can access to User Management Service's endpoints and add your own admin(s). use "admin" as both user code and password to login and obtain the jwt.
+> If all services are running correctly, each should display a "Healthy" or "Started" status. If you encounter any issues, please reach out to me, and I'll assist you in resolving them.
 
-   <img width="635" alt="admin" src="https://github.com/user-attachments/assets/8f359b86-405c-4d03-92f6-da5d0d4a27cb">
-   
-3. User Management Service: Utilize this service to manage user-related operations (CRUD). When registering a user in the system, please use an existing email address, as the login credentials (user code and system-generated password) will be sent to that email. Subsequently, you can log in using this information and change the password using the relevant endpoint.
-   
-4. Product Service: Manage products and inventory.
+<p align="center">
+    <img width="680" alt="terminal" src="https://github.com/user-attachments/assets/877ac6f7-6321-42eb-83a5-10bf06d6aec7">
+</p>
 
-5. Sales Service: Record and manage sales transactions.
+# API Documentation
 
-6. Reporting Service: Generate reports based on sales data.
-
-## API Documentation
-
-API documentation for each service is available via Postman collection. Follow these steps to access and import the collection:
-
-Link for the collection : ```https://api.postman.com/collections/30227502-9d39eaf3-a47b-4ff0-9a25-f6141d490ea9?access_key=PMAT-01J3NMGRC9RP3B13NPH76FT8XA```
+**API documentation for each service is available via Postman collection.**
 
 To import the Postman collection:
 
-1. Copy the provided collection link.
-2. Open Postman and go to the "Import" button in the top-left corner.
+1. Copy the provided collection link: ```https://api.postman.com/collections/30227502-9d39eaf3-a47b-4ff0-9a25-f6141d490ea9?access_key=PMAT-01J3NMGRC9RP3B13NPH76FT8XA```
 
-   <img width="302" alt="import" src="https://github.com/user-attachments/assets/87d7b03d-4fdf-429c-ad82-b1fa551531db">
+<p align="center">
+  <img width="680" alt="postman collection" src="https://github.com/user-attachments/assets/37a44925-d932-4257-9920-39d83ba4dd8e">
+</p>
    
-4. Paste the link and import it into Postman.
-   
-   <img width="485" alt="paste" src="https://github.com/user-attachments/assets/6492ff1c-aa4f-4f70-b871-f55ae71cc853">
-   
-6. Once imported, you'll have access to all the endpoints and can start making requests to the respective services.
-
-   <img width="282" alt="access" src="https://github.com/user-attachments/assets/c726ca18-9c8b-49fe-86ef-5343df297d44">
-
-## License
+# License
 
 This project is licensed under the MIT License - see the [LICENCE.txt](LICENCE.txt) file for details.
 
-## Contact
+# Contact
 
 For any questions or feedback, please contact me at: ```emirhancebiroglu21@hotmail.com```.
